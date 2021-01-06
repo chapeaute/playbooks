@@ -1,0 +1,38 @@
+---
+- hosts: filebeat
+  roles:
+    - role: filebeat
+      fb_kafka_hosts: "{{ groups['kafka'] }}"
+      #fb_logstash_hosts: "{{ groups['logstash'] }}"
+      applications:
+        - name: basic-server
+          files:
+            - /var/log/messages
+            - /var/log/secure
+            - /var/log/dmesg
+            - /var/log/cron
+            - /var/log/firewalld
+        - name: mysql
+          files:
+            - /var/log/mysql/*.log
+        - name: apache
+          files:
+            - /var/log/apache2/*.log
+            - /var/log/httpd/*_log
+        - name: nginx
+          files:
+            - /var/log/nginx/*.log
+            - /srv/www/*/logs/*.log
+          fields: nginx
+        - name: haproxy
+          files:
+            - /var/log/haproxy.log
+        - name: postfix
+          files:
+            - /var/log/mail.err
+            - /var/log/mail.info
+            - /var/log/mail.warn
+        - name: kafka 
+          files:
+            - /var/log/kafka/kafkaServer-gc.log
+            - /var/log/kafka/zookeeper-gc.log

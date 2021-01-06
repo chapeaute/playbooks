@@ -1,0 +1,48 @@
+---
+- name: wizard | Create configuration.php
+  file:
+    path:   "{{ whmcs_htdocs_dir }}/configuration.php"
+    owner:  apache
+    group:  apache
+    mode:   0750
+    setype: "{% if ansible_selinux.status == 'enabled' %}httpd_sys_rw_content_t{% else %}{{ omit() }}{% endif %}"
+    state: touch
+
+- name: wizard | WHMCS Wizard check dependencies - Step 2
+  uri:
+    url: "http://{{ inventory_hostname }}/install/install.php?step=2"
+    method: GET
+    return_content: yes
+  register: dependencies
+
+- name:  wizard | WHMCS Wizard if dependencies fail
+  fail:
+    msg: "Please check the requirements. Go to http://{{ whmcs_vhost }}/install/install.php?step=2"
+  when: "'System Requirements Check Failed' in dependencies.content"
+
+- name: wizard | WHMCS Wizard - Step 4
+  uri:
+    url: "http://{{ inventory_hostname }}/install/install.php?step=4"
+    method: POST
+    body: 'licenseKey={{ whmcs_licence_key }}&databaseHost={{ whmcs_db_host }}&databasePort=&databaseUsername={{ whmcs_db_username }}&databasePassword={{ whmcs_db_password }}&databaseName={{ whmcs_db_name }}'
+    status_code: 200
+    timeout: 120
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: wizard | WHMCS Wizard - Step 5
+  uri:
+    url: "http://{{ inventory_hostname }}/install/install.php?step=5"
+    method: POST
+    body: 'firstName=Admin&lastName=Admin&email={{ whmcs_admin_email }}&username=admin&password={{ whmcs_admin_pass }}&confirmPassword={{ whmcs_admin_pass }}' 
+    status_code: 200
+    timeout: 120
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: wizard | Remove folder install
+  file:
+    path: "{{ whmcs_htdocs_dir }}/install"
+    state: absent

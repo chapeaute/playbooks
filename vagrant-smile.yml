@@ -1,0 +1,28 @@
+---
+  - hosts: all
+    roles:
+    - role: libvirt-kvm
+      libvirt_cron_backup_disabled: false
+      libvirt_networks:
+        - client: smile
+          vlanid: 1
+          netif:  eth0
+          ipaddr: 192.168.122.1
+          prefix: 24
+    - role: vagrant
+      vagrant_deploy_template: true
+      vagrant_group_owner: exploit
+      vagrant_plugins:
+        - vagrant-libvirt
+        - vagrant-triggers
+      vagrant_libvirt_dft_net: smile1
+      vagrant_manage_dns: true
+      vagrant_dns_domain: dev.smile.lan
+    - role: bind
+      bind_ddns_enable: true
+      bind_ddns_key_name: dev.smile.lan
+      bind_zone_conf_manage: true
+      bind_zone:
+        dev.smile.lan:
+          subnet: 192.168.122.0/24
+          servers: ['192.168.122.1']

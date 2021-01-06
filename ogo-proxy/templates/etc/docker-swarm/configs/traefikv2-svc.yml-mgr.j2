@@ -1,0 +1,129 @@
+#
+# Admin services
+#
+http:
+  routers:
+    # Access to Grafana dashboards
+    grafana:
+      rule: "Host(`{{ ogo_manager_hostname }}`, `localhost`, `127.0.0.1`) && PathPrefix(`/grafana`)"
+      service: grafana
+      entryPoints:
+        - http
+      middlewares:
+        - stripprefix
+
+    # Access to Grafana dashboards (secure)
+    grafana-tls:
+      rule: "Host(`{{ ogo_manager_hostname }}`) && PathPrefix(`/grafana`)"
+      service: grafana
+      entryPoints:
+        - https
+      tls: {}
+      middlewares:
+        - stripprefix
+
+    # Access to Ogo API manager
+    ogo-api:
+      rule: "Host(`{{ ogo_manager_hostname }}`, `localhost`, `127.0.0.1`) && PathPrefix(`/ogo`)"
+      service: ogo-api
+      entryPoints:
+        - http
+      middlewares:
+        - stripprefix
+
+    # Access to Ogo API manager (secure)
+    ogo-api-tls:
+      rule: "Host(`{{ ogo_manager_hostname }}`) && PathPrefix(`/ogo`)"
+      service: ogo-api
+      entryPoints:
+        - https
+      tls: {}
+      middlewares:
+        - stripprefix
+
+    # Access to Prometheus metrics API
+    prometheus-tls:
+      rule: "Host(`{{ ogo_manager_hostname }}`) && PathPrefix(`/prometheus`)"
+      service: prometheus
+      entryPoints:
+        - https
+      tls: {}
+
+    # Access to RabbitMQ dashboard
+    rabbitmq-tls:
+      rule: "Host(`{{ ogo_manager_hostname }}`) && PathPrefix(`/rabbitmq`)"
+      service: rabbitmq
+      entryPoints:
+        - https
+      tls: {}
+      middlewares:
+        - stripprefix
+
+    # Access to Traefik dashboards
+    traefik-dashboard-tls:
+      rule: "Host(`{{ ogo_manager_hostname }}`) && PathPrefix(`/traefik`)"
+      service: api@internal
+      entryPoints:
+        - https
+      tls: {}
+      middlewares:
+        - dashboard-auth
+        - stripprefix
+
+    traefik-api-tls:
+      rule: "Host(`{{ ogo_manager_hostname }}`) && PathPrefix(`/api`)"
+      service: api@internal
+      entryPoints:
+        - https
+      tls: {}
+      middlewares:
+        - dashboard-auth
+
+  middlewares:
+    # Redirect to https
+    redirect-https:
+      redirectScheme:
+        scheme: https
+        permanent: true
+
+    stripprefix:
+      stripPrefix:
+        prefixes:
+          - "/grafana"
+          - "/ogo"
+          - "/rabbitmq"
+          - "/traefik"
+
+    # Htaccess authentication
+    dashboard-auth:
+      basicAuth:
+        users:
+          - "{{ traefikv2_opts.admin_user }}:{{ traefikv2_opts.admin_pass }}"
+
+  services:
+    grafana:
+      loadBalancer:
+        servers:
+          - url: http://{{ grafana_opts.dns }}:3000/grafana
+
+    ogo-api:
+      loadBalancer:
+        passHostHeader: false
+        healthCheck:
+          path: "/version"
+          interval: "10s"
+        servers:
+          - url: http://{{ proxy_mgr_opts.dns }}:7007/
+
+    prometheus:
+      loadBalancer:
+        healthCheck:
+          path: "/prometheus/status"
+          interval: "15s"
+        servers:
+          - url: http://{{ prometheus_opts.dns }}:9090/prometheus
+
+    rabbitmq:
+      loadBalancer:
+        servers:
+          - url: http://{{ rabbitmq_opts.dns }}:15672/

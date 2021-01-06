@@ -1,0 +1,12 @@
+# v1.0
+---
+- hosts: whmcs
+  vars:
+    whmcs_license_key: 'WHMCS-xxxxxxxxxxxxxxx'
+    whmcs_admin_email: admin@smile.ci
+    whmcs_admin_pass: changeme
+    whmcs_vhost: whmcs.smile.ci
+    whmcs_root_dir: "/var/www"
+  roles:
+    - role: mariadb-server
+    - role: whmcs

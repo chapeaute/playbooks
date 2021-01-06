@@ -1,0 +1,5 @@
+---
+tomcat_mysql_connector_package: mysql-connector-java
+tomcat_extra_packages: []
+tomcat_selinux_packages:
+  - policycoreutils-python

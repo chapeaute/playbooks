@@ -1,0 +1,50 @@
+---
+# Global
+use_satellite_repo: false
+
+# defaults file for filebeat-agent
+mb_version: "7.4"
+mb_string_version: "{{ mb_version | string }}" # Make sure we receive sting
+mb_major_version: "{{ mb_string_version.split('.')[0] }}"
+mb_deploy_modules: True
+
+# Kafka
+mb_kafka_port: 9092
+mb_kafka_hosts: []
+mb_kafka_broker_timeout: 6
+mb_kafka_topic: logstash
+mb_kafka_version: "0.10.1"
+mb_kafka_worker: "{{ ansible_processor_vcpus }}"
+
+# Logstash
+mb_logstash_port: 5044
+mb_logstash_hosts: []
+
+# Elasticsearch
+mb_es_hosts: []
+mb_es_port: 9200
+mb_es_protocol: http
+mb_es_username:
+mb_es_password:
+
+# Monitoring Elasticsearch hosts
+mb_monitoring_enabled: "{% if mb_monitoring_es_hosts|length > 0 %}true{% else %}false{% endif %}"
+mb_monitoring_es_hosts: "{{ mb_es_hosts }}"
+mb_monitoring_es_port: "{{ mb_es_port }}"
+mb_monitoring_es_protocol: "{{ mb_es_protocol }}"
+mb_monitoring_es_username: "{{ mb_es_username }}"
+mb_monitoring_es_password: "{{ mb_es_password }}"
+mb_monitoring_collection_interval: "10s"
+mb_monitoring_http_enabled: false
+mb_monitoring_http_host: localhost
+mb_monitoring_http_port: 5070
+
+# Filebeat modules
+mb_modules: []
+mb_default_modules: ['system']
+
+# Filebeat tags and extra fields
+mb_tags: "{{ group_names }}"
+mb_extra_fields: []
+mb_default_extra_fields: []
+  # ansible_groups: "[{% for group in group_names %}'{{ group }}',{% endfor %}]"

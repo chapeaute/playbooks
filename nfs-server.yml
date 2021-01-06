@@ -1,0 +1,9 @@
+---
+- hosts: prd-db-rab
+  vars:
+    nfs_data_dir: "/var/lib/nfs_data"
+  roles:
+    - role: nfs-server
+      nfs_exports:
+        - directory: "{{ nfs_data_dir }}/www.oncf.lan"
+          hosts: prd-web-rab

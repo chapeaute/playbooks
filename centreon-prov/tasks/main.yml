@@ -1,0 +1,189 @@
+---
+# include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  tags:
+    - always
+
+- name: main | Set default bind addr
+  set_fact:
+    centreon_bind_addr: "{{ hostvars[inventory_hostname]['ansible_'+centreon_bind_interface]['ipv4']['address'] }}"
+  when: centreon_bind_interface is defined
+  tags:
+    - always
+
+- name: main | Create temporary centreon directory
+  file:
+    dest:    "{{ centreon_tmp_dir }}/hosts"
+    state:   directory
+    recurse: yes
+  run_once: true
+  delegate_to: "{{ centreon_server }}"
+  tags:
+    - provision
+
+- name: main | Force configuration regeneration
+  file:
+    path:  "{{ centreon_tmp_dir}}/hosts.csv"
+    state: absent
+  when: centreon_force_prov
+  delegate_to: "{{ centreon_server }}"
+  tags:
+    - provision
+
+- name: main | Copy CLAPI configuration
+  template:
+    src:   etc/centreon/clapi.conf.j2
+    dest:  "{{ centreon_clapi_conf }}"
+    group: centreon
+    mode:  0640
+  run_once: true
+  delegate_to: "{{ centreon_server }}"
+  tags:
+    - provision
+
+- name: main | Copy script to centreon_server
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "{{ centreon_script_dir }}/{{ item }}"
+    group: centreon
+    mode:  0750
+  with_items:
+    - centreon-host-add
+    - centreon-poller-get
+    - centreon-poller-reload
+    - centreon-disco-common
+    - centreon-disco-disk
+    - centreon-disco-traffic
+    - centreon-disco-bacula-jobs
+    - centreon-disco-muleesb-apps
+    - centreon-disco-tomcat-apps
+    - centreon-disco-nodejs-apps
+    - centreon-disco-apache-vhosts
+  run_once: true
+  delegate_to: "{{ centreon_server }}"
+  tags:
+    - provision
+    - autodisco
+
+- set_fact:
+    centreon_poller_list: "{{ centreon_poller|join('|') }}"
+  run_once: true
+  tags:
+    - provision
+
+- name: main | Define resource on centreon server {{ centreon_server }}
+  include: "define_resource.yml rsc_name={{ item.name }} rsc_value={{ item.value }}"
+  with_items:
+    - "{{ centreon_rsc | default([]) }}"
+  tags:
+    - provision
+
+- name: main | Generate host configuration csv file
+  template:
+    src:   "var/tmp/centreon/hosts.csv.j2"
+    dest: "{{ centreon_tmp_dir }}/hosts/{{ ansible_fqdn }}.csv"
+  changed_when: false
+  delegate_to: "{{ centreon_server }}"
+  tags:
+    - provision
+
+- name: main | Assemble hosts CSV in one file
+  assemble:
+    src:  "{{ centreon_tmp_dir }}/hosts"
+    dest: "{{ centreon_tmp_dir}}/hosts.csv"
+  notify:
+    - Generate configuration
+    - Reload configuration
+  run_once: true
+  delegate_to: "{{ centreon_server }}"
+  tags:
+    - provision
+
+- name: main | Purge centreon provisionning cache directory
+  file:
+    path:  "{{ centreon_tmp_dir }}/hosts/{{ ansible_fqdn }}.csv"
+    state: absent
+  delegate_to: "{{ centreon_server }}"
+  when: centreon_prov_purge_cache == true
+  changed_when: false
+  tags:
+    - provision
+
+- name: main | Flush handler to force host creation before bacula auto-discover
+  meta: flush_handlers
+
+- name: main | Auto-dicover bacula director jobs
+  command: "{{ centreon_script_dir }}/centreon-disco-bacula-jobs -s -H {{ ansible_fqdn }} -u {{ centreon_backup_ssh_user }}"
+  delegate_to: "{{ centreon_server }}"
+  become: true
+  become_user: centreon-engine
+  when:
+    - centreon_backup_dir_group in group_names
+  notify:
+    - Reload configuration
+  tags:
+    - provision
+    - autodisco
+
+- name: main | Auto-dicover MuleESB applications
+  command: "{{ centreon_script_dir }}/centreon-disco-muleesb-apps -s -H {{ ansible_fqdn }} -u {{ centreon_muleesb_ssh_user }}"
+  delegate_to: "{{ centreon_server }}"
+  become: true
+  become_user: centreon-engine
+  when:
+    - centreon_muleesb_dir_group in group_names
+  notify:
+    - Reload configuration
+  tags:
+    - provision
+    - autodisco
+
+- name: main | Auto-dicover NodeJS applications
+  command: "{{ centreon_script_dir }}/centreon-disco-nodejs-apps -s -H {{ ansible_fqdn }} -u {{ centreon_nodejs_ssh_user }}"
+  delegate_to: "{{ centreon_server }}"
+  become: true
+  become_user: centreon-engine
+  when:
+    - centreon_nodejs_dir_group in group_names
+  notify:
+    - Reload configuration
+  tags:
+    - provision
+    - autodisco
+
+- name: main | Auto-dicover Tomcat applications
+  command: "{{ centreon_script_dir }}/centreon-disco-tomcat-apps -s -H {{ ansible_fqdn }} -u {{ centreon_tomcat_ssh_user }} -e '{{ centreon_tomcat_exclude }}'"
+  delegate_to: "{{ centreon_server }}"
+  become: true
+  become_user: centreon-engine
+  when:
+    - centreon_tomcat_dir_group in group_names
+  notify:
+    - Reload configuration
+  tags:
+    - provision
+    - autodisco
+
+- name: main | Auto-dicover Apache applications
+  command: "{{ centreon_script_dir }}/centreon-disco-apache-vhosts -s -H {{ ansible_fqdn }} -u {{ centreon_apache_ssh_user }}"
+  delegate_to: "{{ centreon_server }}"
+  become: true
+  become_user: centreon-engine
+  when:
+    - centreon_apache_dir_group in group_names
+  notify:
+    - Reload configuration
+  tags:
+    - provision
+    - autodisco
+

@@ -1,0 +1,15 @@
+---
+- hosts: wso2iot
+  vars:
+    # WSO2 Version
+    wso2iot_version: 3.2.0
+    # WSO2 Password
+    wso2iot_admin_pass: changeme
+    # Address of MySQL host
+    #wso2iot_db_host: "db_host_address"
+    # Percentage of total memory dedicated to jvm
+    wso2iot_memory_size_prct: 0.6
+    # WSO2 data directory
+    wso2iot_root_dir: /var/lib
+  roles:
+    - role: wso2iot

@@ -1,0 +1,5 @@
+---
+# defaults file for template
+
+## Global
+use_satellite_repo: false

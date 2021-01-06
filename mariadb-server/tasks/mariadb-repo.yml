@@ -1,0 +1,9 @@
+---
+- name: mariadb-repo | Add MariaDB repository
+  yum_repository:
+    name: MariaDB
+    description: MariaDB {{ mysql_version }} repository
+    baseurl:  "http://yum.mariadb.org/{{ mysql_version }}/{{ ansible_distribution | lower }}{{ ansible_distribution_major_version }}-amd64"
+    gpgkey:   https://yum.mariadb.org/RPM-GPG-KEY-MariaDB
+    gpgcheck: yes
+  when: ansible_os_family == 'RedHat' and use_satellite_repo == false

@@ -1,0 +1,15 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: ruby
+      image: centos/systemd
+      image_version: latest
+      privilegd: true
+      ansible_groups:
+        - ruby
+verifier:
+  name: testinfra

@@ -1,0 +1,23 @@
+---
+- name: sshkey | Fetch {{ ceph_user }} user key file on ceph {{ ctl_host }} controller server
+  command: cat ~{{ ceph_user }}/.ssh/id_rsa.pub
+  register: "pub_key_file"
+  delegate_to: "{{ ctl_host }}"
+  run_once: true
+  check_mode: no
+  changed_when: false
+
+- name: sshkey | Deploy {{ ceph_user }} user key file on ceph node
+  authorized_key:
+    user:  "{{ ceph_user }}"
+    key:   "{{ pub_key_file.stdout }}"
+    state: present
+
+- name: sshkey | Accept SSH host key file
+  command: "ssh -oStrictHostKeyChecking=no {{ inventory_hostname }} hostname"
+  delegate_to: "{{ ctl_host }}"
+  delegate_facts: true
+  become: true
+  become_user: "{{ ceph_user }}"
+  changed_when: false
+

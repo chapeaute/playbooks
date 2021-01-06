@@ -1,0 +1,10 @@
+---
+# handlers file for wso2
+
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: Restart wso2ei
+  service:
+    name: wso2ei
+    state: restarted

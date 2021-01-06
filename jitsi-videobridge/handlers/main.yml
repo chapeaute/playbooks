@@ -1,0 +1,14 @@
+---
+
+- name: Restart jitsi-videobridge
+  service:
+    name: jitsi-videobridge
+    state: restarted
+
+- name: Register Jvb XMPP users
+  command: "prosodyctl register {{ jvb_xmpp_user }} {{ jvb_xmpp_auth_domain }} {{ jvb_xmpp_pass }}"
+  delegate_to: "{{ jvb_xmpp_server }}"
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes

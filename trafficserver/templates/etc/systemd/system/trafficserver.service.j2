@@ -1,0 +1,24 @@
+[Unit]
+Description=Apache Trafficserver Instance
+
+
+[Service]
+ExecStart={{ ts_default_install_dir }}/bin/traffic_manager --nosyslog
+Restart=always
+RestartSec=1
+# XXX: `traffic_server -C verify_config` is broken: it causes configuration
+# reloads, which cause errors with ascii_pipe logs
+#ExecReload={{ ts_default_install_dir }}/bin/traffic_server -C verify_config
+ExecReload={{ ts_default_install_dir }}/bin/traffic_ctl config reload
+# traffic_manager is terminated with SIGTERM and exits with the received signal
+# number (15)
+SuccessExitStatus=15
+
+LimitNOFILE=500000
+LimitMEMLOCK=90000
+
+# Security options
+PrivateTmp=yes
+
+[Install]
+WantedBy=multi-user.target

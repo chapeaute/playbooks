@@ -1,0 +1,4 @@
+---
+- include: bacula-director.yml
+- include: bacula-storage.yml
+- include: bacula-agent.yml

@@ -1,0 +1,4 @@
+---
+# handlers file for vm-init
+- name: reload hostname RedHat
+  command: "hostnamectl set-hostname {{ ansible_hostname }}"

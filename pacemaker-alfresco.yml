@@ -1,0 +1,20 @@
+---
+- hosts: pacemaker-alfresco
+  roles:
+    - role: pacemaker
+      pcmk_hosts: "{{ groups['alfresco'] }}"
+      pcmk_vip_rsc: 
+        - interface: eth1
+          address: 192.168.122.112
+          netmask: 32
+      pcmk_svc_rsc:
+        - tomcat
+        - mariadb
+      pcmk_drbd_rsc:
+        rsc_name: data
+        mnt_point: /srv/drbd
+        dir:
+          - src_dir: /var/lib/apache-tomcat-7.0.59
+            dst_dir: /srv/drbd/alfresco
+          - src_dir: /var/lib/mysql
+            dst_dir: /srv/drbd/mysql

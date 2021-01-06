@@ -1,0 +1,22 @@
+[Unit]
+Description=Apache Hadoop YARN resource manager
+After=network.target
+
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+EnvironmentFile=/etc/default/hadoop
+Type=forking
+User=hadoop
+Group=hadoop
+LimitNOFILE=8192
+WorkingDirectory={{ hadoop_install_dir }}
+Restart=no
+TimeoutSec=5min
+IgnoreSIGPIPE=no
+KillMode=control-group
+GuessMainPID=no
+ExecStart={{ hadoop_install_dir }}/sbin/yarn-daemon.sh start nodemanager
+ExecStop={{ hadoop_install_dir }}/sbin/yarn-daemon.sh stop nodemanager
+Restart=on-failure

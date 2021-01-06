@@ -1,0 +1,11 @@
+---
+- hosts: pacemaker-service
+  roles:
+    - role: pacemaker
+      pcmk_hosts: "{{ groups['mariadb'] }}"
+      pcmk_vip_rsc: 
+        - interface: eth1
+          address: 192.168.122.70
+          netmask: 32
+      pcmk_svc_rsc:
+        - mariadb

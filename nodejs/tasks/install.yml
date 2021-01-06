@@ -1,0 +1,38 @@
+---
+
+- name: install | Download archive
+  get_url:
+    url:  "{{ nodejs_download_url }}"
+    dest: /tmp
+  check_mode: no
+
+- name: install | Decompress archive
+  unarchive:
+    src: "/tmp/{{ nodejs_archive }}"
+    dest: /tmp
+    remote_src: yes
+    exclude:
+      - CHANGELOG.md
+      - LICENSE
+      - README.md
+  register: nodejs_decompress
+
+- name: install | Copy archive
+  shell: "cp -rf /tmp/{{ nodejs_dir }}/* {{ nodejs_prefix }}"
+  when: nodejs_decompress is changed
+
+- name: install | link node to nodejs
+  file:
+    src: "{{ nodejs_prefix }}/bin/node"
+    dest: "{{ nodejs_prefix }}/bin/nodejs"
+    state: link
+
+#- name: install | Clean copy
+#  file:
+#    path:  "{{nodejs_prefix}}/{{item}}"
+#    state: absent
+#  with_items:
+#    - CHANGELOG.md
+#    - LICENSE
+#    - README.md
+#  when: nodejs_decompress|changed

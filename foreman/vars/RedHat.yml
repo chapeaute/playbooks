@@ -1,0 +1,6 @@
+---
+
+foreman_dependencies:
+  - epel-release
+  - centos-release-scl-rh 
+

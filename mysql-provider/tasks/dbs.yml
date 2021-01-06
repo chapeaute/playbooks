@@ -1,0 +1,39 @@
+---
+# tasks file for mysql-databases
+
+- name: dbs | Ensure dump download directory exists
+  file:
+    name: /var/tmp/{{ item.value.db_name|default(item.key) }}
+    state: directory
+  when:
+    - item.value.sync_source is defined
+  with_dict: "{{ mysql_databases }}"
+
+- name: dbs | Create databases
+  delegate_to: "{{ mysql_host }}"
+  mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    name: "{{ item.value.db_name|default(item.key) }}"
+    state: present
+    collation: "{{ item.value.collation|default(mysql_db_default_collation) }}"
+    encoding: "{{ item.value.encoding|default(mysql_db_default_encoding) }}"
+  with_dict: "{{ mysql_databases }}"
+  register: created_dbs
+  notify:
+    - Retrieve MySQL dump (from SSH)
+    - Retrieve MySQL dump (from URL)
+    - Retrieve MySQL dump (from local copy)
+    - Import MySQL dump from synced server
+    - Import MySQL dump from remote sql
+
+- name: dbs | set fact user
+  set_fact:
+    u: "{{ { 'user': item.value.user|default(item.key), 'password': item.value.password, 'state': item.value.state|default('present'), 'host': item.value.host|default(omit), 'hosts': item.value.hosts|default(omit),  'priv':  item.value.db_name|default(item.key) + '.*:ALL' } }}"
+  with_dict: "{{ mysql_databases }}"
+
+- name: dbs | Add user fact to mysql_users
+  set_fact:
+    mysql_users: "{{ mysql_users + [u] }}"
+
+- name: dbs | Run hanlders
+  meta: flush_handlers

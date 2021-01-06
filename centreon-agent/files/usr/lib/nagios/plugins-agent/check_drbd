@@ -1,0 +1,208 @@
+#!/bin/bash
+
+# Ce script a pour but de vérifier l'état du volume DRBD.
+
+if [ ! -e /proc/drbd ]
+then
+        echo "ERROR : /proc/drbd does not exist, drbd service not running ?"
+        exit 1
+fi
+
+#STATE=$(cat /proc/drbd | egrep -o 'cs:[[:alpha:]]+' | cut -d ":" -f 2)
+#
+#MYROLE=$(cat /proc/drbd | egrep -o 'st:[[:alpha:]]+' | cut -d ":" -f 2)
+#PEERROLE=$(cat /proc/drbd | egrep -o 'st:[[:alpha:]]+/[[:alpha:]]+' | cut -d "/" -f 2)
+#
+#DISKSTATE=$(cat /proc/drbd | egrep -o 'ds:[[:alpha:]]+' | cut -d ":" -f 2)
+#PEERDISKSTATE=$(cat /proc/drbd | egrep -o 'ds:[[:alpha:]]+/[[:alpha:]]+' | cut -d "/" -f 2)
+
+STATE=$(/sbin/drbdadm cstate all)
+
+MYROLE=$(/sbin/drbdadm role all | cut -d "/" -f 1)
+PEERROLE=$(/sbin/drbdadm role all | cut -d "/" -f 2)
+
+DISKSTATE=$(/sbin/drbdadm dstate all | cut -d "/" -f 1)
+PEERDISKSTATE=$(/sbin/drbdadm dstate all | cut -d "/" -f 2)
+#
+#STATE=$(sudo /sbin/drbdadm cstate all)
+#
+#MYROLE=$(sudo /sbin/drbdadm state all | cut -d "/" -f 1)
+#PEERROLE=$(sudo /sbin/drbdadm state all | cut -d "/" -f 2)
+#
+#DISKSTATE=$(sudo /sbin/drbdadm dstate all | cut -d "/" -f 1)
+#PEERDISKSTATE=$(sudo /sbin/drbdadm dstate all | cut -d "/" -f 2)
+#
+case $STATE in
+        # WE START WITH OK CASES
+        "Connected")
+        echo -n "OK : DRBD state is $STATE. "
+        ;;
+
+        "StartingSyncS")
+        echo -n "OK : DRBD state is $STATE. Full synchronization, initiated by the administrator, is just starting. The next possible states are: SyncSource or PausedSyncS. "
+        ;;
+
+        "StartingSyncT")
+        echo -n "OK : DRBD state is $STATE. Full synchronization, initiated by the administrator, is just starting. Next state: WFSyncUUID. "
+        ;;
+
+        "WFBitMapS")
+        echo -n "OK : DRBD state is $STATE. Partial synchronization is just starting. Next possible states: SyncSource or PausedSyncS. "
+        ;;
+
+        "WFBitMapT")
+        echo -n "OK : DRBD state is $STATE. Partial synchronization is just starting. Next possible state: WFSyncUUID. "
+        ;;
+
+        "WFSyncUUID")
+        echo -n "OK : DRBD state is $STATE. Synchronization is about to begin. Next possible states: SyncTarget or PausedSyncT. "
+        ;;
+
+        "SyncSource")
+        echo -n "OK : DRBD state is $STATE. Synchronization is currently running, with the local node being the source of synchronization. "
+        ;;
+
+        "SyncTarget")
+        echo -n "OK : DRBD state is $STATE. Synchronization is currently running, with the local node being the target of synchronization. "
+        ;;
+
+        "PausedSyncS")
+        echo -n "OK : DRBD state is $STATE. The local node is the source of an ongoing synchronization, but synchronization is currently paused. This may be due to a dependency on the completion of another synchronization process, or due to synchronization having been manually interrupted by drbdadm pause-sync. "
+        ;;
+
+        "PausedSyncT")
+        echo -n "OK : DRBD state is $STATE. The local node is the target of an ongoing synchronization, but synchronization is currently paused. This may be due to a dependency on the completion of another synchronization process, or due to synchronization having been manually interrupted by drbdadm pause-sync. "
+        ;;
+
+        "VerifyS")
+        echo -n "OK : DRBD state is $STATE. On-line device verification is currently running, with the local node being the source of verification. "
+        ;;
+
+        "VerifyT")
+        echo -n "OK : DRBD state is $STATE. On-line device verification is currently running, with the local node being the target of verification. "
+        ;;
+
+        # ERROR STATES NOW
+        "StandAlone")
+        echo "ERROR : DRBD state is $STATE. No network configuration available. The resource has not yet been connected, or has been administratively disconnected (using drbdadm disconnect), or has dropped its connection due to failed authentication or split brain";
+        exit 1
+        ;;
+
+        "Disconnecting")
+        echo "ERROR : DRBD state is $STATE. Temporary state during disconnection. The next state is StandAlone. "
+        exit 1
+        ;;
+
+        "Unconnected")
+        echo "ERROR : DRBD state is $STATE. Temporary state, prior to a connection attempt. Possible next states: WFConnection and WFReportParams. "
+        exit 1
+        ;;
+
+        "Timeout")
+        echo "ERROR : DRBD state is $STATE. Temporary state following a timeout in the communication with the peer. Next state: Unconnected. "
+        exit 1
+        ;;
+
+        "BrokenPipe")
+        echo "ERROR : DRBD state is $STATE. Temporary state after the connection to the peer was lost. Next state: Unconnected. "
+        exit 1
+        ;;
+
+        "NetworkFailure")
+        echo "ERROR : DRBD state is $STATE. Temporary state after the connection to the partner was lost. Next state: Unconnected. "
+        exit 1
+        ;;
+
+        "ProtocolError")
+        echo "ERROR : DRBD state is $STATE. Temporary state after the connection to the partner was lost. Next state: Unconnected. "
+        exit 1
+        ;;
+
+        "TearDown")
+        echo "ERROR : DRBD state is $STATE. Temporary state. The peer is closing the connection. Next state: Unconnected. "
+        exit 1
+        ;;
+
+        "WFConnection")
+        echo "ERROR : DRBD state is $STATE. This node is waiting until the peer node becomes visible on the network. "
+        exit 1
+        ;;
+
+        "WFReportParams")
+        echo "ERROR : DRBD state is $STATE. TCP connection has been established, this node waits for the first network packet from the peer. "
+        exit 1
+        ;;
+
+        * )
+        echo "ERROR : DRBD state is unknown" # this should never happen
+        exit 1
+        ;;
+esac
+
+if [ $MYROLE == $PEERROLE ]
+then
+        echo "ERROR : Both DRBD volumes are in secondary state. "
+        exit 1
+fi
+
+if [ $PEERROLE == "Unknown" ]
+then
+        echo -n "ERROR : Peer role is Unknown. "
+fi
+
+for DS in $DISKSTATE $PEERDISKSTATE
+do
+        case $DS in
+                # OK CASES
+                "UpToDate" )
+                echo -n "OK : Diskstate is $DS. "
+                ;;
+
+                "Attaching" )
+                echo -n "OK : Diskstate is $DS. Transient state while reading meta data. "
+                ;;
+
+                "Negotiating" )
+                echo -n "OK : Diskstate is $DS. Transient state when an Attach is carried out on an already-Connected DRBD device. "
+                ;;
+
+                "Outdated" )
+                echo -n "OK : Diskstate is $DS. Resource data is consistent, but outdated. "
+                ;;
+
+                "Inconsistent" )
+                echo -n "OK : Diskstate is $DS. Resource data is consistent, but outdated. "
+                ;;
+
+                "Consistent" )
+                echo -n "OK : Diskstate is $DS. Consistent data without connection. When the connection is established, it is decided whether the data is UpToDate or Outdated. "
+                ;;
+
+                # ERROR CASES
+                "Diskless")
+                echo "ERROR : DRBD diskstate is $STATE. No local block device has been assigned to the DRBD driver. This may mean that the resource has never attached to its backing device, that it has been manually detached using drbdadm detach, or that it automatically detached after a lower-level I/O error. "
+                exit 1
+                ;;
+
+                "Failed")
+                echo "ERROR : DRBD diskstate is $STATE. Transient state following an I/O failure report by the local block device. Next state: Diskless. "
+                exit 1
+                ;;
+
+                "DUnknown")
+                echo "ERROR : DRBD diskstate is $STATE. This state is used for the peer disk if no network connection is available. "
+                exit 1
+                ;;
+        
+                *)
+                echo "ERROR : DRBD diskstate is unknown. " # this should never happen
+                exit 1
+                ;;
+        esac
+done
+
+echo ""
+
+exit 0
+
+

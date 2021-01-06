@@ -1,0 +1,9 @@
+---
+- hosts: all
+  roles:
+    - role: apache
+      apache2_vhosts:
+        ajax.smile.ci:
+          server_name: ajax.smile.ci
+          document_root: /var/www/ajax.smile.ci
+    - php

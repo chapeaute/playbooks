@@ -1,0 +1,84 @@
+---
+# tasks file for openstreetmap
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  tags: always
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | install dependencies
+  package:
+    name: "{{ item }}"
+  with_items:
+   -  "{{ osm_dependencies }}"
+   - git
+
+- name: main | install python modules
+  pip:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    "{{ osm_python_modules }}"
+
+- name: main | install php modules
+  pear:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    "{{ osm_php_modules }}"
+
+- name: main | download source
+  git:
+    repo:  git://github.com/openstreetmap/Nominatim.git
+    update: no
+    dest: "{{ osm_install_dir }}"
+
+- name: main | get countries
+  get_url:
+    url: http://www.nominatim.org/data/country_grid.sql.gz
+    dest: "{{ osm_install_dir }}/data/country_osm_grid.sql.gz"
+
+- name: main | create build
+  file:
+    path: "{{ osm_install_dir }}/build"
+    state: directory
+    recurse: true
+
+- name: main | cmake
+  command: "cmake"
+  args:
+    chdir: "{{ osm_install_dir }}/build"
+    creates: "{{ osm_install_dir }}/build/Makefile"
+
+- name: main | make
+  command: "/bin/make"
+  args:
+    chdir: "{{ osm_install_dir }}/build"
+    creates: "{{ osm_install_dir }}/build/osm2pgsql/osm2pgsql"
+
+- name: main | link website
+  file:
+    src: "{{ osm_install_dir }}/build/website"
+    dest: "{{ apache_data_dir }}/nomatim/htdocs"
+    state: link
+    force: yes
+
+- name: main | configure database url
+  lineinfile:
+    path: "{{ osm_install_dir }}/build/settings/settings.php"
+    regexp: "CONST_Database_DSN"
+    line: "@define('CONST_Database_DSN', 'pgsql://{{ osm_db_user }}:{{ osm_db_pass }}@{{ osm_db_host }}/{{ osm_db_name }}');"
+
+- name: main | configure web user
+  lineinfile:
+    path: "{{ osm_install_dir }}/build/settings/settings.php"
+    regexp: "CONST_Database_Web_User"
+    line: "@define('CONST_Database_Web_User', '{{ osm_db_user }}');"

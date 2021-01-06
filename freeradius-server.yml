@@ -1,0 +1,20 @@
+---
+- hosts: freeradius
+  roles:
+    - role: mariadb-server
+    - role: freeradius
+      freerad_client_vhost: default
+      freerad_enable_serverstatus: true
+      freerad_server_thread_start: 32
+      freerad_server_thread_max: 64
+      freerad_server_thread_minspare: 10
+      freerad_server_thread_maxspare: 20
+    - role: freeradius-mysql
+      freerad_db:
+        - name: sql
+          # MySQL account used to access freeradius database by SQL module
+          host: 127.0.0.1
+          database: radius
+          user: radius
+          pass: "{{ lookup('password', 'credential/radius_sql_password chars=ascii_letters,digits') }}"
+          remote_host: "{{ inventory_hostname }}"

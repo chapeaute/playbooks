@@ -1,0 +1,2 @@
+[all]
+glassfish ansible_connection=docker

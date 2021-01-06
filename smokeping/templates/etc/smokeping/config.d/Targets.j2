@@ -1,0 +1,36 @@
+*** Targets ***
+
+probe = FPing
+
+menu = Top
+title = {{ smokeping_title }}
+remark = {{ smokeping_remark }}
+
+{% for target in smokeping_targets %}
++ {{ target.name }}
+
+menu = {{ target.name }}
+title = {{ target.title }}
+
+{% if target.hosts is iterable %}
+
+{% for host in target.hosts %}
+++ host-{{ loop.index }}
+
+menu = {{ host }}
+host = {{ host }}
+title = {{ host }}
+{% endfor %}
+
+{% else %}
+
+{% for host in target.hosts %}
+++ {{ host.name }}
+
+menu = {{ host.menu }}
+title = {{ host.name }}
+host = {{ host.host }}
+{% endfor %}
+{% endif %}
+
+{% endfor %}

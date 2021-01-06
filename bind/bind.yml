@@ -1,0 +1,31 @@
+---
+- hosts: all
+  vars:
+    domain_name: "ovh.smile.lan"
+    subnet: "10.1.1.0/24"
+    main_interface: "eth1"
+  tasks:
+    - set_fact:
+        subnet: "{{ subnet }}"
+        domain_name: "{{ domain_name }}"
+        main_interface: "{{ main_interface }}"
+        dns_servers_addr: []
+        dns_servers_list: []
+
+    - set_fact:
+        dns_servers_addr: "{{ dns_servers_addr + [ hostvars[item]['ansible_' + main_interface]['ipv4']['address'] ] }}"
+        dns_servers_list: "{{ dns_servers_list + [ hostvars[item]['ansible_' + main_interface]['ipv4']['address'] + \":\" + hostvars[item]['ansible_hostname'] ] }}"
+      with_items: "{{ play_hosts }}"
+
+- hosts: all
+  roles:
+  - role: bind
+    bind_ddns_enable: true
+    bind_ddns_key_name: "{{ domain_name }}"
+    bind_zone_conf_manage: true
+    bind_allow_transfert: "{{ dns_servers_addr[1:] }}"
+    bind_zone:
+      "{{ domain_name }}":
+        subnet: "{{ subnet }}"
+        servers: "{{ dns_servers_list }}"
+

@@ -1,0 +1,17 @@
+---
+
+- name: server-status | Create file server-status
+  template:
+     src:  server-status.j2
+     dest: "{{ apache2_confd_dir }}/server-status.conf"
+     directory_mode:
+     owner: "{{ apache2_user }}"
+     group: "{{ apache2_group }}"
+     mode:  0644
+  notify: "Restart Apache"
+
+- name: server-status | Dont log server-status request
+  replace:
+    path:   "{{ apache2_config_file }}"
+    regexp: '^(\s+CustomLog .* combined)$'
+    replace:   '\1 env=!dontlog'

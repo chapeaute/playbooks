@@ -1,0 +1,11 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users:
+        - login: makou
+          groups: tomcat
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNhxpMgKy3YRh791HewiA2FWP711scq2wY1JPvMS3i3x+FXdQ5t5UQxBnHsjogTA0Z5kEFnZmZqdxI+Sfo/4W1XmvkFc1ZXB9JLgZiHfENoshbOtwR8au4Nrl7tRaM3A1vuA2LXK3Kc0BjkLmwBlqQ1Xt0ZrYYrxhyxS1VwDBd+KZuipIXCtgAT4H82y7Kh6uzA0qb9HJHQrwydmTXKZSwE5PAyncHIH9G1wyKVbY5ad5/+EFQus6XwTk08ppgNeg1ktDGoVR7bNzYwbzUp0MfcZpxqupVBoLyo2rvvW2rvRbQUQuRte/iVY0IjHvGWrio5zuw0CLZ8M6EhlXKsRtZ martin.kouame@objectif-libre.ci

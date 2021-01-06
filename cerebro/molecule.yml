@@ -1,0 +1,15 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: cerebro
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+      ansible_groups:
+        - cerebro
+verifier:
+  name: testinfra

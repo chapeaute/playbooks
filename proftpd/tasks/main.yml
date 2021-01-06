@@ -1,0 +1,94 @@
+---
+# tasks file for proftpd
+
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+      - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'         # CentOS-6.5
+      - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'          # RedHat-6.5
+      - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+      - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'      # RedHat-6
+      - '{{ ansible_distribution }}.yml'                                # CentOS
+      - '{{ ansible_os_family }}.yml'                                 # RedHat
+      - 'main.yml'
+      paths: '../vars'
+  tags: always
+
+- include: "{{ ansible_os_family }}.yml"
+
+- name: main | Install proftpd packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "{{ proftpd_packages }}"
+
+- name: main | Create proftpd directory
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ proftpd_conf_directory }}"
+
+
+- name: main | Create proftpd daemon group
+  group:
+    name: "{{ proftpd_group_daemon }}"
+    system: yes
+    state: present
+
+- name: main | Create proftpd daemon user
+  user:
+    name: "{{ proftpd_user_daemon_name }}"
+    uid: "{{ proftpd_user_daemon_id }}"
+    group: "{{ proftpd_group_daemon }}"
+    createhome: no
+    state: present
+
+- name: main | Set up proftpd log directory
+  file:
+    path: "{{ proftpd_log_dir }}"
+    state: directory
+    owner: "{{ proftpd_user_daemon_name }}"
+
+- include: sftp.yml
+  when: proftpd_enable_sftp
+
+- name: main | Set main conf file
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: etc/proftpd.conf.j2
+      dest: "{{ proftpd_conf_file }}"
+    - src:  etc/proftpd/modules.conf.j2
+      dest: /etc/proftpd/modules.conf
+    - src: etc/proftpd/conf.d/sftp.conf.j2
+      dest: /etc/proftpd/conf.d/sftp.conf
+    - src: etc/proftpd/conf.d/ftp.conf.j2
+      dest: /etc/proftpd/conf.d/ftp.conf
+  notify:
+    - restart proftpd
+
+- include: proftpd_user.yml user="{{ item }}"
+  with_items: "{{ proftpd_users }}"
+  tags:
+    - proftpd_users
+    - config
+  when: proftpd_users|length > 0
+
+- name: main | Create auth file
+  file:
+    path: "{{ proftpd_auth_user_file }}"
+    mode: 0440
+    owner: "{{ proftpd_user_daemon_name }}"
+  when: proftpd_users|length > 0
+  tags:
+    - proftpd_users
+    - config
+
+- name: main | Enable service proftpd
+  service:
+    name: proftpd
+    enabled: yes
+    state: started

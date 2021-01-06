@@ -1,0 +1,72 @@
+---
+# include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: '{{ ansible_os_family }}.yml'
+
+- name: main | Server installation
+  package:
+    name:  "{{ item }}"
+    state: present
+  with_items: "{{ bacula_packages }}"
+
+- name: main | Create client and storage configuration directory
+  tags: deploy_config
+  file:
+    path:  "{{ item }}"
+    state: directory
+    owner: bacula
+    group: bacula
+    mode:  0750
+  with_items:
+    - "{{ bacula_conf_dir }}/clients.d"
+    - "{{ bacula_conf_dir }}/storages.d"
+    - "/var/spool/bacula"
+
+- name: main | Deploy bacula client default configuration file
+  tags: deploy_config
+  template:
+    src:     etc/bacula/clients.d/bacula.conf
+    dest:    "{{ bacula_conf_dir }}/clients.d/{{ bacula_dir_name }}.conf"
+    owner:   bacula
+    group:   bacula
+    mode:    0640
+    force: false
+  notify: Restart bacula services
+
+- name: main | Deploy bacula configuration
+  tags: deploy_config
+  template:
+    src:  "etc/bacula/{{ item }}.j2"
+    dest: "{{ bacula_conf_dir }}/{{ item }}"
+    owner:   bacula
+    group:   bacula
+    mode:    0660
+  with_items:
+    - bacula-dir.conf
+    - bconsole.conf
+    - bat.conf
+    - pool.conf
+    - schedule.conf
+  notify: Restart bacula services
+
+- include: mariadb.yml
+  tags: mariadb
+  when: bacula_db_driver == "mysql"
+
+- name: main | Enable services on boot
+  service:
+    name:    "{{ item }}"
+    state:   started
+    enabled: yes
+  with_items: "{{ bacula_services }}"

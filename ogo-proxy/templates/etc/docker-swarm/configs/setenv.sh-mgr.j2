@@ -1,0 +1,22 @@
+# Ogo environment variables
+CATALINA_OPTS="$CATALINA_OPTS -DPROXY_INSTANCE_TYPE={{ ogo_proxy_instance_type | default('manager') }}"
+CATALINA_OPTS="$CATALINA_OPTS -DCLUSTER_MEMORY_OFF={{ (not ogo_cmem_enable) | lower }}"
+CATALINA_OPTS="$CATALINA_OPTS -DCPLUSPLUS_DEBUG={{ ogo_proxy_cpp_debug | lower }}"
+CATALINA_OPTS="$CATALINA_OPTS -DENV={{ ogo_proxy_log_level }}"
+CATALINA_OPTS="$CATALINA_OPTS -DNAVIGATION_ON={{ ogo_nav_enable | lower }}"
+CATALINA_OPTS="$CATALINA_OPTS -server -XX:+UseParallelGC -Djava.awt.headless=true -Djava.security.egd=file:/dev/urandom -XX:+CMSClassUnloadingEnabled"
+CATALINA_OPTS="$CATALINA_OPTS -Xms{{ (ogo_proxy_mgr_memory_min/2) | int }}M -Xmx{{ ogo_proxy_mgr_memory_min }}M"
+CATALINA_OPTS="$CATALINA_OPTS -Djavax.net.ssl.trustStore={{ ogo_proxy_ca_keystore }}"
+CATALINA_OPTS="$CATALINA_OPTS -DRESPONSE_HEADERS_TO_STRIP={{ ogo_proxy_strip_header }}"
+CATALINA_OPTS="$CATALINA_OPTS -DNODE=${NODE_NAME}_${HOSTNAME}"
+CATALINA_OPTS="$CATALINA_OPTS -javaagent:/usr/local/tomcat/bin/jmx_prometheus_javaagent.jar={{ ogo_proxy_jmx_port }}:/usr/local/tomcat/conf/prometheus-jmx-config.yaml"
+{% if ogo_proxy_jmx_enable %}
+CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote=true"
+CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote.port=8008"
+CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote.rmi.port=8008"
+CATALINA_OPTS="$CATALINA_OPTS -Djava.rmi.server.hostname=172.18.0.1"
+CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote.local.only=false"
+CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
+CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote.ssl=false"
+{% endif %}
+export CATALINA_OPTS

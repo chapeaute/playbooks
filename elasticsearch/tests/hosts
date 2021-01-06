@@ -1,0 +1,5 @@
+[all]
+elasticsearch ansible_connection=docker
+
+[elasticsearch]
+elasticsearch

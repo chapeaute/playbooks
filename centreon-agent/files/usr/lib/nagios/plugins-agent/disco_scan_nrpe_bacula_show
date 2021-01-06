@@ -1,0 +1,9 @@
+#!/bin/bash
+
+echo -n "<data>"
+ls -1 /etc/bacula/clients* | cut -d '.' -f1 | while read client 
+do
+	echo -n " <label name='$client' />"
+done
+echo " </data>"
+exit 0

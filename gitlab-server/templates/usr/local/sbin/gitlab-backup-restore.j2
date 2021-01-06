@@ -1,0 +1,40 @@
+#!/bin/bash
+
+BACKUP_DIR="{{ gitlab_backup_dir }}"
+
+function syntax() {
+    cat <<EOF
+Script to restore a Gitlab dump.
+
+Usage: ${0##*/} [-h|-o <days>]
+    -h                  Display this message
+    -f <backup_file>    Path to backup file
+EOF
+}
+
+while getopts "ho:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        o)
+            BACKUP_FILE="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+# Move backup file
+echo "=== Move backup file ==="
+mv $BACKUP_FILE $BACKUP_DIR
+# Launch restore backup
+echo "=== Launch restore backup ==="
+BACKUP_VERSION=$(basename $BACKUP_FILE | cut -d _ -f 1-5)
+gitlab-rake gitlab:backup:restore BACKUP=$BACKUP_VERSION
+
+exit $?

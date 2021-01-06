@@ -1,0 +1,5 @@
+---
+# defaults file for basic-route
+#gateway_itf:
+#gateway_addr:
+route: {}

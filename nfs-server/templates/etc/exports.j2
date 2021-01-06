@@ -1,0 +1,10 @@
+{% for export in nfs_exports %}
+{% if export.hosts|default(nfs_default_hosts) is iterable %}
+{{ export.directory }}
+{%- for host in export.hosts|default(nfs_default_hosts) %}
+ {{ host }}({{ export.options|default(nfs_default_options) }})
+{% endfor %}
+{% else %}
+{{ export.directory }} {{ export.hosts|default('*') }}({{ export.options|default(nfs_default_options) }})
+{% endif %}
+{% endfor %}

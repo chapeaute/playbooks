@@ -1,0 +1,20 @@
+---
+# defaults file for whmcs
+whmcs_version: "7.10.2"  # Attention: version must be download before in https://www.whmcs.com/download/ and put in archive.smile.ci/whmcs/ directory
+whmcs_admin_email: admin@smile.ci
+whmcs_admin_pass: changeme
+whmcs_licence_key: "WHMCS-xxxxxxxxxxx"
+whmcs_download_url: "http://archive.smile.ci/whmcs/whmcs_v{{ whmcs_version | regex_replace('\\.') }}_full.zip"
+
+# Web server settings
+whmcs_vhost: "whmcs"
+whmcs_aliases: []
+whmcs_webroot_dir: "/var/www"
+whmcs_htdocs_dir: "{{ whmcs_webroot_dir }}/{{ whmcs_vhost }}/htdocs/whmcs"
+
+# Database settings
+whmcs_db_host: localhost
+whmcs_db_remote_host: "{{ inventory_hostname }}"
+whmcs_db_name: whmcs
+whmcs_db_username: whmcs
+whmcs_db_password: "{{ lookup('password', 'credential/{{ inventory_hostname }}-whmcs_db_password chars=ascii_letters,digits') }}"

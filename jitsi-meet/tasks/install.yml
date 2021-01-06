@@ -1,0 +1,57 @@
+---
+
+- name: Create install directories
+  file:
+    name: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ jitsi_meet_install_tmp_dir }}"
+    - "{{ jitsi_meet_install_dir }}"
+    - "{{ jitsi_meet_etc_dir }}"
+
+- name: Stat jitsi-meet-web deb url
+  stat:
+    path: "{{ jitsi_meet_install_tmp_dir }}/{{ jitsi_meet_web_deb_url | basename }}"
+  register: jitsi_meet_deb
+
+- name: Download jitsi-meet-web deb archive
+  get_url:
+    url: "{{ jitsi_meet_web_deb_url }}"
+    dest: "{{ jitsi_meet_install_tmp_dir }}/"
+  when: not jitsi_meet_deb.stat.exists
+
+- name: Decompress jitsi-meet-web archive to temporary directory
+  shell: ar x {{ jitsi_meet_install_tmp_dir }}/jitsi-meet-web*
+  args:
+    creates: data.tar.xz
+    chdir: "{{ jitsi_meet_install_tmp_dir }}"
+
+- name: Extract data archive for jitsi-meet-web
+  unarchive:
+    src: "{{ jitsi_meet_install_tmp_dir }}/data.tar.xz"
+    dest: "{{ jitsi_meet_install_tmp_dir }}"
+    creates: "{{ jitsi_meet_install_tmp_dir }}/usr"
+    remote_src: yes
+  register: jistsi_meet_uncompress
+
+- name: Sychronize build with install dir
+  copy:
+    src: "{{ jitsi_meet_install_tmp_dir }}/usr/share/jitsi-meet/"
+    dest: "{{ jitsi_meet_install_dir }}/"
+    owner: apache
+    group: apache
+    mode: 0755
+    remote_src: yes
+    directory_mode: yes
+  when: jistsi_meet_uncompress is changed
+
+- name: Update languages
+  include_tasks: update_lang.yml
+  loop: "{{ jitsi_meet_custom_lang.keys() | list }}"
+  tags: jitsi
+
+# - name: Create simlink in /var/www for install dir
+#   file:
+#     src: "{{ jitsi_meet_install_dir }}"
+#     dest: "{{ apache2_data_dir }}/jitsi-meet"
+#     state: link

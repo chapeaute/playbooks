@@ -1,0 +1,12 @@
+# Molecule managed
+
+---
+
+process:
+  mysqld:
+    running: true
+port:
+  tcp:3306:
+    listening: true
+  tcp6:9200:
+    listening: true

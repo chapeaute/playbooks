@@ -1,0 +1,20 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users_groups:
+        - name: exploit
+      sudoers:
+        exploit:
+          state: present
+          lines:
+            - "%exploit ALL=(ALL) NOPASSWD: ALL"
+      users:
+        - login: jekas
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxFFp+2zNSVEHV62bMrs8MUL0KjBphcPubHc/+XMBUZSpRVr2VkJhlwkrOG4KHzbo77VmJWftx2IYbBZ7FrXejWpPQZmas/SlVCGjahrj3qxvYAwSvTqJfRxF1klVCD/qXL35cc4qXPdnPb4iTOOQfMiCm6yTkZdZvMbpCUFtXbQg9hS240hXnY5YHg6Zt6AAhjqmxtjFLsvmFi/VCkZ94zTrk4lHYU8A1WBtjkE5txbKyFkQiAVwCc4ZuzXiOOWPrtbtCnYSVvWm74t9Lr1IX6GDpFEDNDtvdOrRkDUFHbGTmCttFiWkRh7aeb6k3yCr1WvoCM6M6g5ifxU8hFtpwhsRGAzM7jOvcn7yWEjBK+SwnWNVwOHOxdcjwR2WI1GMQF6aKvzFKRI2nXq2SaIJvdNStIb4+Fyodgu7gR5s1NqIqmns0ri0grumMmWMwjMXEI4g32e/l8izqUAkrf4IQPuIwAuHTrhLGn3VIG0IgMQm0lzxVYSOR6AwgSMkeuQx6YAYsez2Qd1V600k2hAtBRKQDx/HYudORoGsvKyomo7YjvRlChu4mofXSdflRfZgPZac1XMBqDV02WVOvf8cGDPWjNQSgg13yhTWeGy0lBdO8qfB6Cu8A5b+GVlWiK+edg5HdloE2mr46bFwWetiW6yxEDGEHBUD5bIT5DwWxWQ== jekas@smile.ci
+
+

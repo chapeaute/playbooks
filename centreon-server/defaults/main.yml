@@ -1,0 +1,21 @@
+---
+# defaults file for centreon-server
+centreon_clapi_conf: /etc/centreon/clapi.conf
+centreon_clapi_user: admin
+centreon_clapi_pass: changeme
+centreon_admin_pass: "{{ centreon_clapi_pass }}"
+centreon_admin_email: admin@centreon.com
+centreon_timezone: 'Africa/Abidjan'
+centreon_version: "19.10"
+
+# Centreon download configuration template
+centreon_conf_url: http://archive.smile.ci/centreon/centreon-conf.txt
+centreon_conf_import: true
+
+# Update this variables only if database isn't on same server
+centreon_db_host: localhost
+centreon_db_inventory_host: "{% if centreon_db_host == 'localhost' %}{{ inventory_hostname }}{% else %}{{ centreon_db_host }}{% endif %}"
+centreon_db_user: centreon
+centreon_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-centreon_db_pass chars=ascii_letters,digits') }}"
+centreon_db_admin_user: centreon-admin
+centreon_db_admin_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-centreon_db_admin_pass chars=ascii_letters,digits') }}"

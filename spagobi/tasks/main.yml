@@ -1,0 +1,18 @@
+---
+# tasks file for spagobi
+- name: main | Set permissions on shell scripts
+  file:
+    path: "{{ genericservice_root }}/{{ spagobi.subpath }}/{{ item }}"
+    mode: 0750
+  with_items:
+    - bin/SpagoBIStartup.sh
+    - bin/startup.sh
+    - bin/shutdown.sh
+    - bin/catalina.sh
+    - database/start.sh
+
+- name: main | Enabled and start spagobi
+  service:
+    name:    spagobi
+    state:   started
+    enabled: yes

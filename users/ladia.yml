@@ -1,0 +1,9 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: ladia
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCpyrmjYGJ66zglhzRdQzcRzFX7XM2ZsFV5ndzqS6l/XrBGz45k8jnuVkbKTcZvj5Fcth1E+3Y2NdqO0KH+9hsjehwuuBtVf3St72gGK23W5GJqFwLf+eD0Lujyp+lIgrwJ39QYF6h0/yn7cczfNT6i8o5b7n3mdqyUatcGwogLahk/DnZuKiishOwsUAmQ4W/MlCQrIUsWIbM1F7ockDXEsdiDRgtsKqz5qmA9wMrNl+M09OeATUH9Vz7nIHOwkoohFz/e/4GAz9kR8S89ZbdQ34y0nj2mesPwqZoLFz52gga4k11hqOf6HO1b54ZmKftadgSnVGBIEXuEXFuHilHrRcA50bPQYnSfN+HL0u9h6rpysmquHPb1MZ4RPrOIFDBwjgXw3D/NuqUGVWHXDiEqdE3BjKJQInYto8RixmmKJrpGCKmDk/rP5Ef+7Y2pduT6mCX9ykyC/a1sVsW1tuUFUqQ5IC2qHQCSwHqm1+O2+zW0nbqy3UHHC5Y+/3vCZWlr1ogLFamzuN3U98syuKRjepEroIbR6s802L1RSJW3dK9BxGy286W1vfDHDyr5XYQoEXxrTmC/9fIkjnho7gXidevUNjTYjZQnm+GxShzOi0rvWMjzrMv24wZ+sCFN16Q0K/Ux/DXQJ5sA6RYoh6CoSWCqRP5Fz6L1e0R/4cvYEw== lacina.diane@smile.ci

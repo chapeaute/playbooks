@@ -1,0 +1,6 @@
+---
+
+- name: Restart apache
+  systemd:
+    name: httpd
+    state: reloaded

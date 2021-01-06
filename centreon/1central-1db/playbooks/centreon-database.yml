@@ -1,0 +1,7 @@
+---
+- hosts: centreon-database
+  vars:
+    mysql_data_dir:      "{{ _monitoring_mariadb_data_dir }}"
+    mysql_backup_dir:    "{{ _monitoring_mariadb_backup_dir }}"
+  roles:
+    - role: mariadb-server

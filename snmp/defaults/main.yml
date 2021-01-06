@@ -1,0 +1,12 @@
+---
+# Global settings
+firewall_setup: true
+firewall_zone: public
+
+# Defaults settings for SNMP
+snmp_community: public
+snmp_bind_addr:
+  - 0.0.0.0
+snmp_allow_clients:
+  - 127.0.0.1
+snmpd_options: []

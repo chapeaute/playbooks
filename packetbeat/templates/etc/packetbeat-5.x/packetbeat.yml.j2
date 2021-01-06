@@ -1,0 +1,308 @@
+#################### Packetbeat Configuration Example #########################
+
+# This file is an example configuration file highlighting only the most common
+# options. The packetbeat.reference.yml file from the same directory contains all the
+# supported options with more comments. You can use it as a reference.
+#
+# You can find the full configuration reference here:
+# https://www.elastic.co/guide/en/beats/packetbeat/index.html
+
+#============================== Network device ================================
+
+# Select the network interface to sniff the data. On Linux, you can use the
+# "any" keyword to sniff on all connected interfaces.
+packetbeat.interfaces.device: any
+packetbeat.interfaces.type: af_packet
+packetbeat.interfaces.buffer_size_mb: 50
+
+{% if pb_protocols_flows_enable %}
+#================================== Flows =====================================
+
+# Set `enabled: false` or comment out all options to disable flows reporting.
+packetbeat.flows:
+  # Set network flow timeout. Flow is killed if no packet is received before being
+  # timed out.
+  timeout: 30s
+  # Configure reporting period. If set to -1, only killed flows will be reported
+  period: 10s
+{% endif %}
+
+#========================== Transaction protocols =============================
+
+packetbeat.protocols.icmp:
+  # Enable ICMPv4 and ICMPv6 monitoring. Default: false
+  enabled: {{ pb_protocols_icmp_enable | lower }}
+packetbeat.protocols.amqp:
+  enabled: true
+  send_request: true
+  send_response: true
+  # Configure the ports where to listen for AMQP traffic. You can disable
+  # the AMQP protocol by commenting out the list of ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'amqp') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+packetbeat.protocols.cassandra:
+  enabled: true
+  send_request: true
+  send_response: true
+  #Cassandra port for traffic monitoring.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'cassandra') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+packetbeat.protocols.dhcpv4:
+  enabled: true
+  send_request: true
+  send_response: true
+  # Configure the DHCP for IPv4 ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'dhcpv4') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+packetbeat.protocols.dns:
+  enabled: true
+  send_request: true
+  send_response: true
+  # Configure the ports where to listen for DNS traffic. You can disable
+  # the DNS protocol by commenting out the list of ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'dns') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+
+  # include_authorities controls whether or not the dns.authorities field
+  # (authority resource records) is added to messages.
+  include_authorities: true
+
+  # include_additionals controls whether or not the dns.additionals field
+  # (additional resource records) is added to messages.
+  include_additionals: true
+packetbeat.protocols.http:
+  enabled: true
+  send_request: true
+  send_response: true
+  decode_body: true
+  send_all_headers: true
+  # Transaction timeout. Expired transactions will no longer be correlated to
+  # incoming responses, but sent to Elasticsearch immediately.
+  transaction_timeout: {{ pb_protocols_http_transaction_timeout }}
+  include_body_for: [{% for header in pb_protocols_http_decode_body_for -%}
+"{{ header }}" {%- if not loop.last -%}, {% endif -%}
+{%- endfor %}]
+  # Configure the ports where to listen for HTTP traffic. You can disable
+  # the HTTP protocol by commenting out the list of ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'http') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+packetbeat.protocols.memcache:
+  enabled: true
+  send_request: true
+  send_response: true
+  # Configure the ports where to listen for memcache traffic. You can disable
+  # the Memcache protocol by commenting out the list of ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'memcache') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+packetbeat.protocols.mysql:
+  enabled: true
+  send_request: true
+  send_response: true
+  # Configure the ports where to listen for MySQL traffic. You can disable
+  # the MySQL protocol by commenting out the list of ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'mysql') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+packetbeat.protocols.pgsql:
+  enabled: true
+  send_request: true
+  send_response: true
+  # Configure the ports where to listen for Pgsql traffic. You can disable
+  # the Pgsql protocol by commenting out the list of ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'pgsql') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+packetbeat.protocols.redis:
+  enabled: true
+  send_request: true
+  send_response: true
+  # Configure the ports where to listen for Redis traffic. You can disable
+  # the Redis protocol by commenting out the list of ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'redis') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+packetbeat.protocols.thrift:
+  enabled: true
+  send_request: true
+  send_response: true
+  # Configure the ports where to listen for Thrift-RPC traffic. You can disable
+  # the Thrift-RPC protocol by commenting out the list of ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'thrift') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+packetbeat.protocols.mongodb:
+  enabled: true
+  send_request: true
+  send_response: true
+  # Configure the ports where to listen for MongoDB traffic. You can disable
+  # the MongoDB protocol by commenting out the list of ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'mongodb') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+packetbeat.protocols.nfs:
+  enabled: true
+  send_request: true
+  send_response: true
+  # Configure the ports where to listen for NFS traffic. You can disable
+  # the NFS protocol by commenting out the list of ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'nfs') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+packetbeat.protocols.tls:
+  enabled: true
+  send_request: true
+  send_response: true
+  # Configure the ports where to listen for TLS traffic. You can disable
+  # the TLS protocol by commenting out the list of ports.
+  ports: [{%- for app in applications|selectattr('name', 'in', group_names)|selectattr('protocol','equalto', 'tls') -%}
+  {%- for port in app.ports -%}{{ port }}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}{%- if not loop.last -%}, {% endif -%}
+  {%- endfor -%}]
+
+#==================== Elasticsearch template setting ==========================
+
+setup.template.settings:
+  index.number_of_shards: 3
+  #index.codec: best_compression
+  #_source.enabled: false
+
+#================================ General =====================================
+
+# The name of the shipper that publishes the network data. It can be used to group
+# all the transactions sent by a single shipper in the web interface.
+name: {{ ansible_fqdn }}
+
+# The tags of the shipper are included in their own field with each
+# transaction published.
+tags: [{% for tag in pb_tags -%}
+"{{ tag }}" {%- if not loop.last -%}, {% endif -%}
+{%- endfor %}]
+
+# Optional fields that you can specify to add additional information to the
+# output.
+fields:
+{% for key in pb_default_extra_fields %}
+  {{ key }}: {{ pb_default_extra_fields[key] }}
+{% endfor %}
+{% for key in pb_extra_fields %}
+  {{ key }}: {{ pb_extra_fields[key] }}
+{% endfor %}
+
+#============================== Dashboards =====================================
+# These settings control loading the sample dashboards to the Kibana index. Loading
+# the dashboards is disabled by default and can be enabled either by setting the
+# options here, or by using the `-setup` CLI flag or the `setup` command.
+#setup.dashboards.enabled: false
+
+# The URL from where to download the dashboards archive. By default this URL
+# has a value which is computed based on the Beat name and version. For released
+# versions, this URL points to the dashboard archive on the artifacts.elastic.co
+# website.
+#setup.dashboards.url:
+
+#============================== Kibana =====================================
+
+# Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API.
+# This requires a Kibana endpoint configuration.
+setup.kibana:
+
+  # Kibana Host
+  # Scheme and port can be left out and will be set to the default (http and 5601)
+  # In case you specify and additional path, the scheme is required: http://localhost:5601/path
+  # IPv6 addresses should always be defined as: https://[2001:db8::1]:5601
+  #host: "localhost:5601"
+
+  # Kibana Space ID
+  # ID of the Kibana Space into which the dashboards should be loaded. By default,
+  # the Default Space will be used.
+  #space.id:
+
+#============================= Elastic Cloud ==================================
+
+# These settings simplify using packetbeat with the Elastic Cloud (https://cloud.elastic.co/).
+
+# The cloud.id setting overwrites the `output.elasticsearch.hosts` and
+# `setup.kibana.host` options.
+# You can find the `cloud.id` in the Elastic Cloud web UI.
+#cloud.id:
+
+# The cloud.auth setting overwrites the `output.elasticsearch.username` and
+# `output.elasticsearch.password` settings. The format is `<user>:<pass>`.
+#cloud.auth:
+
+#================================ Outputs =====================================
+
+# Configure what output to use when sending the data collected by the beat.
+
+
+{% if pb_es_hosts|length > 0 %}
+#-------------------------- Elasticsearch output ------------------------------
+output.elasticsearch:
+  # Array of hosts to connect to.
+  enabled: true
+  hosts: [{% for item in pb_es_hosts -%}"{{ item }}:{{ pb_es_port }}"{%- if not loop.last -%},{% endif -%}{%- endfor %}]
+
+  # Optional protocol and basic auth credentials.
+  #protocol: "https"
+  #username: "elastic"
+  #password: "changeme"
+{% endif %}
+
+{% if pb_logstash_hosts|length > 0 %}
+#----------------------------- Logstash output --------------------------------
+output.logstash:
+  # The Logstash hosts
+  enabled: true
+  hosts: [{% for item in pb_logstash_hosts -%}"{{ item }}:{{ pb_logstash_port }}"{%- if not loop.last -%},{% endif -%}{%- endfor %}]
+
+  # Optional SSL. By default is off.
+  # List of root certificates for HTTPS server verifications
+  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
+
+  # Certificate for SSL client authentication
+  #ssl.certificate: "/etc/pki/client/cert.pem"
+
+  # Client Certificate Key
+  #ssl.key: "/etc/pki/client/cert.key"
+{% endif %}
+
+{% if pb_kafka_hosts|length > 0 %}
+#-------------------------- Kafka ---------------------------------------------
+
+output.kafka:
+  enabled: true
+  hosts: [{% for item in pb_kafka_hosts -%}"{{ item }}:{{ pb_kafka_port }}"{%- if not loop.last -%},{% endif -%}{%- endfor %}]
+  topic: "{{ pb_kafka_topic }}"
+  worker: {{ pb_kafka_worker }}
+  broker_timeout: {{ pb_kafka_broker_timeout }}
+
+{% endif %}
+
+#================================ Logging =====================================
+
+# Sets log level. The default log level is info.
+# Available log levels are: error, warning, info, debug
+#logging.level: debug
+
+# At debug level, you can selectively enable logging only for some components.
+# To enable all selectors use ["*"]. Examples of other selectors are "beat",
+# "publish", "service".
+#logging.selectors: ["*"]

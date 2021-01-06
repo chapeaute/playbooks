@@ -1,0 +1,51 @@
+---
+- name: vhost-proxy | Create proxy.d directory
+  file:
+    path:  "{{ freerad_confdir }}/proxy.d"
+    owner: root
+    group: "{{ freerad_group }}"
+    state: directory
+  notify:  restart freeradius
+
+- name: vhost-proxy | Configure freeradius proxy.conf
+  template:
+    src:   etc/freeradius/proxy.conf.j2
+    dest:  "{{ freerad_confdir }}/proxy.d/{{ vhost.name }}.conf"
+    owner: root
+    group: "{{ freerad_group }}"
+  notify:  restart freeradius
+
+- name: vhost-proxy | Create freeradius proxy virtual server
+  template:
+    src:   etc/freeradius/sites-available/proxy.j2
+    dest:  "{{ freerad_confdir }}/sites-available/{{ vhost.name }}"
+    owner: root
+    group: "{{ freerad_group }}"
+  notify:  restart freeradius
+
+- name: vhost-proxy | Enable symlink in sites-enabled
+  file:
+    src:   "{{ freerad_confdir }}/sites-available/{{ vhost.name }}"
+    dest:  "{{ freerad_confdir }}/sites-enabled/{{ vhost.name }}"
+    owner: root
+    group: "{{ freerad_group }}"
+    state: link
+  notify:  restart freeradius
+
+- name: vhost-proxy | Declare proxy server as NAS on remote freeradius server
+  template:
+    src:   etc/freeradius/clients.d/proxy.j2
+    dest:  "{{ freerad_confdir }}/clients.d/{{ ansible_hostname }}"
+    owner: root
+    group: "{{ freerad_group }}"
+  with_items: "{{ vhost.servers }}"
+  delegate_to: "{{ item }}"
+  register: remote_client
+
+- name: vhost-proxy | Restart freeradius remote
+  service:
+    name:  "{{ freerad_service_name }}"
+    state: restarted
+  delegate_to: "{{ item }}"
+  when: remote_client.changed
+  with_items: "{{ vhost.servers|default(freerad_prx_dft_home_server) }}"

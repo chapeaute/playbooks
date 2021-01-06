@@ -1,0 +1,23 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: zimbra1
+      image: centos/systemd
+      capabilities: ['SYS_ADMIN']
+      image_version: latest
+      privileged: true
+      ansible_groups:
+        - zimbra-group
+    - name: zimbra2
+      capabilities: ['SYS_ADMIN']
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+      ansible_groups:
+        - zimbra-group
+verifier:
+  name: testinfra

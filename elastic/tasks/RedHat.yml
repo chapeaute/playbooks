@@ -1,0 +1,23 @@
+---
+- name: RedHat | Add elasticsearch repository GPG key
+  rpm_key:
+    state: present
+    key:   https://packages.elastic.co/GPG-KEY-elasticsearch
+    validate_certs: no
+  when: use_satellite_repo == False
+
+- name: RedHat | Install selinux packages
+  package:
+    name:  "{{ elastic_selinux_packages }}"
+
+- name: RedHat | Add elastic repository
+  template:
+    src:   "etc/yum.repos.d/{{ item }}.repo.j2"
+    dest:  "/etc/yum.repos.d/{{ item }}.repo"
+    owner: root
+    group: root
+    mode:  0644
+  with_items:
+    - curator
+    - elastic
+  when: use_satellite_repo == false

@@ -1,0 +1,9 @@
+use = ["spam-header", "x-spam-status", "x-spam-level" ]
+# this is where we may configure our selected routines
+routines {
+  # settings for spam-header routine
+  spam-header {
+    header = "X-Spam-Flag";
+    value = "YES";
+  }
+}

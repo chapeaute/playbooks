@@ -1,0 +1,277 @@
+#!/bin/bash
+#
+# Import template
+#
+
+# Nagios var directory
+CLAPI_CONF={{ centreon_clapi_conf }}
+CLAPI_CMD={{ centreon_clapi_bin }}
+TMP_DIR=/dev/shm
+
+[ -r $CLAPI_CONF ] && source $CLAPI_CONF
+
+#
+# Display command syntax and exit with error code
+#
+syntax ()
+{
+	echo "Syntax: $0 template_file"
+        exit 1
+}
+
+#
+# Extract host template object parameter
+#
+extract_htpl_param() {
+	echo "$*"
+
+	if [[ "$*" =~ "HTPL;ADD;" ]]; then
+		echo "$*" | awk -F';' '{
+		print "HTPL;setparam;"$3";host_alias;"$4
+		print "HTPL;setparam;"$3";host_address;"$5 }'
+	fi
+}
+
+#
+# Extract host group object parameter
+#
+extract_hg_param() {
+	echo "$*"
+
+	if [[ "$*" =~ "HG;ADD;" ]]; then
+		echo "$*" | awk -F';' '{
+		print "HG;setparam;"$3";sc_description;"$4 }'
+	fi
+}
+
+#
+# Extract host categorie object parameter
+#
+extract_hc_param() {
+	echo "$*"
+
+	if [[ "$*" =~ "HC;ADD;" ]]; then
+		echo "$*" | awk -F';' '{
+		print "HC;setparam;"$3";hc_alias;"$4 }'
+	fi
+}
+
+#
+# Extract service template object parameter
+#
+extract_stpl_param() {
+	echo "$*"
+
+	if [[ "$*" =~ "STPL;ADD;" ]]; then
+		echo "$*" | awk -F';' '{
+		print "STPL;setparam;"$3";service_alias;"$4
+		print "STPL;setparam;"$3";template;"$5 }'
+	fi
+}
+
+#
+# Extract service group object parameter
+#
+extract_sg_param() {
+	echo "$*"
+
+	if [[ "$*" =~ "SG;ADD;" ]]; then
+		echo "$*" | awk -F';' '{
+		print "SG;setparam;"$3";sg_alias;"$4 }'
+	fi
+}
+
+#
+# Extract service categorie object parameter
+#
+extract_sc_param() {
+	echo "$*"
+
+	if [[ "$*" =~ "SC;ADD;" ]]; then
+		echo "$*" | awk -F';' '{
+		print "SC;setparam;"$3";sc_description;"$4 }'
+	fi
+}
+
+#
+# Extract contact object parameter
+#
+extract_contact_param() {
+	echo "$*"
+
+	if [[ "$*" =~ "CONTACT;ADD;" ]]; then
+		echo "$*" | awk -F';' '{
+		print "CONTACT;setparam;"$3";contact_alias;"$4
+		print "CONTACT;setparam;"$3";contact_email;"$5
+		print "CONTACT;setparam;"$3";contact_passwd;"$6
+		print "CONTACT;setparam;"$3";contact_admin;"$7
+		print "CONTACT;setparam;"$3";contact_oreon;"$8
+		print "CONTACT;setparam;"$3";contact_lang;"$9
+		print "CONTACT;setparam;"$3";contact_auth_type;"$10 }'
+	fi
+}
+
+#
+# Extract contact group object parameter
+#
+extract_cg_param() {
+	echo "$*"
+
+	if [[ "$*" =~ "CG;ADD;" ]]; then
+		echo "$*" | awk -F';' '{
+		print "CG;setparam;"$3";cg_alias;"$4 }'
+	fi
+}
+
+
+#
+# Extract command object parameter
+#
+extract_cmd_param() {
+	echo "$*"
+
+	if [[ "$*" =~ "CMD;ADD;" ]]; then
+		echo "$*" | awk -F';' '{
+		print "CMD;setparam;"$3";command_type;"$4
+		print "CMD;setparam;"$3";command_line;"$5 }'
+	fi
+}
+
+#
+# Extract timeperiod object parameter
+#
+extract_tp_param() {
+	echo "$*"
+
+	if [[ "$*" =~ "TP;ADD;" ]]; then
+		echo "$*" | awk -F';' '{
+		print "TP;setparam;"$3";tp_alias;"$4 }'
+	fi
+}
+
+
+#
+# Extract report template object parameter
+#
+extract_bitpl_param() {
+	echo "$*"
+
+	if [[ "$*" =~ "BITPL;ADD;" ]]; then
+		echo "$*" | awk -F';' '{
+		print "BITPL;setparam;"$3";source;"$4 }'
+	fi
+}
+
+#
+# Extract parameter
+#
+extract_param() {
+	object=`echo $* | awk -F';' '{print $1}'`
+
+	case $object in
+		"HTPL")    extract_htpl_param "$*"	;;
+		"HG")      extract_hg_param "$*"	;;
+		"HC")      extract_hc_param "$*"	;;
+		"STPL")    extract_stpl_param "$*"	;;
+		"SG")      extract_sg_param "$*"	;;
+		"SC")      extract_sc_param "$*"	;;
+		"CONTACT") extract_contact_param "$*"	;;
+		"CG")      extract_cg_param "$*"	;;
+		"CMD")     extract_cmd_param "$*"	;;
+		"TP")      extract_tp_param "$*"	;;
+		"BITPL")   extract_bitpl_param $*	;;
+		*)         echo "$*" ;;
+	esac
+}
+
+
+#
+# Remove parameter
+#
+remove_param() {
+  action=`echo $* | awk -F';' '{print $2}'`
+
+  case $action in
+		"addcontact")
+      echo "$*" | sed 's/;addcontact;/;delcontact;/' ;;
+		"addcontactgroup")
+      echo "$*" | sed 's/;addcontactgroup;/;delcontactgroup;/' ;;
+		"addmatching")
+      echo "$*" | sed 's/;addmatching;/;delmatching;/' ;;
+		"addservicetemplate")
+      echo "$*" | sed 's/;addservicetemplate;/;delservicetemplate;/' ;;
+		"addtemplate")
+      echo "$*" | sed 's/;addtemplate;/;deltemplate;/' ;;
+		"addtrap")
+      echo "$*" | sed 's/;addtrap;/;deltrap;/' ;;
+		"setmacro")
+      echo "$*" | sed 's/;setmacro;/;delmacro;/' ;;
+		"setparam")
+      echo "$*" | sed 's/\(.*;\).*/\1/' ;;
+	esac
+}
+
+#
+# Extract all action o object
+#
+extract_object_action() {
+	cat $1 | while read -r line
+	do
+    action=`echo $line | awk -F';' '{print $2}'`
+
+    case $action in
+			"setmacro"|"setparam")
+				echo $line | awk -F';' '{print $1";"$2";"$3";"$4";"}' ;;
+			*)
+				echo $line ;;
+		esac
+	done
+}
+
+import_template ()
+{
+	filename="$1"
+
+	# File to import
+	if [ -f $filename ]; then
+		# Export current configuration file
+		current_config=`mktemp $TMP_DIR/export-current-XXXXX`
+		$(dirname $0)/centreon-conf-export CONF-ONLY > $current_config
+		cat $filename | awk -F';' '{print $1";[^;]*;"$3}' | sort -n | uniq | xargs -I match egrep "^match;" $current_config >> ${current_config}-filter
+
+		# Get only object and properties to import
+		import_config=`mktemp $TMP_DIR/import-XXXXX`
+
+		cat $filename | while read -r line
+		do
+			extract_param "$line" >> $import_config
+		done
+
+		# Get current parameter to purge
+		extract_object_action $import_config | sort -n >> ${import_config}-sort
+		extract_object_action ${current_config}-filter | sort -n >> ${current_config}-filter-sort
+
+		comm -1 -3 ${import_config}-sort ${current_config}-filter-sort | while read -r line
+		do
+			remove_param "$line" >> $import_config
+		done
+
+		# Extract template
+		$CLAPI_CMD -u $CLAPI_USER -p $CLAPI_PASS -i $import_config | grep -v "Object already exists"
+
+		rm ${import_config}* ${current_config}*
+	else
+		echo "$filename: no such file or directory"
+		exit 1
+	fi
+}
+
+# Check command syntax
+case $# in
+	1) import_template $*
+	;;
+	*) syntax
+	;;
+esac
+
+exit 0

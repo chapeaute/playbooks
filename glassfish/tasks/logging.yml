@@ -1,0 +1,6 @@
+---
+
+- name: logging | use rsyslog
+  command: "{{ glf_install_dir}}/bin/asadmin {{ item }}"
+  with_items:
+    - "set-log-attributes com.sun.enterprise.server.logging.SyslogHandler.useSystemLogging={{glf_use_rsyslog| ternary('false','true')}}"

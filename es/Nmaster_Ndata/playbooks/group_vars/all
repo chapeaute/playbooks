@@ -1,0 +1,3 @@
+es_version: "5.5"
+
+_elasticsearch_hosts: "{{ groups['elasticsearch-master'] }}"

@@ -1,0 +1,12 @@
+---
+- name: route | Add route on interface {{ int }} in file
+  lineinfile:
+    path:   "/etc/sysconfig/network-scripts/route-{{ int }}"
+    line:   "{{ item }}"
+    create: yes
+  with_items:
+    - "{{ rt }}"
+
+- name: route | Activate route
+  command: "ifup {{ int }}"
+  changed_when: false

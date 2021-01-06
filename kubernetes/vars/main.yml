@@ -1,0 +1,4 @@
+---
+# vars file for kubernetes
+k8s_packages_dependencies:
+  - curl

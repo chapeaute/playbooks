@@ -1,0 +1,39 @@
+---
+# tasks file for centreon-server
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: firewall.yml
+
+- include: mysql_config.yml
+
+- include: php_config.yml
+
+- include: install.yml
+
+- include: deploy_scripts.yml
+  tags: script
+
+- name: main | Check if centreon wizard installation succeed
+  tags: install_wizard
+  stat:
+    path: "/usr/share/centreon/www/install/index.php"
+  register: "centreon_installed"
+
+- include: install_wizard.yml
+  tags: install_wizard
+  when: centreon_installed.stat.exists
+
+- include: deploy_template.yml
+  tags: config
+
+- include: service.yml

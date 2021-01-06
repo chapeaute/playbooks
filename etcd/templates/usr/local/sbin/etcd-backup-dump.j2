@@ -1,0 +1,45 @@
+#!/bin/python
+
+import etcd3
+import json
+import sys
+import os
+import argparse
+import gzip
+import datetime
+
+etcd = etcd3.client()
+backup_dir = "{{ etcd_backup_dir }}"
+backup_date = datetime.date.today()
+backup_file = "etcd-dump-" + str(backup_date) +  ".json.gz"
+data = {}
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--dir", help="Directory to save backup file")
+parser.add_argument("-p", "--prefix", help="Etcd prefix to backup recursively")
+args = parser.parse_args()
+
+if args.prefix:
+    for value, metadata in etcd.get_prefix(args.prefix):
+        data[metadata.key.decode('utf-8')] = value.decode('utf-8')
+else:
+    for value, metadata in etcd.get_all():
+        data[metadata.key.decode('utf-8')] = value.decode('utf-8')
+
+if not args.dir and backup_dir == "":
+    json.dump(data, sys.stdout)
+    print
+else:
+    if args.dir:
+        backup_dir = args.dir
+
+    if not os.access(backup_dir, os.W_OK):
+        print(backup_dir + ": Invalid directory. Check if directory exists and is writable.")
+        exit(1)
+
+    json_str = json.dumps(data) + "\n"
+    json_bytes = json_str.encode('utf-8')
+
+    with gzip.GzipFile(backup_dir + "/" + backup_file, 'w') as fd:
+        fd.write(json_bytes)
+

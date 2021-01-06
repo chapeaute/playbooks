@@ -1,0 +1,2 @@
+export VAGRANT_HOME={{ vagrant_default_home }}
+export VAGRANT_DEFAULT_PROVIDER=libvirt

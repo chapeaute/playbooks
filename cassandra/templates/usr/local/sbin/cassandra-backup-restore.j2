@@ -1,0 +1,105 @@
+#!/bin/bash
+
+# Append custom script to path
+PATH=$PATH:/usr/local/sbin:/usr/bin:/usr/sbin
+
+#current date of the snapshot backup folder
+DATE=`date +%Y%m%d%H%M%S`
+BACKUP_DIR={{ cassandra_path_backup }}
+
+# Get current date
+CUR_DATE=`date +%Y-%m-%d`
+CUR_TMSTAMP=`date +%s`
+# Set Snapshot name with date
+SNAPSHOT_NAME="snapshot-$CUR_DATE"
+
+# Assign backup directory to create it
+BACKUPDIRECTORY="/var/backup/cassandra/$CUR_DATE"
+DATA_DIR=/var/lib/cassandra/data
+
+function syntax() {
+    cat <<EOF
+Script to restore Cassandra from directory. **You have to create the keyspaces first**
+
+Usage: ${0##*/} [-h|-d <dumpdir>] [-k keyspace]
+    -h            Display this message
+    -d <dumpdir>  Dump directory containing DB to restore
+    -k <keyspace> Keyspace to restore (if not specified, all keyspaces in directory will be restore)
+EOF
+}
+
+function exec_cmd() {
+    local cmd="$@"
+
+    # Backup must be done with mongodb admin user, if not try to switch to this user
+    if [ "$UID" -eq 0 ]; then
+        ${cmd}
+        return $?
+    else
+        >&2
+        echo "Script must be run with root privileges. Abording backup..."
+        exit 1
+    fi
+}
+
+function restore_db() {
+
+    local dumpdir=$1
+    local keyspace=$2
+
+    ls -1 ${dumpdir}/${keyspace}/*/schema.cql | while read line
+    do
+      cqlsh -k $keyspace < schema.cql
+    done
+
+    ls -1 ${dumpdir}/${keyspace}/* | while read line
+    do
+       sstableloader -u {{ cassandra_root_user }} -pw {{ cassandra_root_password }} -d localhost `$line
+    done
+
+}
+
+function restore_all_db() {
+
+    local dumpdir=$1
+
+    ls -1 ${dumpdir}/* | while read line
+    do
+       restore_db $dumpdir $line
+    done
+}
+
+while getopts "hd:n:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        d)
+            DIRNAME="${OPTARG}"
+            ;;
+        n)
+            KEYSPACE="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+if [ ! -r "${DIRNAME}" ]; then
+    >&2
+    echo "Could not access dump directory: ${DIRNAME}"
+    syntax
+    exit 1
+fi
+
+if [[ -n $KEYSPACE ]]; then
+        restore_db ${DIRNAME} ${KEYSPACE}
+    else
+        restore_all_db ${KEYSPACE}
+fi
+
+exit $?

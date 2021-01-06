@@ -1,0 +1,14 @@
+---
+- hosts: elasticsearch
+  vars:
+    es_version: "{{ _elk_version }}"
+    es_hosts: "{{ _elasticsearch_hosts }}"
+    es_cluster_name: "{{ _elasticsearch_cluster_name }}"
+    es_path_data: "{{ _elasticsearch_path_data }}"
+    es_path_logs: "{{ _elasticsearch_path_logs }}"
+    es_path_repo: "{{ _elasticsearch_path_repo }}"
+    es_ilm: "{{ _elasticsearch_ilm }}"
+  roles:
+    - role: elasticsearch
+      es_install_admin_scripts: True
+      es_plugins: {}

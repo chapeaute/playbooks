@@ -1,0 +1,36 @@
+---
+
+- name: Install | Install prosody
+  package:
+    name: "{{ prosody_packages }}"
+  register: prosody_installed
+
+- name: Install | Create directories
+  file:
+    path: "{{ prosody_modules_dir }}"
+    state: directory
+    owner: prosody
+    group: prosody
+    mode: 0750
+
+- name: Install | Install modules
+  get_url:
+    url: "{{ item.url | default('https://raw.githubusercontent.com/prosody-modules/' ~ item.name ~ '/master/' ~ item.name ~ '.lua') }}"
+    dest: "{{ prosody_root_dir }}/modules/{{ item.name }}.lua"
+  with_items:
+    - "{{ prosody_modules|default([]) }}"
+  notify: Restart prosody
+  when: prosody_installed is changed
+
+- name: Install | Create systemd unit snippet dir
+  file:
+    path: /etc/systemd/system/prosody.service.d
+    state: directory
+    mode: 0754
+
+- name: Install | Customize prosody service unit
+  template:
+    src: etc/systemd/system/prosody.service.d/override.conf
+    dest: /etc/systemd/system/prosody.service.d/override.conf
+    mode: 0644
+  notify: Reload systemd

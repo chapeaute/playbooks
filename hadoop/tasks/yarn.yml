@@ -1,0 +1,38 @@
+---
+
+- name: yarn | create unit file
+  template:
+    src: "etc/systemd/system/{{ item }}.service.j2"
+    dest: "/etc/systemd/system/{{ item }}.service"
+  with_items:
+    - yarn-node-manager
+    - yarn-resource-manager
+  notify: reload systemd
+
+- name: yarn | start and enable yarn-resource-manager
+  service:
+    name: yarn-resource-manager
+    enabled: yes
+    state: started
+  when: hadoop_master == inventory_hostname
+
+- name: yarn | start and enable yarn-node-manager
+  service:
+    name: yarn-node-manager
+    enabled: yes
+    state: started
+
+- name: yarn | Deploy Configs
+  tags: config
+  template:
+    src: "etc/hadoop/{{ item }}.j2"
+    dest: "{{hadoop_install_dir}}/etc/hadoop/{{ item }}"
+    owner: "{{ hadoop_user }}"
+    group: "{{ hadoop_group }}"
+    mode: 0755
+  notify:
+    - Restart yarn-node-manager
+    - Restart yarn-resource-manager
+  with_items:
+    - mapred-site.xml
+    - yarn-site.xml

@@ -1,0 +1,8 @@
+---
+- hosts: all
+  roles:
+    - role: filebeat
+      fb_version: "7.0"
+      #fb_kafka_hosts: "{{ groups['kafka'] }}"
+      #fb_logstash_hosts: "{{ groups['logstash'] }}"
+      #fb_es_hosts: "{{ groups['elasticsearch'] }}"

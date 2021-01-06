@@ -1,0 +1,58 @@
+#!/bin/bash
+
+USER="{{ nodejs_user }}"
+GROUP="{{ nodejs_group }}"
+APP_DIR="{{ nodejs_data_dir }}/apps"
+
+APP_NAME=""
+APP_PORT=""
+
+function syntax() {
+    cat <<EOF
+Script to deploy new NodeJS applications
+
+Usage: ${0##*/} [-h|-n <app_name> -p <app_port>]
+    -h             Display this message
+    -n <app_name>  Application name
+    -p <app_port>  Application port
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Abording..."
+    exit 1
+fi
+
+while getopts "hn:p:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        n)
+            APP_NAME="${OPTARG}"
+            ;;
+        p)
+            APP_PORT="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+
+if [[ -z $APP_NAME ]] || [[ -z $APP_PORT ]]; then
+    syntax
+    exit 1
+fi
+
+mkdir -p ${APP_DIR}/${APP_NAME}
+chown -R ${USER}:${GROUP} ${APP_DIR}/${APP_NAME}
+chmod -R g-w,o-rwx ${APP_DIR}/${APP_NAME}
+
+firewall-cmd -q --add-port=${APP_PORT}/tcp --permanent
+firewall-cmd -q --reload

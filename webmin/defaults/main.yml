@@ -1,0 +1,6 @@
+---
+# defaults file for webmin
+
+# Global
+use_satellite_repo: true
+manage_firewalld: true

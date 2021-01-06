@@ -1,0 +1,16 @@
+[Unit]
+Description=Zimbra Collaboration Suite
+After=syslog.target network.target
+Conflicts=sendmail.service exim.service postfix.service
+
+[Service]
+Type=simple
+User={{zimbra_user}}
+Group={{zimbra_group}}
+ExecStart=/opt/zimbra/bin/zmcontrol start
+ExecStop=/opt/zimbra/bin/zmcontrol stop
+ExecReload=/opt/zimbra/bin/zmcontrol restart
+TimeoutSec=2000
+
+[Install]
+WantedBy=multi-user.target

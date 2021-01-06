@@ -1,0 +1,91 @@
+---
+# tasks file for gitlab
+- name: main | Include env_vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family }}.yml"
+
+- name: main | Install GitLab CE
+  package:
+    name: "{{ gitlab_package }}"
+
+- name: main | Configure GitLab - external_url
+  lineinfile:
+    dest:   "{{ gitlab_conf_file }}"
+    regexp: "^external_url 'http://.*"
+    line:   "external_url 'http://{{ gitlab_external_url }}'"
+  notify: Reconfigure GitLab
+
+- name: main | Configure GitLab - unicorn worker
+  lineinfile:
+    dest:   "{{ gitlab_conf_file }}"
+    regexp: ".*unicorn.*worker_processes.*=.*"
+    line:   "unicorn['worker_processes'] = {{ gitlab_unicorn_worker }}"
+  notify: Reconfigure GitLab
+
+- name: main | Configure GitLab - unicorn listen
+  lineinfile:
+    dest:   "{{ gitlab_conf_file }}"
+    regexp: ".*unicorn.*listen.*=.*"
+    line:   "unicorn['listen'] = '{{ gitlab_unicorn_listen }}'"
+  notify: Reconfigure GitLab
+
+- name: main | Configure GitLab - backup path
+  lineinfile:
+    dest:   "{{ gitlab_conf_file }}"
+    regexp: "'backup_path'"
+    line:   "gitlab_rails['backup_path'] = '{{ gitlab_backup_dir }}'"
+  notify: Reconfigure GitLab
+
+- meta: flush_handlers
+
+- name: main | Start and enable GitLab services
+  service:
+    name:    "{{ gitlab_service }}"
+    state:   started
+    enabled: yes
+
+- name: main | Create {{ gitlab_user_deploy }} user and generate SSH Key
+  user:
+    name: "{{ gitlab_user_deploy }}"
+    generate_ssh_key: yes
+    ssh_key_comment: "{{ gitlab_user_deploy }}@{{ ansible_fqdn }}"
+  when: gitlab_user_deploy is defined
+
+- name: main | Gitlab scripts
+  template:
+    src: "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    mode: 0755
+  tags: script
+  with_items:
+    - gitlab-backup-clean
+    - gitlab-backup-dump
+    - gitlab-backup-restore
+
+- name: Monitoring | Create plugins dir
+  file:
+    path: "/usr/lib/nagios/plugins-agent"
+    state: directory
+    recurse: true
+
+- name: Monitoring | Copy monitoring scripts
+  copy:
+    src: "usr/lib/nagios/plugins-agent/{{ item }}"
+    dest: "/usr/lib/nagios/plugins-agent/{{ item }}"
+    mode: 0755
+  with_items:
+    - check_gitlab.rb
+
+- include: backup.yml
+

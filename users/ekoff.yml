@@ -1,0 +1,13 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users_groups:
+        - name: exploit
+      users:
+        - login: ekoff
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC80YmrTiD0CXIDRyAwNkrna5kk76ufFRFi6GeDF9PCNpvZgZWUTelNXtEGi9SETIaICGYvT3RQbWDC0i2349GuB36shOdCE+kWNFJtxzlTKE182eTa5rLNEZE8osrrphy1XupFs1jfuKdJO4JgrLN/Sy6gDC+OCxuUTlQNtY4GkaUXzL9WhYz4bFwGRrji2XkafMnU+GRmeXeoYvvxBOjxAtQaj0vQZCCuRG5x8l6Bzw6XEn2Mqe1p7ON371Sgx7oVDHdNV1V2IalyLlitmsoUZ3bbZF5+TMn5SWqF8KSGGoBcYg6DcSjvKXvJ94wVlnZprBqLO98IBjQROoKU0brykiusKBvmig8Cs6fHZ/v49OpCYA/ZbcRDX56HLmZkEufwuoZ6POP4lPOCIDzBTycNJECAEUp5yxTynjDncIyDH8hP/NQDsJQDlmJMVXXsLk5rxPPYXGPkn0U6tL+94AMaZXop0vcfCXFVoHSEFgKOgPDwlWnNUpJYv1IsLzrr1EBlAyi/4A1E+mWHPuw8RZIS1WgR98Idx0irnzx7Tsp+wPVFRjJaLcwblpRod2GAyYTG+TzNX06ZPDAj+tZxKeGLXkKlkYGc0iLVr2qf9UqtlkDLY1kHJehazv/VU8az/TPAPbxDLRDN0xgG64eEFysjIZNkjcLMF94uvWa6t2gdAw== jean-emmanuel.koffi@smile.ci
+

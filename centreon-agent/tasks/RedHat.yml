@@ -1,0 +1,20 @@
+---
+- name: RedHat | Enable Smile CentOS repository
+  copy:
+    src:  etc/yum.repos.d/CentOS-Smile.repo
+    dest: /etc/yum.repos.d/CentOS-Smile.repo
+  when: centagt_nrpe_enable == true and use_satellite_repo == false
+
+- name: RedHat | Install EPEL (CentOS)
+  yum:
+    name:  epel-release
+    state: installed
+
+- name: RedHat | Setting firewall rules
+  firewalld:
+    port:      "{{ centagt_nrpe_server_port }}/tcp"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  when: centagt_nrpe_enable == true
+

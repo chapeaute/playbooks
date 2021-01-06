@@ -1,0 +1,7 @@
+backend = "{{ confd_backend }}"
+watch = true
+nodes = [
+{% for node in confd_etcd_nodes %}
+  "{{ node }}",
+{% endfor %}
+]

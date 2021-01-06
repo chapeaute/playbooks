@@ -1,0 +1,152 @@
+---
+
+# General config
+- name: config | Deploy daemon configuration file for Logstash 2.x
+  template:
+    src:  "etc/logstash/{{ item.src }}.j2"
+    dest:  "{{ item.dest }}"
+    owner: root
+    group: logstash
+    mode:  0640
+  with_items:
+    - src: logstash.daemon
+      dest: '{{ ls_daemon_conf }}'
+  notify:
+      - "Restart Logstash"
+  when: ls_major_version == '2'
+
+- name: main | Deploy logstash 5.x specific configuration file
+  template:
+    src:   "etc/logstash/{{ item }}.j2"
+    dest:  "/etc/logstash/{{ item }}"
+    owner: root
+    group: logstash
+    mode:  0660
+  with_items:
+    - logstash.yml
+    - jvm.options
+    - log4j2.properties
+  notify:
+    - "Restart Logstash"
+
+# Kafka input
+- name: config | Deploy input kafka configuration file
+  template:
+    src:   etc/logstash/conf.d/input-kafka.conf.j2
+    dest:  "{{ ls_path_conf }}/conf.d/input-kafka.conf"
+    owner: root
+    group: logstash
+    mode:  0640
+    force: "{{ ls_conf_override }}"
+  when: ls_input_kafka
+  notify:
+    - "Restart Logstash"
+
+# HTTP input
+- name: config | Deploy input http configuration file
+  template:
+    src:   etc/logstash/conf.d/input-http.conf.j2
+    dest:  "{{ ls_path_conf }}/conf.d/input-http.conf"
+    owner: root
+    group: logstash
+    mode:  0640
+    force: "{{ ls_conf_override }}"
+  when: ls_input_http
+  notify:
+    - "Restart Logstash"
+
+# Filebeat input
+- name: config | Deploy input filebeat configuration file
+  template:
+    src:   etc/logstash/conf.d/input-beat.conf.j2
+    dest:  "{{ ls_path_conf }}/conf.d/input-beat.conf"
+    owner: root
+    group: logstash
+    mode:  0640
+    force: "{{ ls_conf_override }}"
+  when: ls_input_beat
+  notify:
+    - "Restart Logstash"
+
+# Syslog input
+- name: config | Deploy input syslog configuration file
+  template:
+    src:   etc/logstash/conf.d/input-syslog.conf.j2
+    dest:  "{{ ls_path_conf }}/conf.d/input-syslog.conf"
+    owner: root
+    group: logstash
+    mode:  0640
+    force: "{{ ls_conf_override }}"
+  when: ls_input_syslog
+  notify:
+    - "Restart Logstash"
+
+# Kafka output
+- name: config | Deploy output kafka configuration file
+  template:
+    src:   etc/logstash/conf.d/output-kafka.conf.j2
+    dest:  "{{ ls_path_conf }}/conf.d/output-kafka.conf"
+    owner: root
+    group: logstash
+    mode:  0640
+    force: "{{ ls_conf_override }}"
+  when: ls_output_kafka
+  notify:
+    - "Restart Logstash"
+
+# Elasticsearch output
+- name: config | Deploy output elasticsearch configuration file
+  template:
+    src:   etc/logstash/conf.d/output-elasticsearch.conf.j2
+    dest:  "{{ ls_path_conf }}/conf.d/output-elasticsearch.conf"
+    owner: root
+    group: logstash
+    mode:  0640
+    force: "{{ ls_conf_override }}"
+  when: ls_output_elasticsearch
+  notify:
+    - "Restart Logstash"
+
+# Deploy pre-filter file
+- name: config | Deploy pre-filter configuration file
+  copy:
+    src:   etc/logstash/conf.d/01-prefilter.conf
+    dest:  "{{ ls_path_conf }}/conf.d/01-prefilter.conf"
+    owner: root
+    group: logstash
+    mode:  0640
+    force: "{{ ls_conf_override }}"
+  when: ls_deploy_prefilter
+  notify:
+    - "Restart Logstash"
+
+# Deploy filter
+- name: config | Deploy pattern configuration file
+  copy:
+    src:   "etc/logstash/patterns/{{ item | basename }}"
+    dest:  "{{ ls_path_conf }}/patterns/{{ item | basename }}"
+    owner: root
+    group: logstash
+    mode:  0640
+    force: "{{ ls_conf_override }}"
+  with_fileglob:
+    - "etc/logstash/patterns/*"
+  when: ls_deploy_sample
+  notify:
+    - "Restart Logstash"
+
+# Deploy filter
+- name: config | Deploy filter configuration file
+  copy:
+    src:   "etc/logstash/conf.d/{{ item | basename }}"
+    dest:  "{{ ls_path_conf }}/conf.d/{{ item | basename }}"
+    owner: root
+    group: logstash
+    mode:  0640
+    force: "{{ ls_conf_override }}"
+  with_fileglob:
+    - "etc/logstash/conf.d/*filter*.conf"
+  when: ls_deploy_sample
+  notify:
+    - "Restart Logstash"
+

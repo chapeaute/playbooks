@@ -1,0 +1,14 @@
+---
+- name: Converge
+  vars:
+    odoo_memory: 530242876
+    odoo_workers: 1
+  hosts: all
+  roles:
+    - role: basic-firewalld
+    - role: postgresql
+      postgresql_version: 10
+      postgresql_shared_buffers_prct: 0.15
+      postgresql_effective_cache_size_prct: 0.25
+    - role: odoo
+      odoo_version: 12.0

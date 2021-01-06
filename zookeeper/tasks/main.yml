@@ -1,0 +1,48 @@
+---
+# tasks file for zookeeper
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  tags: always
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family }}.yml"
+  tags: config
+
+- name: main | Remove 127.0.0.1 with server hostname entry in /etc/hosts if exists
+  lineinfile:
+    dest:   /etc/hosts
+    regexp: '^127\.0\.0\.1.*{{ ansible_hostname }}'
+    state:  absent
+
+- include: firewall.yml
+  tags: config
+  when: firewall_setup == true
+
+- name: main | Install package
+  package:
+    name: confluent-kafka-{{ zk_scala_version }}
+
+- include: config.yml
+  tags: config
+
+- name: main | Start and enable zookeeper
+  register: zk_started
+  service:
+    name:    zookeeper
+    state:   started
+    enabled: yes
+
+- name: main | Wait_for zookeeper is started
+  wait_for:
+    port: "{{ zk_client_port }}"
+    host: localhost
+    connect_timeout: 10

@@ -1,0 +1,5 @@
+---
+# vars file for nfs-server
+nfs_default_data_dir: /var/lib/nfs_data
+nfs_default_hosts: ['*']
+nfs_default_options: 'rw,async,no_root_squash,no_subtree_check'

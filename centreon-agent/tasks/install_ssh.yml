@@ -1,0 +1,15 @@
+---
+- name: install_ssh | Fetch centreon-engine SSH public key on "{{ poller }}"
+  command: cat ~centreon-engine/.ssh/id_rsa.pub
+  register: pub_key_file
+  delegate_to: "{{ poller }}"
+  run_once: true
+  check_mode: no
+  changed_when: false
+
+- name: install_ssh | Deploy centreon-engine SSH public key file on centreon user
+  authorized_key:
+    user:  centreon
+    key:   "{{ pub_key_file.stdout }}"
+    state: present
+

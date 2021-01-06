@@ -1,0 +1,10 @@
+---
+# defaults file for postgresql-provider
+
+# Remote host to manage
+postgresql_host: "{{ ansible_fqdn }}"
+postgresql_users: []
+postgresql_databases: []
+
+# Default settings used to create a new database
+postgresql_db_default_encoding: UTF8

@@ -1,0 +1,7 @@
+# v1.0
+---
+- hosts: all
+  vars:
+    python_version: 3.6
+  roles:
+    - role: python

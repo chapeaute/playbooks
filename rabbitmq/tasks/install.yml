@@ -1,0 +1,12 @@
+---
+- name: install | Install RabbitMQ
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ rabbitmq_packages }}"
+
+- name: install | Symlink RabbitMQ bin to sbin
+  file:
+    state: link
+    src: /usr/lib/rabbitmq/bin
+    dest: /usr/lib/rabbitmq/sbin

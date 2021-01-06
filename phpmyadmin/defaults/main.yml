@@ -1,0 +1,7 @@
+---
+# defaults file for phpmyadmin
+phpmyadmin_aliases:
+  - phpMyAdmin
+  - phpmyadmin
+
+phpmyadmin_allowed_ips: "{{ phpmyadmin_default_allowed_ips }}"

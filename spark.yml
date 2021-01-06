@@ -1,0 +1,10 @@
+---
+
+- hosts: all
+  vars:
+    spark_root_dir: /srv
+    spark_version: "2.4.0"
+    spark_master: "{{ ansible_fqdn }}"
+  roles:
+    - role: spark
+

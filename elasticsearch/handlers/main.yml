@@ -1,0 +1,11 @@
+---
+
+- name: "Systemctl daemon-reload"
+  systemd:
+    daemon_reload: yes
+
+# handlers file for elasticsearch
+- name: "Restart Elasticsearch"
+  service:
+    name: "elasticsearch"
+    state: restarted

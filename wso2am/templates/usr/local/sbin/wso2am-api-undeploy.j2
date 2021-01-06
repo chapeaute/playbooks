@@ -1,0 +1,74 @@
+#!/bin/bash
+
+USER="deploy"
+GROUP="deploy"
+
+API_ENV='Production and Sandbox'
+API_NAME=""
+API_VERSION=""
+ADMIN_NAME='{{ wso2am_admin_user }}'
+ADMIN_PASSWORD='{{ wso2am_admin_pass }}'
+
+function syntax() {
+    cat <<EOF
+Script to deploy an api on a wso2am server
+
+Usage: ${0##*/} [-h|-n <api_name> -v <api_version>][-e <api_environment>][-a <admin_name>][-p <admin_password>]
+    -h                    Display this message
+    -n <api_name>         Api name
+    -v <api_version>      Api version
+    -e <api_environment>  Environment from which to remove api (default: "Production and Sandbox")
+    -a <admin_name>       WSO2AM admin username
+    -p <admin_password>   WSO2AM admin password
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Aborting..."
+    exit 1
+fi
+
+while getopts "hn:v:e:a:p:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        n)
+            API_NAME="${OPTARG}"
+            ;;
+        v)
+            API_VERSION="${OPTARG}"
+            ;;
+        e)
+            API_ENV="${OPTARG}"
+            ;;
+        a)
+            ADMIN_NAME="${OPTARG}"
+            ;;
+        p)
+            ADMIN_PASSWORD="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+if [[ -z $API_NAME ]] || [[ -z $API_VERSION ]] ; then
+    syntax
+    exit 1
+fi
+
+echo Removing ${API_DIR_PATH} from ${API_ENV}
+tar -axf ${API_FILE}
+/usr/local/sbin/apictl add-env -e "${API_ENV}" --registration https://$(hostname --fqdn):9443 --apim https://$(hostname --fqdn):9443 --token https://$(hostname --fqdn):8243/token
+/usr/local/sbin/apictl login "${API_ENV}" -u "${ADMIN_NAME}" -p "${ADMIN_PASSWORD}" -k
+/usr/local/sbin/apictl delete api -n "${API_NAME}" -v "${API_VERSION}" -e "${API_ENV}" -k
+/usr/local/sbin/apictl logout "${API_ENV}" -k
+/usr/local/sbin/apictl remove env "${API_ENV}" -k
+
+echo done

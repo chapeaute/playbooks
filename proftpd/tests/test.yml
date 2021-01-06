@@ -1,0 +1,8 @@
+---
+- hosts: localhost
+  remote_user: root
+  roles:
+    - role: proftpd
+      proftpd_users:
+        - name: test
+          password: 12345

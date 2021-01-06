@@ -1,0 +1,26 @@
+---
+
+- name: RedHat | Install python binding to manage selinux
+  package:
+    name: "{{ php_selinux_packages }}"
+
+- name: RedHat | Permit php to network connect
+  seboolean:
+    name: "{{ item }}"
+    state: yes
+    persistent: yes
+  with_items:
+    - httpd_can_network_connect
+    - httpd_can_network_connect_db
+  when: ansible_selinux and ansible_selinux.status == "enabled"
+
+- name: RedHat | PHP Configuration override
+  template:
+    src: configuration.ini.j2
+    dest: "{{ php_conf_dir }}/80-ansible.ini"
+  notify:
+    - "Restart PHP-FPM"
+    - "Restart Apache Service"
+  tags:
+    - install
+    - update_config

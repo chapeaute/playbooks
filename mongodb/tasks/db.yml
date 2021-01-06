@@ -1,0 +1,14 @@
+---
+
+- name: db | Create mongodb database
+  mongodb_user:
+    login_user: "{{ mongodb_admin_user }}"
+    login_password: "{{ mongodb_admin_pass }}"
+    login_database: admin
+    database: "{{ item.value.db_name|default(item.key) }}"
+    name: "{{ item.value.user|default(item.key) }}"
+    password: "{{ item.value.password }}"
+    roles: "{{ item.value.roles|default('readWrite') }}"
+    state: present
+    update_password: always
+  with_dict: "{{ mongodb_databases }}"

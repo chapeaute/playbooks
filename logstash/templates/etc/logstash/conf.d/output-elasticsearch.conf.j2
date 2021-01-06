@@ -1,0 +1,20 @@
+# Output to elasticsearch
+output {
+  if [@metadata][version] {
+    elasticsearch {
+        hosts => [{% for item in ls_es_hosts -%} "{{ item }}" {%- if not loop.last -%}, {% endif -%} {%- endfor %}]
+        index => "%{[@metadata][beat]}-%{[@metadata][version]}-%{+YYYY.MM.dd}"
+{% if ls_deploy_prefilter %}
+        document_id => "%{[@metadata][fingerprint]}"
+{% endif %}
+    }
+  } else {
+      elasticsearch {
+        hosts => [{% for item in ls_es_hosts -%} "{{ item }}" {%- if not loop.last -%}, {% endif -%} {%- endfor %}]
+        index => "%{[@metadata][beat]}-%{+YYYY.MM.dd}"
+{% if ls_deploy_prefilter %}
+        document_id => "%{[@metadata][fingerprint]}"
+{% endif %}
+      }
+   }
+}

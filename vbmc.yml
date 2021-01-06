@@ -1,0 +1,11 @@
+---
+
+- hosts: all
+  vars:
+    manage_firewall: True
+    instack_user: stack
+    vbmc_libvirt_uri: "qemu+tcp://192.168.1.1/system"
+    instackfile_path: "/tmp/"
+  roles:
+     - role: virtualbmc
+

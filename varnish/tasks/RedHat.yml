@@ -1,0 +1,50 @@
+---
+- name: RedHat | Ensure Varnish dependencies are installed.
+  yum: name={{ item }} state=present
+  with_items:
+    - epel-release
+    - yum-utils
+    - pygpgme
+
+- name: RedHat | Add Varnish packagecloud.io yum repo.
+  yum_repository:
+    name: varnish
+    description: Varnish Cache packagecloud.io repository.
+    baseurl: https://packagecloud.io/varnishcache/{{ varnish_packagecloud_repo }}/el/{{ ansible_distribution_major_version|int }}/$basearch
+    repo_gpgcheck: no
+    gpgcheck: no
+    enabled: yes
+    gpgkey: https://packagecloud.io/varnishcache/{{ varnish_packagecloud_repo }}/gpgkey
+    sslverify: 1
+    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+  when: use_satellite_repo == false
+  register: varnish_packagecloud_repo_addition
+
+- name: RedHat | Refresh yum metadata cache if repo changed.
+  command: >
+    yum clean metadata
+    warn=no
+  when: varnish_packagecloud_repo_addition.changed
+
+- name: RedHat | Ensure Varnish is installed.
+  yum:
+    name: "{{ varnish_package_name }}"
+    state: installed
+
+- name: RedHat | Open firewalld
+  firewalld:
+    port:      "{{item}}/tcp"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - "{{ varnish_listen_port }}"
+
+- name: main | Copy Varnish configs (systemd).
+  template:
+    src: etc/systemd/system/varnishncsa.service.j2
+    dest: /etc/systemd/system/varnishncsa.service
+    owner: root
+    group: root
+    mode: 0644
+  notify: reload systemd

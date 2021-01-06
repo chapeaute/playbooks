@@ -1,0 +1,28 @@
+#!/bin/bash
+
+export LANG="en_US.UTF-8"
+
+BACKUP_ROOT=${1%/} # Remove trailing / if exist
+BACKUP_DIR="backup"
+
+log () {
+  echo `date "+%Y-%m-%d %H:%M:%S"`": $@"
+}
+
+if [ $# -ne 1 ]; then
+    echo "Usage: $0 <backup-folder>"
+    exit 1
+fi
+
+for m in $(df --output=target | egrep "^$BACKUP_ROOT")
+do
+    if [ ! -d "$m/$BACKUP_DIR" ]; then
+        echo "$m/$BACKUP_DIR: directory not found"
+    else
+       for d in $(find $m/$BACKUP_DIR/*/* -maxdepth 1 -type d)
+        do
+            log "Begin backup compression for $d"
+            cd $(dirname $d) && tar cvzf $(basename $d).tar.gz $(basename $d) && rm -rf $(basename $d)
+        done
+    fi
+done

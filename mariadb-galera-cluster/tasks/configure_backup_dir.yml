@@ -1,0 +1,33 @@
+---
+
+- name: install | State {{ mariadb_backup_dir }}
+  stat:
+    path: "{{ mariadb_backup_dir }}"
+  register: backup_dir
+  check_mode: false
+
+- name: install | Create backup directory
+  file:
+    state:   directory
+    path:    "{{ mariadb_backup_dir }}"
+    recurse: yes
+  when: not backup_dir.stat.exists
+
+- name: install | Create default backup directory
+  file:
+    state:   directory
+    path:    "{{ mariadb_default_backup_dir | dirname }}"
+    recurse: yes
+
+- name: install | Remove backup directory
+  file:
+    state: absent
+    path:  "{{ mariadb_default_backup_dir }}"
+  when: mariadb_backup_dir != mariadb_default_backup_dir and mariadb_force_remove_backup_dir
+
+- name: install | Create symlink from {{ mariadb_default_backup_dir }} to backup directory
+  file:
+    state: link
+    src:   "{{ mariadb_backup_dir }}"
+    dest:  "{{ mariadb_default_backup_dir }}"
+  when: mariadb_backup_dir != mariadb_default_backup_dir

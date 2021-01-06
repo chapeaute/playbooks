@@ -1,0 +1,6 @@
+---
+# handlers file for alfresco
+- name: Restart alfresco
+  service:
+    name:  "{{ alfresco_service }}"
+    state: restarted

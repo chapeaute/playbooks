@@ -1,0 +1,7 @@
+---
+# handlers file for zeppelin
+
+- name: restart zeppelin
+  service:
+    name: zeppelin
+    service: restarted

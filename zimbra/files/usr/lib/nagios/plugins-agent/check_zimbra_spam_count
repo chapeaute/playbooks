@@ -1,0 +1,29 @@
+#!/bin/bash
+
+if [ "$(id -n -u)" != "zimbra" ]; then
+   sudo -u zimbra $0 $@
+   exit 0
+fi
+
+SPAM_ACCOUNT=$(/opt/zimbra/bin/zmprov -l gacf zimbraSpamIsSpamAccount | cut -d ' ' -f 2)
+WARNING=$1
+CRITICAL=$2
+
+spam_count=`/opt/zimbra/bin/zmmailbox -z <<EOF |grep messages | cut -d ',' -f 3 | cut -d ':' -f 2 | sed "s/^\ *\t*\ *//" | tr -d '\n'
+sm $SPAM_ACCOUNT
+quit
+EOF`
+
+rc=$?
+
+echo "Nombre de mail dans la boite spam $spam_count | spam_count=$spam_count"
+
+if [[ $spam_count -eq $CRITICAL ]]
+then
+  exit 2
+elif [[ $spam_count -eq $WARNING ]]
+then
+  exit 1
+fi
+
+exit 0

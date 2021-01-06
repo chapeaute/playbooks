@@ -1,0 +1,19 @@
+#!/bin/bash
+
+output=$(redis-cli -p {{ redis_sentinel_port }} sentinel get-master-addr-by-name {{ redis_sentinel_cluster_name }} 2>/dev/null)
+if [ $? -gt 0 ]
+then
+  echo "slave*"
+  exit 0
+fi
+
+master_host=$(echo $output | awk '{print $1}')
+master_hostname=$(getent hosts $master_host | awk '{print $2}' | cut -d . -f 1 )
+
+if [[ `hostname | cut -d . -f 1` == $master_hostname ]]
+then
+  echo "master"
+else
+  echo "slave"
+fi
+

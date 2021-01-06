@@ -1,0 +1,58 @@
+---
+# Global settings
+firewall_setup: true
+firewall_zone: public
+
+# CEPH GLOBAL CONFIGURATION
+ceph_version: "nautilus"
+ceph_cluster_name: "ceph"
+ceph_repo_package: "https://download.ceph.com/rpm-{{ ceph_version }}/el7/noarch/ceph-release-1-1.el7.noarch.rpm"
+# Interface dedicated to specific Ceph Public and Cluster networks (https://docs.ceph.com/docs/nautilus/rados/configuration/network-config-ref/)
+ceph_public_itf: "{{ ansible_default_ipv4.interface }}"
+ceph_cluster_itf: "{{ ansible_default_ipv4.interface }}"
+
+ceph_user: cephadm
+ceph_group: cephadm
+
+# CEPH CONTROLLER
+ceph_ctl_hosts: []
+ceph_ctl_ports:
+  - 80/tcp
+  - 2003/tcp
+  - 4505/tcp
+  - 4506/tcp
+ceph_ctl_services:
+  - http
+  - https
+
+# CEPH MONITOR
+ceph_mon_hosts: []
+ceph_mon_ports:
+  - 6789/tcp
+  - 3300/tcp
+
+# CEPH OSD
+ceph_osd_hosts: []
+ceph_osd_ports:
+  - 6800-7300/tcp
+ceph_osd_devices: []
+#  - /dev/vdb
+cpeh_osd_zap: false
+ceph_osd_pools: []
+#  - name:
+#    pg:
+
+# CEPH FS
+ceph_fs_enable: true
+
+# CEPH OBJECT
+ceph_radgw_enable: true
+ceph_radgw_ports:
+  - 7480/tcp
+ceph_radgw_useradm: rgwadm
+
+# CEPH RBD
+ceph_rbd_enable: true
+
+# CEPH DASHBOARD
+ceph_dashboard_enable: true

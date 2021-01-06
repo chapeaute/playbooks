@@ -1,0 +1,37 @@
+---
+- hosts: elk
+  vars:
+    # ELASTICSEARCH
+    es_version: "{{ _elk_version }}"
+    es_hosts: "{{ _elasticsearch_hosts }}"
+    es_cluster_name: "{{ _elasticsearch_cluster_name }}"
+    es_path_data: "{{ _elasticsearch_path_data }}"
+    es_path_logs: "{{ _elasticsearch_path_logs }}"
+    es_path_repo: "{{ _elasticsearch_path_repo }}"
+    es_ilm: "{{ _elasticsearch_ilm }}"
+    # KAFKA
+    zk_hosts: "{{ _kafka_hosts }}"
+    kafka_log_dir:  "{{ _kafka_log_dir }}"
+    kafka_data_dir: "{{ _kafka_data_dir }}"
+    # LOGSTASH
+    ls_version: "{{ _elk_version }}"
+    ls_es_hosts: "{{ _elasticsearch_hosts }}"
+    ls_kafka_hosts: "{{ _kafka_hosts }}"
+    ls_kafka_topic: "{{ _kafka_topic }}"
+    # KIBANA
+    kibana_version: "{{ _elk_version }}"
+    kibana_es_hosts: "{{ _elasticsearch_hosts }}"
+  roles:
+    - role: elasticsearch
+      es_install_admin_scripts: True
+      es_plugins: {}
+      es_heap_size_prct: 0.40
+    - role: kafka
+      kafka_num_partitions: 64
+      kafka_default_replication_factor: "{{ zk_hosts | length }}"
+    - role: logstash
+      ls_heap_size_prct: 0.20
+      ls_input_kafka: true
+      ls_output_elasticsearch: true
+      ls_batch_size: 4096
+    - role: kibana

@@ -1,0 +1,18 @@
+---
+
+- name: monitoring | Download jolokia jar
+  get_url:
+    url: "https://search.maven.org/remotecontent?filepath=org/jolokia/jolokia-jvm/{{ spark_jolokia_version }}/jolokia-jvm-{{ spark_jolokia_version }}-agent.jar"
+    dest: /usr/share/java/
+
+- name: monitoring | config
+  template:
+    src:  "spark/conf/{{ item }}.j2"
+    dest: "{{ spark_install_dir }}/conf/{{ item }}"
+    owner: spark
+    group: spark
+  with_items:
+    - jolokia.properties
+    - jolokia.policy
+  notify:
+    - "Restart Spark Worker"

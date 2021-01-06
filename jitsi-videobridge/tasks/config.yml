@@ -1,0 +1,27 @@
+---
+
+- name: Config | Generate logrotate file
+  template:
+    src: etc/logrotate.d/jitsi-videobridge.j2
+    dest: /etc/logrotate.d/jitsi-videobridge
+    owner: "{{ jvb_user }}"
+    group: "{{ jvb_group }}"
+    mode: 0640
+
+- name: Deploy videobridge configuration
+  template:
+    src: "etc/jitsi-videobridge/{{ item }}.j2"
+    dest: "{{ jvb_etc_dir }}/{{ item }}"
+    owner: "{{ jvb_user }}"
+    group: "{{ jvb_group }}"
+    mode: 0640
+  loop:
+    - videobridge.conf
+    - sip-communicator.properties
+    - logging.properties
+  notify:
+    - Register Jvb XMPP users
+    - Restart jitsi-videobridge
+  tags:
+    - config
+    - jitsi

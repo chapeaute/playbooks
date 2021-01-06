@@ -1,0 +1,16 @@
+---
+- name: journald | Create journald log directory
+  file:
+    path:  /var/log/journal
+    state: directory
+    owner: "root"
+    group: "systemd-journal"
+  register: create_journald
+
+- name: journald | Init journald log directory
+  command: "systemd-tmpfiles --create --prefix /var/log/journal"
+  notify: Restart Journald
+  when:
+    - create_journald.changed
+
+- meta: flush_handlers

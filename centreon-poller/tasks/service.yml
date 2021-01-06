@@ -1,0 +1,7 @@
+---
+- name: service | Enable and start centreon
+  service:
+    name:    "{{ item }}"
+    enabled: yes
+  with_items:
+    - centengine

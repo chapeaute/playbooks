@@ -1,0 +1,12 @@
+---
+- hosts: pacemaker-vip
+  vars:
+    net_itf: eth0
+    vip_cidr: 10.1.14.24/24
+  roles:
+    - role: pacemaker
+      pcmk_hosts: "{{ play_hosts }}"
+      pcmk_vip_rsc:
+        - interface: "{{ net_itf }}"
+          address: '{{ vip_cidr.split(''/'')[0] }}'
+          netmask: '{{ vip_cidr.split(''/'')[1] }}'

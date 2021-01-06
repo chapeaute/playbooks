@@ -1,0 +1,11 @@
+---
+# defaults file for webacula
+
+webacula_root_dir: /usr/share
+webacula_timezone: 'Africa/Abidjan'
+webacula_db_name: bacula
+webacula_db_user: bacula
+webacula_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-bacula_db_pass chars=ascii_letters,digits') }}"
+webacula_db_host: "127.0.0.1"
+webacula_default_password: changeme       # Deprecated, just for retro-compatibility use webacula_admin_pass variables
+webacula_admin_pass: "{{ webacula_default_password }}"

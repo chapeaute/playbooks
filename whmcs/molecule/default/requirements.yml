@@ -1,0 +1,23 @@
+---
+- src: git@git.smile.ci:adminsys/ansible/role/basic-firewalld.git
+  scm: git
+  version: v1.0.7
+
+
+- src: git@git.smile.ci:adminsys/ansible/role/php.git
+  scm: git
+  version: v2.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/apache.git
+  scm: git
+  version: v1.3.0
+
+
+- src: git@git.smile.ci:adminsys/ansible/role/mariadb-server.git
+  scm: git
+  version: v1.3.2
+
+
+- src: git@git.smile.ci:adminsys/ansible/role/composer.git
+  scm: git
+  version: v1.0.1

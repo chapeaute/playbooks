@@ -1,0 +1,54 @@
+---
+- name: Make sure installation directory exists
+  file:
+    path: "{{ flywaydb_root }}"
+    state: directory
+
+- name: Unpack source files (directly)
+  unarchive:
+    copy: yes
+    src: "{{ flywaydb_source_file }}"
+    dest: "{{ flywaydb_root }}"
+    creates: "{{ flywaydb_root }}/{{ flywaydb_subpath }}"
+  when:
+    - flywaydb_source_file is defined
+    - flywaydb_source_file is not none
+    - flywaydb_source_file|trim != ''
+  register: unpacked1
+
+- name: Download and unpack source files
+  unarchive:
+      copy: no
+      src: "{{ flywaydb_source_url }}"
+      dest: "{{ flywaydb_root }}"
+      creates: "{{ flywaydb_root }}/{{ flywaydb_subpath }}"
+  when:
+    - flywaydb_source_url is not none
+    - flywaydb_source_url|trim != ''
+  register: unpacked2
+
+- name: Create bin symbolic link
+  file:
+    src: "{{ flywaydb_root }}/{{ flywaydb_subpath }}/flyway"
+    dest: "/usr/local/bin/{{ flywaydb_name }}"
+    state: link
+  when: flywaydb_systemwide_install
+
+- name: Create SymLink to current version
+  file:
+    path: "{{ flywaydb_root }}/current"
+    src: "./{{ flywaydb_subpath }}"
+    state: link
+    force: True
+
+- name: Install additional drivers from remote
+  get_url:
+    url: "{{ item }}"
+    dest: "{{ flywaydb_root }}/{{ flywaydb_subpath }}/drivers/{{ item|basename }}"
+  with_items: "{{ flywaydb_drivers }}"
+
+- name: Install additional drivers from local
+  copy:
+    src: "{{ item }}"
+    dest: "{{ flywaydb_root }}/{{ flywaydb_subpath }}/drivers/{{ item|basename }}"
+  with_items: "{{ flywaydb_drivers_files }}"

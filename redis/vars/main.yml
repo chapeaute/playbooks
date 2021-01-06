@@ -1,0 +1,6 @@
+---
+redis_config_file: "{{ redis_config_dir }}/redis.conf"
+redis_sentinel_config_file: "{{ redis_config_dir }}/redis-sentinel.conf"
+redis_extra_config_file: "{{ redis_config_dir }}/redis_ansible.conf"
+redis_custom_config_file: "{{ redis_config_dir }}/redis_custom.conf"
+redis_default_data_dir: /var/lib/redis

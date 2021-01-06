@@ -1,0 +1,5 @@
+[basic-server:children]
+zimbra-stack
+
+[zimbra-stack]
+zimbra-stack-allinone

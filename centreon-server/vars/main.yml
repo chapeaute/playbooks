@@ -1,0 +1,4 @@
+---
+# vars file for centreon-server
+centreon_script_dir: /usr/local/sbin
+centreon_clapi_bin: /usr/bin/centreon

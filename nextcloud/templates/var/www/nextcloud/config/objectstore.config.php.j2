@@ -1,0 +1,16 @@
+<?php
+$CONFIG = array (
+  'objectstore' => array(
+    'class' => '\\OC\\Files\\ObjectStore\\S3',
+    'arguments' => array(
+      'hostname' => '{{ nextcloud_s3_host }}',
+      'port' => {{ nextcloud_s3_port }},
+      'bucket' => '{{ nextcloud_s3_bucket }}',
+      'key'    => '{{ nextcloud_s3_key }}',
+      'secret' => '{{ nextcloud_s3_secret }}',
+      'autocreate' => true,
+      'use_ssl' => {{ nextcloud_s3_ssl }},
+      'use_path_style' => true,
+    ),
+  ),
+);

@@ -1,0 +1,8 @@
+---
+- hosts: prd-web-rab
+  roles:
+    - role: nfs-client
+      nfs_mounts:
+        - server: prd-db-rab
+          localdir: /var/www/www.oncf.lan
+          remotedir: /var/www/www.oncf.lan

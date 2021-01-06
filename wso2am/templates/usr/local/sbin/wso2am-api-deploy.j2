@@ -1,0 +1,86 @@
+#!/bin/bash
+
+USER="deploy"
+GROUP="deploy"
+
+API_ENV='Production and Sandbox'
+API_NAME=""
+API_DESCPRITION=""
+API_FILE=""
+ADMIN_NAME='{{ wso2am_admin_user }}'
+ADMIN_PASSWORD='{{ wso2am_admin_pass }}'
+
+function syntax() {
+    cat <<EOF
+Script to deploy an api on a wso2am server
+
+Usage: ${0##*/} [-h|-n <api_name> -f <archive_file> -d <api_description>][-e <api_environment>][-a <admin_name>][-p <admin_password>]
+    -h                    Display this message
+    -n <api_name>         Api name
+    -f <archive_file>     Archive file in tar.gz format
+    -d <api_description>  Path to yaml descrition file after extraction
+    -e <api_environment>  Environment to deploy api (default: "Production and Sandbox")
+    -a <admin_name>       WSO2AM admin username
+    -p <admin_password>   WSO2AM admin password
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Aborting..."
+    exit 1
+fi
+
+while getopts "hn:f:d:e:a:p:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        n)
+            API_NAME="${OPTARG}"
+            ;;
+        f)
+            API_FILE="${OPTARG}"
+            ;;
+        d)
+            API_DESCRIPTION="${OPTARG}"
+            ;;
+        e)
+            API_ENV="${OPTARG}"
+            ;;
+        a)
+            ADMIN_NAME="${OPTARG}"
+            ;;
+        p)
+            ADMIN_PASSWORD="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+if [[ -z $API_NAME ]] || [[ -z $API_FILE ]] || [[ -z $API_DESCRIPTION ]]; then
+    syntax
+    exit 1
+fi
+
+if [ ! -r "$API_FILE" ]; then
+    echo "$API_FILE: No such file or directory"
+    exit 1
+fi
+
+echo Deploying ${API_NAME} to ${API_ENV}
+tar -axf ${API_FILE}
+/usr/local/sbin/apictl add-env -e "${API_ENV}" --registration https://$(hostname --fqdn):9443 --apim https://$(hostname --fqdn):9443 --token https://$(hostname --fqdn):8243/token
+/usr/local/sbin/apictl login "${API_ENV}" -u "${ADMIN_NAME}" -p "${ADMIN_PASSWORD}" -k
+/usr/local/sbin/apictl init "${API_NAME}" --oas ${API_DESCRIPTION}
+/usr/local/sbin/apictl import-api -f ./${API_NAME} -e "${API_ENV}" --update -k
+rm -rf ./${API_NAME}
+/usr/local/sbin/apictl logout "${API_ENV}" -k
+/usr/local/sbin/apictl remove env "${API_ENV}" -k
+
+echo done

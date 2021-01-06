@@ -1,0 +1,113 @@
+#!/bin/bash
+
+ES=http://localhost:{{ es_port }}
+
+# You must change it
+BACKUP_DIR="{{ es_default_backup_dir }}"
+ED_LIMIT=100
+
+
+exist_index() {
+    local index=$1
+
+    ls -a $BACKUP_DIR | egrep "${index}"
+
+    return $?
+}
+
+clean_index() {
+    local index=$1
+
+    exist_index $index
+
+    if [ "$?" -eq 0 ]; then
+        echo "Clean index $index"
+        rm $BACKUP_DIR/$index
+    else
+        echo "Warning: index $index doesn't exist"
+    fi
+}
+
+clean_date() {
+    if [[ "${1}" =~ ^[+]?[0-9]+$ ]];  then
+       day=$1
+       date=$(date --date="$day days ago" +%Y.%m.%d)
+       index_list=$(curl -s $ES/_cat/indices?h=i | grep  "$date")
+
+        for idx in $index_list
+        do
+           clean_index "$idx.json.gz"
+        done
+    else
+        echo "Warning:Argument passed to the option is not a number or is a negative number "
+    fi
+
+    exit 0
+}
+
+clean_all() {
+    index_list=$(find $BACKUP_DIR/ -type f -regex "$BACKUP_DIR/.*.json.gz" | sed "s#$BACKUP_DIR/##")
+
+    for idx in $index_list
+    do
+        clean_index "$idx"
+    done
+    exit 0
+}
+
+clean_name() {
+    index_list=$1
+
+    for idx in $index_list
+    do
+        clean_index "$idx.json.gz"
+    done
+    exit 0
+}
+
+help() {
+  echo "
+  es-index-clean scripts allow you to clean the indexes of an $BACKUP_DIR
+
+SYNOPSIS
+
+  es-indice-clean [OPTIONS]... [ARGUMENTS]
+
+Description
+
+    -a     Takes no argument and allows to clean all indexes of $BACKUP_DIR
+
+    -d     Takes as argument a number (1 ... N) to determine the creation date of the index to Clean
+           Examples:
+             - es-indice-clean -d 1 # Clean the index with the date of the previous day
+             - es-indice-clean -d 2 # Clean the index with the date of two days ago
+             - ...
+
+    -i     Takes as argument the name of the index a Clean
+           Examples:
+             -  es-indice-clean -i logstash-2017.01.01
+    "
+    exit 1
+
+}
+
+while getopts "i:d:ah" opt
+do
+    case $opt in
+       d) clean_date $OPTARG
+       ;;
+       a) clean_all
+       ;;
+       i) clean_name  $OPTARG
+       ;;
+       h) help
+       ;;
+       *) help
+       ;;
+    esac
+done
+
+if [ -z "$index_list" ]; then
+    help
+fi
+

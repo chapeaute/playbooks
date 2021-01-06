@@ -1,0 +1,37 @@
+---
+
+
+- name: Redhat | Install firewalld and python module
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - python-firewall
+    - firewalld
+
+- name: RedHat |  Start and enable firewalld service
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: RedHat | Import neo4j key
+  rpm_key:
+    state: present
+    key: https://debian.neo4j.org/neotechnology.gpg.key
+
+- name: RedHat | Deploy repo
+  copy:
+    src: etc/yum.repos.d/neo4j.repo
+    dest: /etc/yum.repos.d/neo4j.repo
+
+- name: RedHat | Configure firewall
+  firewalld:
+   port:      "{{ item }}/tcp"
+   state:     enabled
+   permanent: yes
+   immediate: yes
+  with_items:
+    - 7687
+    - 7473
+    - 7474

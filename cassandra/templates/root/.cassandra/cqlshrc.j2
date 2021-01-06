@@ -1,0 +1,7 @@
+{% if cassandra_enable_password %}
+[authentication]
+username = {{ cassandra_root_user }}
+password = {{ cassandra_root_password }}
+{% endif %}
+[connection]
+hostname = {{ cassandra_bind_addr }}

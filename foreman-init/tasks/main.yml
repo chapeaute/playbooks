@@ -1,0 +1,54 @@
+---
+# tasks file for vm-init
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+
+- stat:
+    path: /forcefsck
+  register: forcefsck
+
+- name: main | Create /forcefsck to force fsck at boot
+  file:
+    path: /forcefsck
+    state: touch
+  when: not forcefsck.stat.exists
+
+- name: main | Tell foreman {{ ansible_fqdn }} is built
+  uri:
+    url: "{{ foreman_url }}/unattended/built"
+    user: "{{ foreman_api_user }}"
+    password: "{{ foreman_api_password }}"
+    force_basic_auth: yes
+    validate_certs: no
+    status_code: 200,201,404,405
+  ignore_errors: yes
+
+- name: preseed | Upgrade all packages
+  package:
+    name: "*"
+    state: latest
+  register: packages_upgrade
+
+- name: preseed | Reboot server
+  shell: sleep 2 && shutdown -r now
+  async: 1
+  poll: 0
+  ignore_errors: True
+  register: rebooting
+  when: packages_upgrade|changed
+
+- name: preseed | Waiting for server to reboot
+  become: false
+  local_action: wait_for host={{ ansible_ssh_host }} delay=10 timeout=120 connect_timeout=5 port=22
+  when: rebooting|changed

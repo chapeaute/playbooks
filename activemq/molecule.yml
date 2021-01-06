@@ -1,0 +1,30 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: activemq-1
+      hostname: activemq-1
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+      ansible_groups:
+        - activemq
+    - name: activemq-2
+      hostname: activemq-2
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+      ansible_groups:
+        - activemq
+    - name: activemq-3
+      hostname: activemq-3
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+      ansible_groups:
+        - activemq
+verifier:
+  name: testinfra

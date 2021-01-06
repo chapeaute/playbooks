@@ -1,0 +1,151 @@
+###################### Filebeat Configuration Example #########################
+
+# This file is an example configuration file highlighting only the most common
+# options. The filebeat.full.yml file from the same directory contains all the
+# supported options with more comments. You can use it as a reference.
+#
+# You can find the full configuration reference here:
+# https://www.elastic.co/guide/en/beats/filebeat/index.html
+
+#=========================== Filebeat prospectors =============================
+
+filebeat.prospectors:
+
+# Each - is a prospector. Most options can be set at the prospector level, so
+# you can use different prospectors for various configurations.
+# Below are the prospector specific configurations.
+
+  # Paths that should be crawled and fetched. Glob based paths.
+{% for app in applications %}
+{% if app.name in group_names %}
+- input_type: log
+  paths:
+{% for files in app.files %}
+    - {{ files }}
+{% endfor %}
+  fields:
+    fqdn: "{{ ansible_fqdn }}"
+    type: "{{ app.type|default(app.name) }}"
+{% if multiline_pattern is defined %}
+    multiline.pattern: {{ multiline_pattern }}
+    multiline.negate: {{ multiline_negate|default(false) | lower}}
+    multiline.match: {{ multiline_match|default('after')}}
+{% endif %}
+
+{% endif %}
+{% endfor %}
+  # Exclude lines. A list of regular expressions to match. It drops the lines that are
+  # matching any regular expression from the list.
+  #exclude_lines: ["^DBG"]
+
+  # Include lines. A list of regular expressions to match. It exports the lines that are
+  # matching any regular expression from the list.
+  #include_lines: ["^ERR", "^WARN"]
+
+  # Exclude files. A list of regular expressions to match. Filebeat drops the files that
+  # are matching any regular expression from the list. By default, no files are dropped.
+  #exclude_files: [".gz$"]
+
+  # Optional additional fields. These field can be freely picked
+  # to add additional information to the crawled log files for filtering
+  #fields:
+  #  level: debug
+  #  review: 1
+
+  ### Multiline options
+
+  # Mutiline can be used for log messages spanning multiple lines. This is common
+  # for Java Stack Traces or C-Line Continuation
+
+  # The regexp Pattern that has to be matched. The example pattern matches all lines starting with [
+  #multiline.pattern: ^\[
+
+  # Defines if the pattern set under pattern should be negated or not. Default is false.
+  #multiline.negate: false
+
+  # Match can be set to "after" or "before". It is used to define if lines should be append to a pattern
+  # that was (not) matched before or after or as long as a pattern is not matched based on negate.
+  # Note: After is the equivalent to previous and before is the equivalent to to next in Logstash
+  #multiline.match: after
+
+
+#================================ General =====================================
+
+# The name of the shipper that publishes the network data. It can be used to group
+# all the transactions sent by a single shipper in the web interface.
+name: {{ ansible_fqdn }}
+
+# The tags of the shipper are included in their own field with each
+# transaction published.
+tags: [{% for tag in fb_tags -%}
+"{{ tag }}" {%- if not loop.last -%}, {% endif -%}
+{%- endfor %}]
+# Optional fields that you can specify to add additional information to the
+# output.
+fields:
+{% for key in fb_default_extra_fields %}
+  {{ key }}: {{ fb_default_extra_fields[key] }}
+{% endfor %}
+{% for key in fb_extra_fields %}
+  {{ key }}: {{ fb_extra_fields[key] }}
+{% endfor %}
+
+fields_under_root: true
+
+#================================ Outputs =====================================
+
+# Configure what outputs to use when sending the data collected by the beat.
+# Multiple outputs may be used.
+{% if fb_kafka_hosts|length > 0 %}
+#-------------------------- Kafka ---------------------------------------------
+
+output.kafka:
+  enabled: true
+  hosts: [{% for item in fb_kafka_hosts -%}"{{ item }}:{{ fb_kafka_port }}"{%- if not loop.last -%},{% endif -%}{%- endfor %}]
+  topic: "{{ fb_kafka_topic }}"
+  worker: {{ fb_kafka_worker }}
+  broker_timeout: {{ fb_kafka_broker_timeout }}
+  version: "{{ fb_kafka_version }}"
+{% endif %}
+
+{% if fb_es_hosts|length > 0 %}
+#-------------------------- Elasticsearch output ------------------------------
+output.elasticsearch:
+  # Array of hosts to connect to.
+  enabled: true
+  hosts: [{% for item in fb_es_hosts -%}"{{ item }}:{{ fb_es_port }}"{%- if not loop.last -%},{% endif -%}{%- endfor %}]
+
+  # Optional protocol and basic auth credentials.
+  protocol: "{{ fb_es_protocol }}"
+  username: "{{ fb_es_username }}"
+  password: "{{ fb_es_password }}"
+
+{% endif %}
+
+{% if fb_logstash_hosts|length > 0 %}
+#----------------------------- Logstash output --------------------------------
+output.logstash:
+  # The Logstash hosts
+  hosts: [{% for item in fb_logstash_hosts -%}"{{ item }}:{{ fb_logstash_port }}"{%- if not loop.last -%},{% endif -%}{%- endfor %}]
+
+  # Optional SSL. By default is off.
+  # List of root certificates for HTTPS server verifications
+  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
+
+  # Certificate for SSL client authentication
+  #ssl.certificate: "/etc/pki/client/cert.pem"
+
+  # Client Certificate Key
+  #ssl.key: "/etc/pki/client/cert.key"
+{% endif %}
+
+#================================ Logging =====================================
+
+# Sets log level. The default log level is info.
+# Available log levels are: critical, error, warning, info, debug
+#logging.level: debug
+
+# At debug level, you can selectively enable logging only for some components.
+# To enable all selectors use ["*"]. Examples of other selectors are "beat",
+# "publish", "service".
+#logging.selectors: ["*"]

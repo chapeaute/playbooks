@@ -1,0 +1,10 @@
+{% for client in snmp_allow_clients %}
+rocommunity {{ snmp_community }} {{ client }} .1
+{% endfor %}
+agentAddress {% for addr in snmp_bind_addr %}udp:{{ addr }}:161,{% endfor %}
+
+dontLogTCPWrappersConnects 1
+includeAllDisks 10%
+{% for snmpd_option in snmpd_options %}
+{{snmpd_option}}
+{% endfor %}

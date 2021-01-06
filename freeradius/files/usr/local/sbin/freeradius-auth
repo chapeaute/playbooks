@@ -1,0 +1,2 @@
+#!/bin/bash
+radclient -xs -f /usr/local/sbin/auth.txt localhost auth "testing123"

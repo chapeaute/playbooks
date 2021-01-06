@@ -1,0 +1,25 @@
+---
+# defaults file for rspamd
+manage_firewalld: True
+
+# Global config for rspamd
+rspamd_nodes: "[]"
+rspamd_password: "{{ lookup('password', 'credential/rspamd_password chars=ascii_letters,digit') }}"
+
+# Elasticsearch host
+rspamd_es_hosts: []
+rspamd_es_port: 9200
+
+# Redis config
+rspamd_redis_port: 6379
+rspamd_redis_hosts: ["127.0.0.1"]
+rspamd_redis_password:
+rspamd_redis_sentinel_watch_time: 5
+rspamd_redis_sentinel_port: 26379
+rspamd_redis_sentinel_fix_bug: false
+
+# Apache config
+rspamd_reverse_vhost_name: rspamd
+rspamd_enable_http_reverse_ssl: false
+rspamd_enable_http_reverse: True
+rspamd_http_protocol: "{% if rspamd_enable_http_reverse_ssl %}https{% else %}http{% endif %}"

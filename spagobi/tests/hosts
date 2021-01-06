@@ -1,0 +1,5 @@
+[all]
+spagobi ansible_connection=docker
+
+[spagobi]
+spagobi

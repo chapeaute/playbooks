@@ -1,0 +1,10 @@
+{{ jvb_log_dir }}/*.log {
+  daily
+  missingok
+  rotate 7
+  compress
+  delaycompress
+  notifempty
+  copytruncate
+  su {{ jvb_user }} {{ jvb_group }}
+}

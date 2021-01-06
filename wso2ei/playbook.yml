@@ -1,0 +1,6 @@
+--- 
+
+- hosts: all
+  roles:
+    - role: wso2ei
+      wso2ei_memory_size_prct: 0.2

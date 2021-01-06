@@ -1,0 +1,24 @@
+---
+
+- name: RedHat | Add odoo repository
+  template:
+    src: etc/yum.repos.d/odoo.repo.j2
+    dest: /etc/yum.repos.d/odoo.repo
+    owner: root
+    group: root
+    mode:  0666
+  when: not use_satellite_repo
+
+- name: RedHat | Add epel repository
+  package:
+    name: epel-release
+    state: present
+  when: not use_satellite_repo
+
+- name: RedHat | Setting firewall rules
+  firewalld:
+    port: "{{ odoo_port }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: yes
+  when: manage_firewalld

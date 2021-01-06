@@ -1,0 +1,93 @@
+---
+galaxy_info:
+  author: Franck Aboa
+  description: Install WHMCS
+  company: SMILE CI
+
+  # If the issue tracker for your role is not on github, uncomment the
+  # next line and provide a value
+  # issue_tracker_url: http://example.com/issue/tracker
+
+  license: BSD
+
+  min_ansible_version: 2.7
+
+  # If this a Container Enabled role, provide the minimum Ansible Container version.
+  # min_ansible_container_version:
+
+  # Optionally specify the branch Galaxy will use when accessing the GitHub
+  # repo for this role. During role install, if no tags are available,
+  # Galaxy will use this branch. During import Galaxy will access files on
+  # this branch. If Travis integration is configured, only notifications for this
+  # branch will be accepted. Otherwise, in all cases, the repo"s default branch
+  # (usually master) will be used.
+  # github_branch:
+
+  #
+  # platforms is a list of platforms, and each platform has a name and a list of versions.
+  #
+  # platforms:
+  # - name: Fedora
+  #   versions:
+  #   - all
+  #   - 25
+  # - name: SomePlatform
+  #   versions:
+  #   - all
+  #   - 1.0
+  #   - 7
+  #   - 99.99
+
+  galaxy_tags: []
+  # List tags for your role here, one per line. A tag is a keyword that describes
+  # and categorizes the role. Users find roles by searching for tags. Be sure to
+  # remove the "[]" above, if you add tags to this list.
+  #
+  # NOTE: A tag is limited to a single word comprised of alphanumeric characters.
+  #       Maximum 20 tags per role.
+
+dependencies:
+  - role: apache
+    apache2_data_dir: "{{ whmcs_webroot_dir }}"
+    apache2_vhosts_opt:
+      - key: "server_aliases"
+        val: "{{ whmcs_aliases }}"
+      - key: "document_root"
+        val: "{{ whmcs_htdocs_dir }}"
+    apache2_vhosts_tmp:
+      - key: "{{ whmcs_vhost }}"
+        val: "{{ apache2_vhosts_opt | get_attr('key', 'val') }}"
+    apache2_vhosts: "{{ apache2_vhosts_tmp | get_attr('key', 'val') }}"
+  - role: generic-webapp
+#    generic_webapp_owner: "root"
+    generic_webapp_webroot_dir: "{{ whmcs_webroot_dir }}"
+    generic_webapp_docroot_dir: "{{ whmcs_htdocs_dir }}"
+    generic_webapp_vhost: "{{ whmcs_vhost }}"
+    generic_webapp_aliases: "{{ whmcs_aliases }}"
+    generic_webapp_download_url: "{{ whmcs_download_url }}"
+    generic_webapp_deploy_via: "download_unarchive"
+    generic_webapp_rw_dirs: "{{ whmcs_rw_dirs }}"
+    generic_webapp_rw_files: "{{ whmcs_rw_files }}"
+    generic_webapp_db_backend: "mariadb"
+    generic_webapp_db_host: "{{ whmcs_db_remote_host }}"
+    generic_webapp_db_name: "{{ whmcs_db_name }}"
+    generic_webapp_db_user: "{{ whmcs_db_username }}"
+    generic_webapp_db_pass: "{{ whmcs_db_password }}"
+  - role: php
+    php_use_default_package: False
+    php_version: "7.2"
+    php_extensions:
+      - ldap
+      - gd
+      - json
+      - curl
+      - zip
+      - intl
+      - mcrypt
+      - posix
+      - apcu
+      - mysql
+      - opcache
+      - xml
+      - mbstring
+  - role: ioncube

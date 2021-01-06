@@ -1,0 +1,7 @@
+---
+- hosts: bacula-agent
+  vars:
+    bacula_dir_host:    "{{ _backup_server_host }}"
+    bacula_sd_hosts:    "{{ _backup_storage_hosts }}"
+  roles:
+  - role: bacula-agent

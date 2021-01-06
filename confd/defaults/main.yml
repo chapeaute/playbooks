@@ -1,0 +1,8 @@
+---
+# defaults file for confd
+confd_version: 0.16.0
+confd_src_url: "https://github.com/kelseyhightower/confd/releases/download/v{{ confd_version }}/confd-{{ confd_version }}-linux-amd64"
+confd_src_checksum: 255d2559f3824dd64df059bdc533fd6b697c070db603c76aaf8d1d5e6b0cc334
+confd_backend: "etcdv3"
+confd_etcd_nodes:
+  - http://127.0.0.1:2379

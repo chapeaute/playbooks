@@ -1,0 +1,4 @@
+---
+# vars file for zeppelin
+zeppelin_default_root_dir: /var/lib
+zeppelin_logs_dir: /var/log/zeppelin

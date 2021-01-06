@@ -1,0 +1,7 @@
+---
+# handlers file for wso2
+
+- name: "Restart wso2as"
+  service:
+    name: wso2as
+    state: restarted

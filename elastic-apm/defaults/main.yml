@@ -1,0 +1,53 @@
+---
+# Global settings
+firewall_setup: true
+firewall_zone: public
+use_satellite_repo: false
+
+# Default APM configuration
+apm_version: "7.5"
+apm_version_string: "{{ apm_version | string }}"
+apm_major_version: "{{ apm_version_string.split('.')[0] }}"
+apm_server_host: 0.0.0.0
+apm_server_port: 8200
+apm_capture_personal_data: true
+apm_secret_token: "{{ lookup('password', 'credential/{{ inventory_hostname }}-apm_secret_token chars=ascii_letters,digits') }}"
+apm_agent_version: 1.9.0
+apm_agent_url: "https://search.maven.org/remotecontent?filepath=co/elastic/apm/elastic-apm-agent/{{ apm_agent_version }}/elastic-apm-agent-{{ apm_agent_version }}.jar"
+
+# Kibana (provision APM specific dashboard and configuration to Kibana)
+apm_kibana_host: ""
+apm_kibana_port: 5601
+apm_kibana_dashboard_setup: false
+
+
+# OUTPUT
+## Logstash output
+apm_logstash_hosts: []
+apm_logstash_port: 5044
+
+## Kafka output
+apm_kafka_hosts: []
+apm_kafka_port: 9092
+apm_kafka_topic: apm
+apm_kafka_version: "0.10.1"
+apm_kafka_worker: "{{ ansible_processor_vcpus }}"
+
+## Elasticsearch outpout
+apm_es_hosts: []
+apm_es_port: 9200
+apm_es_protocol: http
+apm_es_user: ""
+apm_es_password: ""
+apm_es_bulk_max_size: 5120
+apm_es_worker: "{{ ansible_processor_vcpus }}"
+apm_es_queue_mem_events: "{{ apm_es_bulk_max_size * apm_es_worker }}"
+apm_es_max_retries: 3
+
+# Monitoring APM (gathering stats and send it to ES servers)
+apm_monitoring_hosts: "{{ apm_es_hosts }}"
+apm_monitoring_port: "{{ apm_es_port }}"
+apm_monitoring_protocol: http
+apm_monitoring_user: ""
+apm_monitoring_password: ""
+

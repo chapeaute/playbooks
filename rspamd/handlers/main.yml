@@ -1,0 +1,7 @@
+---
+# handlers file for rspamd
+
+- name: "Restart rspamd"
+  service:
+    name: rspamd
+    state: restarted

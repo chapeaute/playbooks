@@ -1,0 +1,43 @@
+---
+
+- name: config | Check if package directory exists
+  stat:
+    path: "{{ genieacs_root_dir }}/package"
+  register: data_dir
+
+- name: config | "Move package to genieacs-{{ genieacs_version }}"
+  command: "mv {{ genieacs_root_dir }}/package {{ genieacs_full_dir }}"
+  when:
+  - data_dir.stat is defined
+  - data_dir.stat.isdir is defined
+  - data_dir.stat.isdir
+
+- name: main | Create a symbolic link to not break generic-service
+  file:
+    src: "{{ genieacs_full_dir }}"
+    dest: "{{ genieacs_root_dir }}/package"
+    state: link
+    force: true
+
+- name: config | Create directories
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ genieacs_user }}"
+    group: "{{ genieacs_group }}"
+  with_items:
+    - "{{ genieacs_install_dir }}/ext"
+    - "{{ genieacs_log_dir }}"
+
+- name: config | link /var/log/genieacs
+  file:
+    src: "{{ genieacs_log_dir }}"
+    dest: /var/log/genieacs
+    state: link
+
+- name: "config | Create symlink from {{ genieacs_default_root_dir }}/genieacs to {{ genieacs_root_dir }}/genieacs"
+  file:
+    state: link
+    src:   "{{ genieacs_root_dir }}/genieacs"
+    dest:  "{{ genieacs_default_root_dir }}/genieacs"
+  when: genieacs_root_dir != genieacs_default_root_dir

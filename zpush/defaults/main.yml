@@ -1,0 +1,23 @@
+---
+# defaults file for ansible-zpush
+
+zpush_main_version: 2.3
+zpush_full_version: 2.3.8
+
+
+zpush_archive_name: z-push-{{zpush_full_version}}.tar.gz
+zpush_dir: z-push-{{zpush_full_version}}
+zpush_download_url: "http://download.z-push.org/final/{{zpush_main_version}}/{{zpush_archive_name}}"
+zpush_timezone: Africa/Abidjan
+
+zpush_httpd_conf: z-push.conf
+
+zpush_tmp_dir: /tmp
+zpush_html_dir: /usr/share/z-push
+zpush_log_dir: "/var/log/z-push"
+zpush_state_dir: "/var/lib/z-push"
+zpush_bakend: zimbra
+zpush_backend_url:  http://zimbra.example.com
+zpush_backend_dir: zimbra66
+zpush_backend_archive_name: zimbra66.tgz
+zpush_backend_download_url: https://gigenet.dl.sourceforge.net/project/zimbrabackend/Release66/zimbra66.tgz

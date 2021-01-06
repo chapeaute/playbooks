@@ -1,0 +1,40 @@
+---
+
+- name: ilm | Create ILM configuration directory
+  file:
+    path: /etc/elasticsearch/ilm
+    owner: root
+    group: elasticsearch
+    mode:  0750
+    state: directory
+  tags:
+    - config
+    - config_ilm
+
+- name: ilm | Deploy ILM configuration {{ indice }}
+  template:
+    src:  "etc/elasticsearch-{{ es_major_version }}.x/ilm-policy.json.j2"
+    dest: "/etc/elasticsearch/ilm/ilm-policy-{{ indice }}.json"
+  register: ilm_policy
+  when:
+    - es_major_version is version_compare('7', '>=')
+  tags:
+    - config
+    - config_ilm
+
+- name: ilm | Import ILM to elasticsearch for {{ indice }}
+  uri:
+    url:         "http://127.0.0.1:{{ es_port }}/_ilm/policy/{{ indice }}"
+#    user:        "{{ es_user|default(omit) }}"
+#    password:    "{{ es_pass|default(omit) }}"
+#    force_basic_auth: true
+    method:      PUT
+    timeout:     120
+    body_format: json
+    body:        "{{ lookup('template','etc/elasticsearch-{{ es_major_version }}.x/ilm-policy.json.j2') }}"
+  run_once: true
+  when:
+    - ilm_policy.changed
+  tags:
+    - config
+    - config_ilm

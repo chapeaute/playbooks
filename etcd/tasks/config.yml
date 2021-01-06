@@ -1,0 +1,49 @@
+---
+- name: config | Etcd common configuration 
+  lineinfile:
+    dest:   "{{ etcd_conf_dir }}/etcd.conf"
+    regexp: "^#?{{ item.key }}\\s*=\\s*"
+    line:   "{{ item.key }}={{ item.value }}"
+  with_items:
+    - key:   "ETCD_NAME"
+      value: "{{ ansible_hostname }}"
+    - key:   "ETCD_DATA_DIR"
+      value: "{{ etcd_data_dir }}"
+    - key:   "ETCD_LISTEN_CLIENT_URLS"
+      value: "{{ etcd_listen_client_urls }}"
+    - key:   "ETCD_ADVERTISE_CLIENT_URLS"
+      value: "{{ etcd_advertise_client_urls }}"
+    - key:   "ETCD_SNAPSHOT_COUNT"
+      value: "{{ etcd_snapshot_count }}"
+
+- name: config | Etcd cluster configuration 
+  lineinfile:
+    dest:   "{{ etcd_conf_dir }}/etcd.conf"
+    regexp: "^#?{{ item.key }}\\s*=\\s*"
+    line:   "{{ item.key }}={{ item.value }}"
+  with_items:
+    - key:   "ETCD_LISTEN_PEER_URLS"
+      value: "{{ etcd_listen_peer_urls }}"
+    - key:   "ETCD_INITIAL_ADVERTISE_PEER_URLS"
+      value: "{{ etcd_initial_advertise_peer_urls }}"
+    - key:   "ETCD_INITIAL_CLUSTER_TOKEN"
+      value: "{{ etcd_cluster_name }}"
+    - key:   "ETCD_INITIAL_CLUSTER_STATE"
+      value: "{{ etcd_initial_cluster_state }}"
+    - key:   "ETCD_INITIAL_CLUSTER"
+      value: "{{ etcd_initial_cluster }}"
+    - key:   "ETCD_ELECTION_TIMEOUT"
+      value: "{{ etcd_election_timeout }}"
+    - key:   "ETCD_HEARTBEAT_INTERVAL"
+      value: "{{ etcd_heartbeat_interval }}"
+  when:
+    - etcd_hosts|length > 2
+
+- name: config | Set environnement variable ETCDCTL_API 
+  lineinfile:
+    dest:   "/etc/environment"
+    regexp: "^#?{{ item.key }}.*=.*"
+    line:   "{{ item.key }}={{ item.value }}"
+  with_items:
+    - key:   "ETCDCTL_API"
+      value: "{{ etcd_api_version }}"

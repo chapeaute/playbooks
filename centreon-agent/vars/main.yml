@@ -1,0 +1,4 @@
+---
+# vars file for nrpe
+centreon_clapi_bin: /usr/bin/centreon
+nrpe_file: /etc/nagios/nrpe.cfg

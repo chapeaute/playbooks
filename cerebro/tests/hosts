@@ -1,0 +1,5 @@
+[all]
+cerebro ansible_connection=docker
+
+[cerebro]
+cerebro

@@ -1,0 +1,22 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    whmcs_license: 'WHMCS-8be05cb5fefbfcf64061'
+    whmcs_db_host: localhost
+    whmcs_db_username: whmcs
+    whmcs_db_password: El7jie4v
+    whmcs_db_name: whmcs
+    whmcs_cc_encryption_hash: 'y6UxATGruIsSVRdH35WAdJiXKpy8SFTSWQkb44ycV0jFnMffAC5JCTHJg9NmPyFH'
+
+  roles:
+    - role: basic-firewalld
+    - role: mariadb-server
+      mysql_databases:
+        '{{ whmcs_db_name }}':
+          db_name : '{{ whmcs_db_name }}'
+          collation: utf8_unicode_ci
+          encoding: utf8
+          user: '{{ whmcs_db_username }}'
+          password: '{{ whmcs_db_password }}'
+    - role: whmcs

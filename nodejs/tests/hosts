@@ -1,0 +1,5 @@
+[all]
+nodejs ansible_connection=docker
+
+[nodejs]
+nodejs

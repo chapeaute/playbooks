@@ -1,0 +1,6 @@
+---
+# handlers file for webacula
+- name: Restart httpd
+  service:
+    name: httpd
+    state: restarted

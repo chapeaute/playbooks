@@ -1,0 +1,13 @@
+---
+# defaults file for mysql-databases
+
+# Remote host to manage
+mysql_host: "{{ inventory_hostname }}"
+mysql_users: []
+mysql_databases: {}
+mysql_admin_user:
+mysql_admin_pass:
+
+# Default settings used to create a new database
+mysql_db_default_encoding: utf8
+mysql_db_default_collation: utf8_unicode_ci

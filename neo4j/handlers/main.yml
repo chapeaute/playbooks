@@ -1,0 +1,7 @@
+---
+# handlers file for neo4j
+
+- name: Restart neo4j
+  service:
+    name: neo4j
+    state: restarted

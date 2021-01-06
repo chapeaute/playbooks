@@ -1,0 +1,4 @@
+---
+rabbitmq_dependencies:
+  - apt-transport-https
+

@@ -1,0 +1,10 @@
+{{ jigasi_log_dir }}/jigasi.log {
+  daily
+  missingok
+  rotate 7
+  compress
+  delaycompress
+  notifempty
+  copytruncate
+  su {{ jigasi_user }} {{ jigasi_group }}
+}

@@ -1,0 +1,30 @@
+---
+- name: script | Deploy admin scripts
+  template:
+    src:  "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - mysql-db-create
+    - mysql-db-delete
+    - mysql-db-import
+    - mysql-db-list
+    - mysql-user-create
+    - mysql-user-delete
+    - mysql-user-list
+    - mysql-backup-dump
+    - mysql-backup-clean
+  tags: script
+
+- name: script | Deploy admin binary scripts
+  copy:
+    src:  "usr/local/sbin/{{ item }}"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - mysql-status
+  tags: script

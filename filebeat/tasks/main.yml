@@ -1,0 +1,58 @@
+---
+# tasks file for elasticsearch
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | Install filebeat
+  package:
+    name: "filebeat-{{ fb_full_version|default(fb_major_version + '*') }}"
+  notify: "Restart Filebeat"
+
+- name: main | Copy configuration file
+  template:
+    src:   "etc/filebeat-{{ fb_major_version }}.x/filebeat.yml.j2"
+    dest:  "/etc/filebeat/filebeat.yml"
+    mode:  0640
+    owner: root
+    group: root
+  notify: "Restart Filebeat"
+  tags: config
+
+- include_tasks: modules.yml
+  tags: config
+  when:
+    - fb_major_version | int >= 6
+
+- name: main | Copy ilm policy file
+  template:
+    src:  "etc/filebeat-{{ fb_major_version }}.x/ilm-policy.json.j2"
+    dest: "/etc/filebeat/ilm-policy.json"
+  register: ilm_policy
+  tags: config
+  when:
+    - fb_major_version is version_compare('7', '>=')
+    - fb_provisioning_enabled | bool
+
+- name: main | Setup template, pattern, ilm and initial indexes in Elasticsearch
+  shell: "filebeat setup --index-management -E 'output.elasticsearch.hosts=[\"{{ fb_provisioning_es_host }}:{{ fb_es_port }}\"]' -E 'setup.ilm.pattern=\"000001\"' -E setup.ilm.policy_file=/etc/filebeat/ilm-policy.json -E setup.ilm.overwrite=true -c /etc/filebeat/filebeat.yml"
+  when:
+    - fb_provisioning_enabled | bool
+    - ilm_policy.changed
+  tags:
+    - template
+
+- name: main | Start and enable service
+  service:
+    name:    filebeat
+    state:   started
+    enabled: yes

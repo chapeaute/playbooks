@@ -1,0 +1,5 @@
+[all]
+varnish ansible_connection=docker
+
+[varnish]
+varnish

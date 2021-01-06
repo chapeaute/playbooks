@@ -1,0 +1,22 @@
+---
+- hosts: 1http_ftp
+  vars:
+    site_name: "www.smile.ci"
+    site_dir:  "/var/www"
+    sftp_user: "{{ site_name }}"
+    sftp_pass: "cohdec3L"
+    sftp_port: "2222"
+    docs_dir:  "{{ site_dir }}/{{ site_name }}/htdocs"
+  roles:
+    - role: apache
+      apache2_data_dir: "{{ site_dir }}"
+      apache2_vhosts:
+        "{{ site_name }}":
+    - role: php
+    - role: proftpd
+      proftpd_enable_sftp: True
+      proftpd_sftp_port: "{{ sftp_port }}"
+      proftpd_users:
+        - name: "{{ sftp_user }}"
+          password: "{{ sftp_pass }}"
+          home_dir: "{{ docs_dir }}"

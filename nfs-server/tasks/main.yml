@@ -1,0 +1,75 @@
+---
+# tasks file for nfs-server
+
+# Include per-environment variables
+- name: main | Include vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include_tasks: "{{ ansible_os_family }}.yml"
+
+- name: main | stat {{ nfs_data_dir }}
+  stat:
+    path: "{{ nfs_data_dir }}"
+  register: data_dir
+
+- name: main | Create data directory
+  file:
+    state:   directory
+    path:    "{{ nfs_data_dir }}"
+    recurse: yes
+  when: not data_dir.stat.exists
+
+- name: config | Create symlink from {{ nfs_default_data_dir }} to data directory
+  file:
+    state: link
+    src:   "{{ nfs_data_dir }}"
+    dest:  "{{ nfs_default_data_dir }}"
+  when: nfs_data_dir != nfs_default_data_dir
+
+- name: main | Install nfs server
+  package:
+    name:  "{{ item }}"
+    state: present
+  with_items:
+    - "{{ nfs_server_packages }}"
+
+- name: main | Deploy /etc/exports configuration file
+  tags:
+    - config
+    - config_nfs
+  template:
+    src:   etc/exports.j2
+    dest:  /etc/exports
+    owner: root
+    group: root
+    mode:  0644
+  notify:
+    - Reload NFS
+  when: nfs_exports|length > 0
+
+- name: main | Create exports directory
+  tags: config
+  file:
+    path:  "{{ item.directory }}"
+    state: directory
+  with_items:
+    - "{{ nfs_exports }}"
+  when: nfs_exports|length > 0
+
+- name: main | Enable and start service
+  service:
+    name:    "{{ nfs_server_service }}"
+    state:   started
+    enabled: yes
+  when:
+    - not manage_by_cluster

@@ -1,0 +1,8 @@
+TYPE=Ethernet
+BOOTPROTO=static
+NAME={{ name }}
+DEVICE={{ name }}
+IPADDR={{ address }}
+NETMASK={{ netmask|default('255.255.255.0') }}
+ONBOOT=yes
+STARTMODE=auto

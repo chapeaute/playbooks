@@ -1,0 +1,47 @@
+---
+
+# - name: main | Add zimbra systemd unit file
+#   template:
+#     src:   "systemd/zimbra.service.j2"
+#     dest:  "/usr/lib/systemd/system/zimbra.service"
+#   notify:
+#     - Systemctl daemon-reload
+
+# - selinux:
+#     policy: targeted
+#     state:  permissive
+#   tags: selinux
+#   when: ansible_selinux and ansible_selinux.status == "enabled"
+
+- name: RedHat | Install firewalld
+  package:
+    name: firewalld
+
+- name: Redhat | Start firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: Firewalld | Setting up firewall rules 
+  firewalld:
+    port:      "{{item}}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - "80/tcp"
+    - "8080/tcp"
+    - "389/tcp"
+    - "443/tcp"
+    - "7071/tcp"
+    - "7993/tcp"
+    - "7995/tcp"
+    - "7110/tcp"
+    - "9071/tcp"
+    - "110/tcp"
+    - "993/tcp"
+    - "990/tcp"
+    - "143/tcp"
+    - "8443/tcp"
+    - "7143/tcp"

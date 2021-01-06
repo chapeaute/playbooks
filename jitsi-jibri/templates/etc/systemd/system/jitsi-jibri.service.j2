@@ -1,0 +1,13 @@
+[Unit]
+Description=Launch jibri instance %i
+After=multi-user.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/sbin/jibri-start %i
+ExecStartPost=/usr/local/sbin/jibri-start-post %i
+ExecStop=/bin/{{ jibri_container_cli }} container rm -f jitsi-jibri-%i
+Restart=always
+TimeoutStartSec=10
+RestartSec=10
+

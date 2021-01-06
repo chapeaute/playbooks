@@ -1,0 +1,6 @@
+3 completes tutorials to deploy centreon is available on gitlab : http://gitlab.smile.ci/adminsys/ansible/blob/master/centreon-server/README.md
+
+Playbooks directory :
+  - centreon-web : Install all in one server : centreon-central (centreon web + database + poller)
+  - centreon-web-db : Install centreon web and poller on centreon-central server, and database on centreon-database server
+  - centreon-web-db-poller : Install centreon web on server centreon-central, database en centreon-database and poller on centreon-poller

@@ -1,0 +1,27 @@
+---
+- name: user | Create Ceph admin user
+  user:
+    name:     "{{ ceph_user }}"
+
+- name: user | Generate {{ ceph_user }} user SSH key on Controller
+  user:
+    name:             "{{ ceph_user }}"
+    generate_ssh_key: yes
+    ssh_key_comment:  "{{ ceph_user }}@{{ ansible_fqdn }}"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+
+- name: user | Deploy Controller SSH keys on Ceph node
+  include: "sshkey.yml ctl_host={{ item }}"
+  with_items:
+    - "{{ ceph_ctl_hosts }}"
+
+- name: user | Ensure deploy directory exist in Controller
+  file:
+    path:  "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster"
+    state: directory
+    owner: "{{ ceph_user }}"
+    group: "{{ ceph_group }}"
+    mode:  "0750"
+  when:
+    - inventory_hostname in ceph_ctl_hosts

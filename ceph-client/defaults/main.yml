@@ -1,0 +1,15 @@
+---
+# CEPH GLOBAL CONFIGURATION
+ceph_version: "nautilus"
+ceph_repo_package: "https://download.ceph.com/rpm-{{ ceph_version }}/el7/noarch/ceph-release-1-1.el7.noarch.rpm"
+
+# CEPH FS
+ceph_mon_hosts: []
+ceph_fs_volumes: []
+#  - name: nextcloud
+#    localdir: /var/www/nextcloud/shared
+#  - name: shared
+#    localdir: /mnt/shared
+#    client: nc
+#    caps: / r /bar rws
+#    snap: true

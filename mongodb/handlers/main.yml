@@ -1,0 +1,25 @@
+---
+- name: Systemd reload
+  systemd:
+    daemon_reload: yes
+
+- name: Restart MongoDB
+  service:
+    name:  "{{ item }}"
+    state: restarted
+  with_items: "{{ mongodb_services }}"
+  when: not manage_by_cluster
+
+- name: "Restart tuned"
+  service:
+    name:  tuned
+    state: restarted
+
+- name: "thp | Enable new profile"
+  command: "tuned-adm profile no-thp"
+  when: mongodb_thp_disable
+  notify: "Restart tuned"
+
+- name: selinux | Apply SELinux module
+  command: "/sbin/semodule -i /var/tmp/mongodb-ha.pp"
+  when: "'notfound' in mongodb_semod.stdout or mongodb_module.changed"

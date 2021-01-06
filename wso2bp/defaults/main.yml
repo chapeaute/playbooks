@@ -1,0 +1,55 @@
+---
+
+# Generic subpath
+wso2_generic_subpath: "wso2ei-{{ wso2bp_version }}/wso2/business-process"
+
+# defaults file for wso2
+wso2bp_version: 6.6.0
+wso2bp_patch_version:
+wso2bp_offset: 0
+# 1565082452198
+wso2bp_ports:
+  - "{{ 4000 + wso2bp_offset }}/tcp" # BP Clustering Port
+  - "{{ 8243 + wso2bp_offset }}/tcp" # BP Integration carbon https port
+  - "{{ 8280 + wso2bp_offset }}/tcp" # BP Integration carbon http port
+  - "{{ 9443 + wso2bp_offset }}/tcp" # BP Business https port
+  - "{{ 9763 + wso2bp_offset }}/tcp" # HTTP servlet Web Service
+
+wso2bp_service_name: wso2bp
+wso2bp_java_version: "8"
+wso2bp_java_impl: "openjdk"
+wso2bp_memory_size_prct: 0.8
+wso2bp_memory_size: "{{ (ansible_memtotal_mb*wso2bp_memory_size_prct)|int }}M"
+wso2bp_root_dir: "{{ wso2bp_default_root_dir }}"
+wso2bp_install_dir: "{{ wso2bp_root_dir }}/{{ wso2bp_service_name }}"
+wso2bp_data_root_dir: "{{ wso2bp_root_dir }}"
+wso2bp_env_vars: {}
+wso2bp_max_backup_index: 7
+
+wso2bp_hostname: "{{ ansible_default_ipv4.address }}"
+wso2bp_remote_hostname: "{{ wso2bp_hostname }}"
+wso2bp_admin_create: "{% if wso2bp_sso_server is defined %}false{% else %}true{% endif %}"
+wso2bp_admin_user: admin
+wso2bp_admin_pass: changeme  # defines wso2bp admin password
+wso2bp_keystore_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-wso2bp_keystore_pass chars=ascii_letters,digits') }}"
+wso2bp_truststore_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-wso2bp_truststore_pass chars=ascii_letters,digits') }}"
+wso2bp_nodes: []
+wso2bp_cluster_enable: false
+# "{% if wso2bp_nodes|length > 1 %}true{% else %}false{% endif %}"
+wso2bp_repl_method: lsyncd # One of lsyncd, nfs, none
+
+
+# Database configuration
+wso2bp_db_driver: mysql
+# wso2bp_db_host: "{{ ansible_fqdn }}"
+wso2bp_db_enable: "{% if wso2bp_db_host is defined %}true{% else %}false{% endif %}"
+wso2bp_db_port: 3306
+wso2bp_db_user: wso2bp
+wso2bp_db_pass: "{{ lookup('password', 'credential/wso2bp_db_pass chars=ascii_letters,digits') }}"
+wso2bp_db_name: wso2_bp
+wso2bp_db_remote_host: "{{ wso2bp_db_host }}"
+
+# SSO
+#wso2bp_sso_server: localhost
+wso2bp_sso_url: "https://{{ wso2bp_sso_server|default('localhost') }}:9443"
+wso2bp_sso_enable: "{% if wso2bp_sso_server is defined %}true{% else %}false{% endif %}"

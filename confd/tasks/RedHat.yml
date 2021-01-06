@@ -1,0 +1,26 @@
+---
+- name: RedHat | Copy unit files
+  template:
+    src:  etc/systemd/system/{{ confd_service_name }}.service.j2
+    dest: /etc/systemd/system/{{ confd_service_name }}.service
+  notify:
+    - Reload Systemd
+    - Restart confd
+
+- name: RedHat | Add auto-restart on-failure - create directory
+  file:
+    path:  /etc/systemd/system/{{ confd_service_name }}.service.d/
+    state: directory
+    owner: root
+    group: root
+    mode:  0755
+
+- name: RedHat | Add auto-restart on-failure - deploy systemd config for named
+  copy:
+    src:  etc/systemd/system/{{ confd_service_name }}.service.d/override.conf
+    dest: /etc/systemd/system/{{ confd_service_name }}.service.d/override.conf
+    owner: root
+    group: root
+    mode:  0644
+  notify:
+    - Reload Systemd

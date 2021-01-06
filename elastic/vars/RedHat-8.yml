@@ -1,0 +1,6 @@
+
+---
+
+elastic_selinux_packages:
+  - python3-policycoreutils
+  - python3-libselinux

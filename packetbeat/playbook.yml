@@ -1,0 +1,7 @@
+---
+
+- hosts: all
+  roles:
+    - role: packetbeat
+      pb_version: 6.0
+      pb_kafka_hosts: ['127.0.0.1']

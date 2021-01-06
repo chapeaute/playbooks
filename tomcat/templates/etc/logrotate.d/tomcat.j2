@@ -1,0 +1,9 @@
+{{ tomcat_log_dir }}/catalina.out {
+    copytruncate
+    create 640 tomcat tomcat
+    {{ tomcat_logrotate_days }}
+    rotate {{ tomcat_logrotate_rotate }}
+    compress
+    nomissingok
+    size {{ tomcat_logrotate_size }}
+}

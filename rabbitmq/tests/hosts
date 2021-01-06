@@ -1,0 +1,5 @@
+[all]
+rabbitmq ansible_connection=docker
+
+[group1]
+rabbitmq

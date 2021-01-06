@@ -1,0 +1,34 @@
+---
+- hosts: 2postgresql_drbd_pcmk
+  vars:
+    postgresql_version: 11
+    net_itf:  "eth0"
+    vip_cidr: "192.168.122.127/24"
+    drbd_res: "data"
+    drbd_dev: "/dev/vdb"
+    drbd_dir: "/srv/drbd"
+    cluster_name: "postgresql-cluster"
+  roles:
+    - role: postgresql
+      manage_by_cluster: True
+    - role: drbd
+      drbd_hosts: "{{ play_hosts }}"
+      drbd_disk:  "{{ drbd_dev }}"
+      drbd_netif:  "{{ net_itf }}"
+      drbd_res_name: "{{ drbd_res }}"
+    - role: pacemaker
+      pcmk_hosts: "{{ play_hosts }}"
+      pcmk_hacluster_passwd: "{{ lookup('password', 'credential/{{ cluster_name }}-pcmk_hacluster_passwd chars=ascii_letters,digits') }}"
+      pcmk_vip_rsc: 
+        - interface: "{{ net_itf }}"
+          address: "{{ vip_cidr.split('/')[0] }}"
+          netmask: "{{ vip_cidr.split('/')[1] }}"
+      pcmk_svc_rsc:
+        - "postgresql-{{ postgresql_version }}"
+      pcmk_drbd_rsc:
+        rsc_name: "{{ drbd_res }}"
+        mnt_point: "{{ drbd_dir }}"
+        dir:
+          - src_dir: "{{ postgresql_data_dir }}"
+            dst_dir: "{{ drbd_dir }}/postgresql"
+

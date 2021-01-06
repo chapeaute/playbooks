@@ -1,0 +1,14 @@
+---
+- hosts: elasticsearch
+  vars:
+    es_version: "7.5"
+    es_cluster_name: estack
+    es_shard_count: "{{ es_hosts | length }}"
+    es_replica_count: 1
+    es_path_data: "/var/lib/elasticsearch"
+    es_path_logs: "/var/log/elasticsearch"
+    es_path_repo: "/var/backup/elasticsearch"
+  roles:
+    - role: elasticsearch
+      es_hosts: "{{ play_hosts }}"
+      es_install_prompt_scripts: True

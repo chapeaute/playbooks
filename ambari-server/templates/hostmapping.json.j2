@@ -1,0 +1,41 @@
+{
+    "blueprint": "{{ ambari_cluster_name }}",
+    "default_password": "passw0rd",
+    "config_recommendation_strategy": "ALWAYS_APPLY_DONT_OVERRIDE_CUSTOM_VALUES",
+    "host_groups": [
+        {
+            "name": "masters",
+            "configurations" : [ ],
+            "hosts": [
+                {
+                {% for host in ambari_masters %}
+                "fqdn": "{{ hostvars[host]['ansible_fqdn'] }}"{% if not loop.last %}, {%endif%}
+                {% endfor %}
+                }
+            ]
+        }
+        {% if ambari_slaves | length > 0 %}
+        ,{
+            "name": "slaves",
+            "configurations" : [ ],
+            "hosts": [
+                {% for host in ambari_slaves %}
+                {"fqdn": "{{ hostvars[host]['ansible_fqdn'] }}" } {% if not loop.last %}, {%endif%}
+                {% endfor %}
+            ]
+        }
+        {% endif %}
+    ]
+    {% if ambari_enable_kerberos == true %}
+    ,
+        "credentials": [{
+            "alias": "kdc.admin.credential",
+            "principal": "admin/admin@IBM.COM",
+            "key": "admin",
+            "type": "TEMPORARY"
+        }],
+        "security": {
+            "type": "KERBEROS"
+        }
+    {% endif %}
+}

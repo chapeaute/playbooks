@@ -1,0 +1,36 @@
+---
+- name: mysql_config | Waiting for database to become available
+  wait_for:
+    port: 3306
+    host: "{{ centreon_db_host }}"
+
+- name: mysql_config | Create directory mariadb systemd directory
+  file:
+    path:  /etc/systemd/system/mariadb.service.d/
+    state: directory
+    owner: root
+    group: root
+    mode:  0755
+
+- name: mysql_config | Update MariaDB systemd file
+  copy:
+    src:  etc/systemd/system/mariadb.service.d/override.conf
+    dest: /etc/systemd/system/mariadb.service.d/override.conf
+    owner: root
+    group: root
+    mode:  0644
+  notify:
+    - Reload Systemd MariaDB
+    - Restart MariaDB
+  delegate_to: "{{ centreon_db_inventory_host }}"
+
+- name: mysql_config | Create MariaDB remote root user to allow centreon initialization during wizard
+  mysql_user:
+    login_host:    127.0.0.1
+    name:           "{{ centreon_db_admin_user }}"
+    password:       "{{ centreon_db_admin_pass }}"
+    host:           "%"
+    priv:           "*.*:ALL,GRANT"
+    state:          present
+  delegate_to: "{{ centreon_db_inventory_host }}"
+

@@ -1,0 +1,13 @@
+---
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-firewalld.git
+  scm: git
+  version: v1.0.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/debian-backports.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/openjdk.git
+  scm: git
+  version: v1.1.0

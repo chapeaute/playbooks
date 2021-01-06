@@ -1,0 +1,11 @@
+# v1.0
+---
+
+- hosts: all
+  roles:
+    - role: basic-firewalld
+      firewalld_rules_add: {}
+#     - zone: public
+#       services:
+#         - http
+#         - https

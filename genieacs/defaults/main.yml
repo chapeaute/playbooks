@@ -1,0 +1,37 @@
+---
+
+# Global
+manage_firewalld: True
+
+genieacs_version: 1.2.1  # genieacs version
+genieacs_download_url: "https://github.com/zaidka/genieacs/releases/download/v{{genieacs_version}}/genieacs-{{genieacs_version}}.tgz"
+genieacs_nodejs_version: 12.18.4
+# defaults file for genieacs
+genieacs_user: "genieacs"
+genieacs_group: "genieacs"
+genieacs_root_dir: "{{ genieacs_default_root_dir }}"
+
+# Database
+genieacs_redis_host: 127.0.0.1
+genieacs_redis_port: "{{ redis_setting_port|default(6379) }}"
+genieacs_db_host: localhost
+genieacs_db_port: 27017
+genieacs_db_user: genieacs
+genieacs_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-genieacs_db_pass chars=ascii_letters,digits') }}"
+
+genieacs_db_name: genieacs
+genieacs_mongo_url: "mongodb://{{ genieacs_db_host }}:{{ genieacs_db_port }}/{{ genieacs_db_name }}"
+
+# Port
+genieacs_cwmp_port: 7547 # CPEs communication port
+genieacs_api_port: 7557  # Rest api Port
+genieacs_nbi_port: "{{genieacs_api_port }}"
+genieacs_fs_port: 7567   # FS port
+genieacs_ui_port: 3000   # UI port
+
+# SSL configuration
+genieacs_enable_ssl: false
+genieacs_site_url: "{{ ansible_fqdn }}"
+# etherpad_key_path:
+# etherpad_cert_path:
+# etherpad_ca_path: []

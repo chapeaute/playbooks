@@ -1,0 +1,10 @@
+#!/bin/bash
+
+CLUSTER_STATE=$(mongodb-cluster-status  | grep `hostname` -A1 | grep state | awk '{ print $3 }' | tr -d '"' )
+
+if [[ $CLUSTER_STATE == "PRIMARY" ]]
+then
+   echo "[mgo:master]"
+else
+   echo "[mgo:slave]"
+fi

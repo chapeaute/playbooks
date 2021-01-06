@@ -1,0 +1,56 @@
+---
+
+- name: flush all handlers
+  meta: flush_handlers
+
+- name: keyspaces | Ensure that database is up
+  tags:
+    - create_dbs
+    - setup
+  wait_for:
+    host: "{{ cassandra_bind_addr }}"
+    port: 9042
+
+- name: keyspaces |  Proper replication of users collection
+  cassandra_keyspace:
+    name: system_auth
+    state: present
+    replication_factor: "{{ cassandra_hosts | length }}"
+    strategy: "SimpleStrategy"
+    login_host: "{{ cassandra_bind_addr }}"
+    login_user: "{{ cassandra_root_user }}"
+    login_password: "{{ cassandra_root_password }}"
+    protocol_version: 3
+  run_once: true
+
+- name: keyspaces | Create keyspaces
+  tags:
+    - create_dbs
+    - setup
+  cassandra_keyspace:
+    name: "{{ item.value.db_name }}"
+    state: "{{ item.state|default('present') }}"
+    replication_factor: "{{ cassandra_hosts | length }}"
+    strategy: "{{ item.value.strategy | default('SimpleStrategy') }}"
+    login_host: "{{ cassandra_bind_addr }}"
+    login_user: "{{ cassandra_root_user }}"
+    protocol_version: 3
+    login_password: "{{ cassandra_root_password }}"
+  with_dict: "{{ cassandra_keyspaces }}"
+  run_once: true
+
+- name: keyspaces | Grant keyspaces to users
+  tags:
+    - create_dbs
+    - setup
+  cassandra_grant:
+    keyspace: "{{ item.value.db_name }}"
+    role: "{{ item.value.user }}"
+    state: "{{ item.value.state | default('present') }}"
+    login_host: "{{ cassandra_bind_addr }}"
+    login_user: "{{ cassandra_root_user }}"
+    login_password: "{{ cassandra_root_password }}"
+    protocol_version: 3
+  with_dict: "{{ cassandra_keyspaces }}"
+  when: cassandra_enable_password
+  run_once: true

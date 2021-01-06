@@ -1,0 +1,22 @@
+---
+
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users_groups:
+        - name: exploit
+      sudoers:
+        exploit:
+          state: present
+          lines:
+            - "%exploit ALL=(ALL) NOPASSWD: ALL"
+        default:
+          state: present
+          lines:
+            - 'Defaults    env_keep += "SSH_AUTH_SOCK"'
+      users:
+        - login: fryao
+          groups: exploit
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCi5Ckgw55t+so0+KjOS/sUYZ5woyqNRRqPY2L/Or8MrY5FD31V8bcVGbstmi+YEZhipn+cwjKHsqFQ7SSUnuuaifIJYAi5fXYoxF3KSEMCnEfO18hWB4nCRnLnYZviHCbEGCBEzGf7+ulKVY6rR1o+U22VkUPXWd628n+C1lfpEw8wMat4HotSxYyM7MBJXDopKHO+l9SrsfRZh1Pqf9BnHwuhQVRqsvtUAvrkrAK+UfDI8rR0vgz2GtJhBFKRRzyC4rrTpTkOfvM+SowIBmdxW7eQ8fAd8zdZCfWgLb8tMjEwfUa1g2U4U2KqeU2XxvrTijo6WLaOrSTLpxntCb8P zouzou@smile.ci

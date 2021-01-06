@@ -1,0 +1,12 @@
+/var/log/nodejs/*.log {
+    rotate {{ nodejs_logrotate_rotate }}
+    daily
+    missingok
+    notifempty
+    compress
+    delaycompress
+    create 0640 {{ nodejs_user }} {{ nodejs_group }}
+    postrotate
+      pm2 reloadLogs
+    endscript
+}

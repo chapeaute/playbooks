@@ -1,0 +1,21 @@
+---
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Restart Spark Master
+  service:
+    name: spark-master
+    state: restarted
+  when: ansible_fqdn in spark_masters
+
+- name: Restart Spark Worker
+  service:
+    name: spark-worker
+    state: restarted
+
+- name: Restart Spark
+  service:
+    name: spark
+    state: restarted

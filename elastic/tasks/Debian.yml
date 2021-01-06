@@ -1,0 +1,23 @@
+---
+- name: Debian | Add elasticsearch key
+  tags: key
+  apt_key:
+    keyserver: pgp.mit.edu
+    id: 46095ACC8548582C1A2699A9D27D666CD88E42B4
+  when: use_satellite_repo == false
+
+- name: Debian | Install https
+  package:
+    name: apt-transport-https
+
+- name: Debian |  Add Filebeat repo
+  template:
+    src:   "etc/apt/sources.list.d/{{ item }}.repo.j2"
+    dest:  "/etc/apt/sources.list.d/{{ item }}.repo"
+    owner: root
+    group: root
+    mode:  0644
+  with_items:
+    - curator
+    - elastic
+  when: use_satellite_repo == false

@@ -1,0 +1,58 @@
+---
+
+# defaults file for wso2
+wso2ei_version: 6.6.0
+wso2ei_patch_version:
+# 1565082452198
+wso2ei_ports:
+  - 8243/tcp # EI Integration carbon https port
+  - 8280/tcp # EI Integration carbon http port
+  - 9443/tcp # EI Integration carbon console port
+  - 9445/tcp # EI Business https port
+  - 9763/tcp # HTTP servlet Web Service and jolokia port
+  # - 9444/tcp # EI Analytics port
+  # - 9090/tcp # EI msf4j port
+  # - 9999/tcp
+  # - 11111/tcp
+  # - 44370/tcp
+
+wso2ei_java_version: "8"
+wso2ei_java_impl: "openjdk"
+wso2ei_memory_size_prct: 0.8
+wso2ei_memory_size: "{{ (ansible_memtotal_mb*wso2ei_memory_size_prct)|int }}M"
+wso2ei_root_dir: "/var/lib"
+wso2ei_install_dir: "{{ wso2ei_root_dir }}/{{ wso2ei_service_name }}"
+wso2ei_data_root_dir: "{{ wso2ei_root_dir }}"
+wso2ei_env_vars: {}
+wso2ei_max_backup_index: 7
+
+wso2ei_hostname: "{{ ansible_default_ipv4.address }}"
+wso2ei_remote_hostname: "{{ wso2ei_hostname }}"
+wso2ei_admin_create: "{% if wso2ei_sso_server is defined %}false{% else %}true{% endif %}"
+wso2ei_admin_user: admin
+wso2ei_admin_pass: changeme  # defines wso2ei admin password
+wso2ei_keystore_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-wso2ei_keystore_pass chars=ascii_letters,digits') }}"
+wso2ei_truststore_pass: "{{ wso2ei_keystore_pass }}"
+# "{{ lookup('password', 'credential/{{ inventory_hostname }}-wso2ei_truststore_pass chars=ascii_letters,digits') }}"
+wso2ei_offset: 0
+
+# Analytics
+#wso2ei_analytics_server:  localhost
+wso2ei_analytics_enabled: "{% if wso2ei_analytics_server is defined %}true{% else %}false{% endif %}"
+wso2ei_analytics_user: admin
+wso2ei_analytics_pass: admin
+
+# Database configuration
+wso2ei_db_driver: mysql
+# wso2ei_db_host: "{{ ansible_fqdn }}"
+wso2ei_db_enable: "{% if wso2ei_db_host is defined %}true{% else %}false{% endif %}"
+wso2ei_db_port: 3306
+wso2ei_db_user: wso2ei
+wso2ei_db_pass: "{{ lookup('password', 'credential/wso2ei_db_pass chars=ascii_letters,digits') }}"
+wso2ei_db_name: wso2_ei
+wso2ei_db_remote_host: "{{ wso2ei_db_host }}"
+
+# SSO
+#wso2ei_sso_server: localhost
+wso2ei_sso_url: "https://{{ wso2ei_sso_server|default('localhost') }}:9443"
+wso2ei_sso_enable: "{% if wso2ei_sso_server is defined %}true{% else %}false{% endif %}"

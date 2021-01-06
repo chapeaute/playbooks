@@ -1,0 +1,62 @@
+Client {
+  Name = {{ bacula_fd_name }}
+  Address = {{ bacula_fd_name }}
+  FDPort = {{ bacula_fd_port }}
+  Password = "{{ bacula_fd_password }}"
+  Catalog = MyCatalog
+  AutoPrune = yes
+  Maximum Concurrent Jobs = {{ bacula_fd_max_concurrent_job }}
+}
+
+FileSet {
+  Name = "{{ bacula_fd_name }} Set"
+  Include {
+    Options {
+      Signature = MD5
+      Compression =  GZIP
+    }
+{% set files = [] %}
+{% for data in filesets %}
+{% if data.name in group_names %}
+{% if data.include is defined %}
+{% for file in data.include %}{{ files.append(file) }}{% endfor %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% for file in files|unique|sort %}
+    File = {{ file }}
+{% endfor %}
+  }
+
+  Exclude {
+{% set files = [] %}
+{% for data in filesets %}
+{% if data.name in group_names %}
+{% if data.exclude is defined  %}
+{% for file in data.exclude %}{{ files.append(file) }}{% endfor %}
+{% endif %}
+{% endif %}
+{% endfor %}
+{% for file in files|unique|sort %}
+    File = {{ file }}
+{% endfor %}
+  }
+}
+
+Job {
+    Name = "{{ bacula_fd_name }}"
+    Enabled = "Yes"
+    JobDefs = "DefaultJob-{{ bacula_sd_host }}"
+    Client = "{{ bacula_fd_name }}"
+    FileSet = "{{ bacula_fd_name }} Set"
+{% for fileset in filesets %}
+{% if fileset.name in group_names %}
+{% if fileset.before is defined %}
+    Client Run Before Job = "{{ fileset.before }}"
+{% endif %}
+{% if fileset.after is defined %}
+    Client Run After Job = "{{ fileset.after }}"
+{% endif %}
+{% endif %}
+{% endfor %}
+}

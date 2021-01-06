@@ -1,0 +1,15 @@
+# v1.0
+---
+- hosts: odoo
+  vars:
+    odoo_version:  '12.0'
+    odoo_admin_password: changeme
+    odoo_home_dir: /var/lib/odoo
+    postgresql_home_dir: /var/lib/pgsql
+  roles:
+    - role: postgresql
+      postgresql_version: 10
+      postgresql_shared_buffers_prct: 0.15
+      postgresql_effective_cache_size_prct: 0.25
+    - role: odoo
+      odoo_memory_prct: 0.4

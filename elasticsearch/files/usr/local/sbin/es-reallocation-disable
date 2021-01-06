@@ -1,0 +1,15 @@
+#!/bin/bash
+
+ES_SERVER="127.0.0.1"
+
+# Disable shards reallocation during node unavailability (usefull during maintenance operation))
+curl -s -XPUT "http://${ES_SERVER}:9200/_cluster/settings" -H 'Content-Type: application/json' -d'
+{
+  "persistent": {
+    "cluster.routing.rebalance.enable": "none"
+  }
+}' | jq .
+
+sleep 3
+
+curl -s -XPOST "http://${ES_SERVER}:9200/_flush/synced" | jq .

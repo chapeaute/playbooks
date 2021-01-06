@@ -1,0 +1,10 @@
+---
+# vars file for asterisk
+
+asterisk_sip_port: 5060
+
+aterisks_codecs:
+  - g722
+  - alaw
+  - ulaw
+  - g729

@@ -1,0 +1,165 @@
+---
+# tasks file for pacemaker
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family}}.yml"
+
+- name: main | Remove 127.0.0.1 with server hostname entry in /etc/hosts if exists
+  lineinfile:
+    dest:   /etc/hosts
+    regexp: '^127\.0\.0\.1.*{{ ansible_hostname }}'
+    state:  absent
+
+- name: main | Allow services to bind to non local address
+  sysctl:
+    name:   net.ipv4.ip_nonlocal_bind
+    value : "1"
+
+- name: main | Install PCS
+  package:
+    name:  "{{ item }}"
+    state: present
+  with_items:
+    - "{{ pcmk_packages_name }}"
+    - "{{ pcmk_packages_utils }}"
+
+- name: main | Enable and start pcsd service
+  service:
+    name:    "{{ item }}"
+    state:   started
+    enabled: yes
+  with_items:
+    - "{{ pcmk_pcs_service_name }}"
+
+- name: main | Generate SHA-512 hash password
+  command: "python -c 'import crypt; print crypt.crypt(\"{{ pcmk_hacluster_passwd }}\", \"$6$saltsalt$\")'"
+  changed_when: false
+  check_mode: no
+  register: pcmk_hash_passwd
+
+- name: main | Create hacluster user
+  user:
+    name:     hacluster
+    uid:      189
+    group:    haclient
+    password: "{{ pcmk_hash_passwd.stdout }}"
+
+- name: main | Deploy HA administration scripts
+  copy:
+    src:   "usr/local/sbin/{{ item }}"
+    dest:  /usr/local/sbin
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - cluster-watch
+    - cluster-state
+
+- name: main | Deploy HA setup scripts
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - pacemaker-setup-rsc
+    - pacemaker-common
+  tags:
+    - script
+
+- name: install_hatop | Create /root/.bashrc.d
+  file:
+    path:  /root/.bashrc.d
+    state: directory
+
+- name: main | Deploy bash HA prompt
+  copy:
+    src:   root/bashrc.d/ha
+    dest:  /root/.bashrc.d
+    owner: root
+    group: root
+    mode:  0500
+  tags:
+    - script
+
+- name: main | Set resource variable
+  set_fact:
+    drbd_rsc: ""
+    dir_rsc: ""
+    svc_rsc: ""
+    vip_rsc: ""
+    nfs_rsc: ""
+    master_node: ""
+
+- name: main | Define master node used to initialize cluster
+  set_fact:
+    master_node: "-m"
+  when: pcmk_hosts[0] == ansible_hostname
+
+- name: main | Get DRBD resources
+  set_fact:
+    drbd_rsc: "{{ drbd_rsc }} -r {{ item.rsc_name }}:{{ item.mnt_point }}"
+    master_node: ""
+  with_items:
+    - "{{ pcmk_drbd_rsc | default([]) }}"
+  when: pcmk_drbd_rsc is defined
+
+- name: main | Set fact
+  set_fact:
+    drbd_dir_list: "{{ pcmk_drbd_rsc.dir }}"
+  when: pcmk_drbd_rsc is defined and pcmk_drbd_rsc.dir is defined
+
+- name: main | Get directory resources
+  set_fact:
+    dir_rsc: "{{ dir_rsc }} -d {{ item.src_dir }}:{{ item.dst_dir }}"
+  with_items:
+    - "{{ drbd_dir_list | default([]) }}"
+  when: drbd_dir_list is defined
+
+- name: main | Get services resources
+  set_fact:
+    svc_rsc: "{{ svc_rsc }} -s {{ item }}"
+  with_items:
+    - "{{ pcmk_svc_rsc | default([]) }}"
+  when: pcmk_svc_rsc is defined
+
+- name: main | Get VIP resources
+  set_fact:
+    vip_rsc: "{{ vip_rsc }} -v {{ item.interface }}:{{ item.address }}:{{ item.netmask }}"
+  with_items:
+    - "{{ pcmk_vip_rsc | default([]) }}"
+  when: pcmk_vip_rsc is defined
+
+- name: main | Get NFS resource
+  set_fact:
+    nfs_rsc: "-N {{ pcmk_nfs_rsc }}"
+  when: pcmk_nfs_rsc is defined
+
+- name: main | Check if pacemaker is already initialize
+  shell: "pcs status && echo configure || echo notconfigure"
+  changed_when: false
+  check_mode: no
+  register: pcmk_init
+
+- name: main | Setup cluster configuration
+  command: "/usr/local/sbin/pacemaker-setup-rsc -n {{ pcmk_hosts | join(',') }} {{ drbd_rsc }} {{ dir_rsc }} {{ vip_rsc }} {{ svc_rsc }} {{ nfs_rsc }} {{ master_node }}"
+  when: "'notconfigure' in pcmk_init.stdout"
+
+- name: main | Enable pacemaker service
+  service:
+    name:    "{{ item }}"
+    enabled: yes
+  with_items:
+    - "{{ pcmk_pck_service_name }}"

@@ -1,0 +1,22 @@
+---
+- name: config | Create configuration directory
+  file:
+    path:  "{{ item }}"
+    owner: "{{ confd_user }}"
+    group: "{{ confd_group }}"
+    mode:  0750
+    state: directory
+  with_items:
+    - "{{ confd_conf_dir }}"
+    - "{{ confd_conf_dir }}/conf.d"
+    - "{{ confd_conf_dir }}/templates"
+
+- name: config | Deploy main configuration file
+  template:
+    src:   "etc/confd/{{ item }}.j2"
+    dest:  "/etc/confd/{{ item }}"
+    owner: "{{ confd_user }}"
+    group: "{{ confd_group }}"
+    mode:  0640
+  with_items:
+    - confd.toml

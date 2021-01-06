@@ -1,0 +1,22 @@
+#!/bin/bash
+
+UA_DB_URL=https://raw.githubusercontent.com/ua-parser/uap-core/master/regexes.yaml
+UA_DB_FILE={{ ls_path_conf }}/regexes.yaml
+
+curl --fail -s $UA_DB_URL -o ${UA_DB_FILE}.new
+
+if [ $? -ne 0 ]; then
+    echo "Failed to download regexes.yaml file"
+    exit 1
+fi
+
+old_md5=$(md5sum ${UA_DB_FILE} | awk '{print $1}')
+new_md5=$(md5sum ${UA_DB_FILE}.new | awk '{print $1}')
+
+if [ "$old_md5" != "$new_md5" ]; then
+    cp ${UA_DB_FILE}.new ${UA_DB_FILE}
+    sleep `echo $((1+RANDOM % 120))`
+    {{ ls_path_bin }}/logstash -t --path.settings {{ ls_path_conf }} && systemctl restart logstash
+fi
+
+rm -f ${UA_DB_FILE}.new

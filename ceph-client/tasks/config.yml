@@ -1,0 +1,23 @@
+---
+- name: main | Create Ceph configuration directory
+  file:
+    path:  /etc/ceph
+    state: directory
+    owner: root
+    group: root
+    mode:  0750
+
+- name: main | Retrieve configuration from Monitor nodes
+  command: "ceph config generate-minimal-conf"
+  register: "ceph_config"
+  delegate_to: "{{ ceph_mon_hosts[0] }}"
+  check_mode: no
+  changed_when: false
+
+- name: main | Deploy ceph configuration file
+  copy:
+    content: "{{ ceph_config.stdout }}\n"
+    dest:    "/etc/ceph/ceph.conf"
+    owner:    root
+    group:    root
+    mode:     0644

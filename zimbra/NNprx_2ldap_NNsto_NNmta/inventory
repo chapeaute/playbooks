@@ -1,0 +1,39 @@
+[all:children]
+basic-server 
+
+[basic-server:children]
+zimbra-stack
+
+[zimbra-stack]
+proxy[1:2]
+mta[1:2]
+ldap[1:2]
+store[1:4]
+
+# proxy
+[proxy:children]
+zimbra-stack-proxy
+
+[zimbra-stack-proxy]
+proxy[1:2]
+
+# mta
+[mta:children]
+zimbra-stack-mta
+
+[zimbra-stack-mta]
+mta[1:2]
+
+# ldap
+[ldap:children]
+zimbra-stack-ldap
+
+[zimbra-stack-ldap]
+ldap[1:2]
+
+# store
+[store:children]
+zimbra-stack-store
+
+[zimbra-stack-store]
+store[1:4]

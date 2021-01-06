@@ -1,0 +1,12 @@
+---
+
+zimbra_url: "https://files.zimbra.com/downloads/{{ zimbra_version }}_GA/"
+
+# Monitoring
+zimbra_monitoring_packages:
+  - perl
+zimbra_monitoring_user: nagios
+zimbra_monitoring_pass: "{{ lookup('password', 'credential/zimbra_monitoring_pass') }}" 
+mariadb_config_file: "/opt/zimbra/conf/my.cnf"
+postfix_spool_dir: "/var/spool/dir"
+zimbra_spool_dir: "/opt/zimbra/data/postfix/spool"

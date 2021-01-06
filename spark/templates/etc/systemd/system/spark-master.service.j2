@@ -1,0 +1,22 @@
+[Unit]
+Description=Spark Master Service
+Wants=network.target network-online.target
+After=network.target network-online.target
+
+[Service]
+Type=forking
+User=spark
+Group=spark
+EnvironmentFile=/etc/default/spark
+LimitNOFILE=8192
+WorkingDirectory={{ spark_install_dir }}
+Restart=on-failure
+TimeoutSec=5min
+IgnoreSIGPIPE=no
+KillMode=control-group
+GuessMainPID=no
+ExecStart={{ spark_install_dir }}/sbin/start-master.sh
+ExecStop={{ spark_install_dir }}/sbin/stop-master.sh
+
+[Install]
+WantedBy=multi-user.target

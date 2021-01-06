@@ -1,0 +1,9 @@
+---
+# handlers file for security
+- name: Reload SSH
+  service:
+    name:  sshd
+    state: restarted
+
+- name: Update Grub2
+  command: "grub2-mkconfig > /boot/grub2/grub.cfg"

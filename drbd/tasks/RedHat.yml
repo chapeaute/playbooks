@@ -1,0 +1,22 @@
+---
+# tasks file for RedHat-like DRBD
+- name: RedHat | Import EPEL GPG key
+  rpm_key:
+    key: "https://www.elrepo.org/RPM-GPG-KEY-elrepo.org"
+    state: present
+    validate_certs: False
+  when: use_satellite_repo == False
+
+- name: RedHat | Install ELRepo
+  yum:
+    name: "http://www.elrepo.org/elrepo-release-7.0-3.el{{ ansible_distribution_major_version }}.elrepo.noarch.rpm"
+    state: present
+  when: use_satellite_repo == False
+
+- name: RedHat | Setting firewall rules
+  firewalld:
+    port:      "{{ drbd_port }}/tcp"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  when: manage_firewalld

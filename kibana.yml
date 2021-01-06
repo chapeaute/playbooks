@@ -1,0 +1,8 @@
+---
+- hosts: kibana
+  vars:
+    kibana_version: "7.5"
+    kibana_enable_http_reverse: True
+    kibana_es_hosts: "{{ groups['elasticsearch'] }}"
+  roles:
+    - role: kibana

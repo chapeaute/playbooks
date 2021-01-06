@@ -1,0 +1,116 @@
+#!/bin/bash
+#
+# This plugin check that index are constantly update by adding with new documents
+#
+
+TMP_DIR=/tmp
+PLUGIN_PATH=$(dirname $0)
+
+ES_HOST="127.0.0.1"
+ES_PORT="9200"
+IDX_PREFIX=""
+WARNING_COUNT=0
+CRITICAL_COUNT=0
+STATUS=0             # 0=OK, 1=WARNING, 2=CRITICAL, 3=UNKNOWN
+
+function usage {
+  cat <<EOF
+This plugin check that index are constantly update by adding with new documents.
+
+Usage : ${0##*/} -H hostname [-p port] [-i index_prefix] [-w warning_treshold] [-c critical_threshold]
+    -H,--hostname <hostname>           Elasticsearch host server address (default: $ES_HOST)
+    -p,--port <port>                   Elasticsearch host server port (default: $ES_PORT)
+    -i,--index-prefix <index_prefix>   Index prefix name. Count documents in all indexes beginning by this prefix name (default: all)
+    -w,--warning <count>               Warning threshold. Warning are return if less that this document count is added since last update (default: $WARNING_COUNT)
+    -c,--critical <count>              Critical threshold. Critical are return if less that this document count is added since last update (default: $CRITICAL_COUNT)
+EOF
+
+  exit 0
+}
+
+ARGS=$(getopt -o H:p:i:c:w:h -l "hostname:,port:,index-prefix:,critical:,warning:,help" -n "$0" -- "$@")
+
+eval set -- "$ARGS";
+
+while true; do
+  case "$1" in
+    -H|--hostname)
+      shift
+      [[ -z "$1" ]] && usage
+      ES_HOST="$1"
+      shift
+      ;;
+    -p|--port)
+      shift
+      [[ -z "$1" ]] && usage
+      ES_PORT="$1"
+      shift
+      ;;
+    -i|--index-prefix)
+      shift
+      IDX_PREFIX="${1:-$IDX_PREFIX}"
+      shift
+      ;;
+    -w|--warning)
+      shift
+      [[ -z "$1" ]] && usage
+      WARNING_COUNT="$1"
+      shift
+      ;;
+    -c|--critical)
+      shift
+      [[ -z "$1" ]] && usage
+      CRITICAL_COUNT="$1"
+      shift
+      ;;
+    -h|--help)
+      shift
+      usage
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+CACHE_FILE="$TMP_DIR/es_cache_${ES_HOST}_${IDX_PREFIX:-all}"
+
+plugin_output=$($PLUGIN_PATH/centreon_plugins.pl --plugin=database::elasticsearch::restapi::plugin --mode=indice-statistics --hostname $ES_HOST --port $ES_PORT --filter-name="^$IDX_PREFIX" --filter-perfdata 'indice.documents.total.count' --output-json)
+
+if [ $? -gt 1 ]; then
+  echo "Failed to retrieve indexes document count: $plugin_output"
+  exit 3
+fi
+
+current_doc=$(echo $plugin_output | jq '.plugin.perfdatas' | jq -r .[].value | awk '{s+=$1} END {print s}')
+
+if [ -w $CACHE_FILE ]; then
+  prev_doc=$(cat $CACHE_FILE | cut -d: -f2)
+  add_doc=$(expr $current_doc - $prev_doc)
+
+  # Case of indexes drop, set negative count to 0
+  if [ $add_doc -lt 0 ] ; then
+    add_doc=0
+  fi
+
+  if [ $add_doc -le $CRITICAL_COUNT  ]; then
+    output="CRITICAL - $add_doc added since last check in '${IDX_PREFIX:-all}' indices (<$CRITICAL_COUNT)"
+    STATUS=2
+  elif [ $add_doc -le $WARNING_COUNT  ]; then
+    output="WARNING - $add_doc added since last check in '${IDX_PREFIX:-all}' indices (<$WARNING_COUNT)"
+    STATUS=1
+  else
+    output="OK - $add_doc added since last check in '${IDX_PREFIX:-all}' indices"
+    STATUS=0
+  fi
+  perf_data="'documents'=${add_doc};0:$WARNING_COUNT;0:$CRITICAL_COUNT;0;"
+  echo "$output | $perf_data"
+else
+  echo "UNKNOWN - First execution. Buffer in creation... for indices '${IDX_PREFIX:-all}'"
+  STATUS=3
+fi
+
+echo `date +%s`:$current_doc > $CACHE_FILE
+
+exit $STATUS

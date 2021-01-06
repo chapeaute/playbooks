@@ -1,0 +1,50 @@
+---
+- set_fact:
+    external_conf: "{{ external | default(True) }}"
+    prefix:        "{{ idx | default('') }}"
+  tags:
+    - always
+
+- name: docker_prov | Deploy {{ config_file }} configs file for {{ svc }}{{ prefix }}
+  template:
+    src:  "etc/docker-swarm/configs/{{ config_file }}.j2"
+    dest: "{{ docker_swarm_conf_dir }}/configs/{{ config_file }}{{ prefix }}"
+    owner: root
+    group: root
+    mode: 0640
+  register: config
+  tags:
+    - version
+
+- name: docker_prov | Get file checksum
+  stat:
+    path: "{{ docker_swarm_conf_dir }}/configs/{{ config_file }}{{ prefix }}"
+    checksum_algorithm: sha1
+  register: config_stat
+  when: external_conf
+  tags:
+    - always
+
+- name: docker_prov | Generate config version from checksum
+  set_fact:
+    config_version: "{{ config_stat.stat.checksum }}"
+  tags:
+    - always
+  when: external_conf
+
+- name : docker_prov | Register new configuration file
+  shell: "docker config inspect {{ config_file }}{{ prefix }}-{{ config_version }} || docker config create {{ config_file }}{{ prefix }}-{{ config_version }} {{ docker_swarm_conf_dir }}/configs/{{ config_file }}{{ prefix }}"
+  when:
+    - config.changed
+    - inventory_hostname == ogo_node_manager[0]
+    - external_conf
+  tags:
+    - version
+
+- name: docker_prov | Set dynamic variable for version
+  set_fact:
+    "{{ svc }}{{ prefix }}_conf_version": "{{ config_version }}"
+  when: external_conf
+  tags:
+    - always
+

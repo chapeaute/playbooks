@@ -1,0 +1,6 @@
+---
+# vars file for gitlab
+gitlab_package: gitlab-ce
+gitlab_service: gitlab-runsvdir
+gitlab_conf_file: /etc/gitlab/gitlab.rb
+gitlab_default_backup_dir: /var/backup/gitlab

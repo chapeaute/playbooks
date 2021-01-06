@@ -1,0 +1,24 @@
+#!/bin/bash
+
+SERVICE_NAME="tomcat"
+APP_DIR="/var/lib/tomcat/webapps"
+
+if [ ! -d "${APP_DIR}" ]; then
+    echo "Application directory ${APP_DIR} not found."
+    exit 1
+fi
+
+tomcat_dir=$(systemctl show $SERVICE_NAME | grep '^Environment=' | grep -o "CATALINA_HOME=[^ ]*" | cut -d= -f2)
+
+[[ -n $tomcat_dir ]] && APP_DIR="$tomcat_dir/webapps"
+
+if [ ! -d "$APP_DIR" ]; then
+    echo "Could find Tomcat working directory"
+    exit 1
+fi
+
+for app in $(find $APP_DIR/* -maxdepth 0 -type d)
+do
+    echo $(basename $app)
+done
+

@@ -1,0 +1,23 @@
+[options]
+; This is the password that allows database operations:
+admin_passwd = {{ odoo_admin_password }}
+db_host = {{ odoo_db_host }}
+db_port = {{ odoo_db_port }}
+db_user = {{ odoo_db_user }}
+db_password = {{ odoo_db_pass }}
+addons_path = {{ odoo_main_addons_dir }},{{ odoo_addons_dir }}
+data_dir = {{ odoo_data_dir }}
+logfile = {{ odoo_log_file }}
+logrotate = False
+log_level = {{ odoo_log_level }}
+log_handler = ["[':INFO']"]
+limit_memory_hard = {{ odoo_limit_memory_hard }}
+limit_memory_soft = {{ odoo_limit_memory_soft }}
+limit_request = {{ odoo_limit_memory_request }}
+limit_time_cpu = {{ odoo_limit_time_cpu }}
+limit_time_real = {{ odoo_limit_time_real }}
+max_cron_threads = {{ odoo_max_cron_threads }}
+workers = {{ odoo_workers }}
+{% for name in odoo_config_custom | sort %}
+{{ name }} = {{ odoo_config_custom[name] }}
+{% endfor %}

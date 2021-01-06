@@ -1,0 +1,4 @@
+alfresco_required_packages:
+#  - libreoffice-core
+  - ImageMagick
+  - unzip

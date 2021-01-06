@@ -1,0 +1,36 @@
+---
+nrpe_packages:
+  - nrpe
+  - nagios-plugins-all
+  - nrpe-plugins-smile
+
+nrpe_service: nrpe
+
+nrpe_pid_file: /var/run/nrpe/nrpe.pid
+nrpe_user: nrpe
+nrpe_group: nrpe
+
+centreon_extra_packages:
+  - rsync
+  - jq
+  - perl-DateTime
+  - perl-DBD-MySQL
+  - perl-DBD-Pg
+  - perl-Digest-SHA
+  - perl-Digest-MD5
+  - perl-libwww-perl
+  - perl-gettext
+  - perl-MongoDB
+  - perl-Nagios-Plugin
+  - perl-Pod-Parser
+  - perl-Redis
+  - perl-JSON
+  - perl-Pod-Parser
+  - perl-Type-Tiny
+  - perl-Hash-Ordered
+  - perl-URI-Encode
+  - perl-XML-LibXML
+  - perl-XML-XPath
+  - socat
+  - openssl-libs
+  - perl-JSON-XS

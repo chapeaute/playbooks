@@ -1,0 +1,7 @@
+---
+
+ipsec_package: openswan
+ipsec_dependencies:
+  - python-dev
+  - python-urllib3
+  - python-openssl

@@ -1,0 +1,48 @@
+---
+
+- name: export_conf_dir | Check if {{ wso2_generic_install_dir }}/{{ dir }} link exist
+  stat:
+    path: "{{ wso2_generic_install_dir }}/{{ dir }}"
+  register: install_dir
+  tags: export_dir
+
+- name: export_conf_dir | Create directory {{ wso2_generic_data_dir }}/{{ dir }}
+  file:
+    path:    "{{ wso2_generic_data_dir + '/' + dir }}"
+    state:   directory
+    owner:   "{{ wso2_generic_service_name }}"
+    group:   "{{ wso2_generic_service_name }}"
+    mode:    0750
+    recurse: yes
+  tags : export_dir
+  run_once: "{{ wso2_generic_repl_method == 'nfs' | ternary('yes', 'no') }}"
+
+- name: export_conf_dir | Move directory {{ dir }} to remote dir {{ wso2_generic_data_dir }}
+  command: "cp -af {{ wso2_generic_install_dir }}/{{ dir }} {{ (wso2_generic_data_dir + '/' + dir) | dirname }}"
+  when:
+    - install_dir.stat.exists
+    - install_dir.stat.islink is not defined and install_dir.stat.islnk == False
+  run_once: "{{ wso2_generic_repl_method == 'nfs' | ternary('yes', 'no') }}"
+  tags: export_dir
+
+- name: export_conf_dir | Remove directory {{ wso2_generic_install_dir }}/{{ dir }}
+  file:
+    path:  "{{ wso2_generic_install_dir }}/{{ dir }}"
+    state: absent
+  when:
+    - install_dir.stat.exists
+    - install_dir.stat.islink is not defined and install_dir.stat.islnk == False
+  tags: export_dir
+
+- name: export_conf_dir | Create link {{ wso2_generic_install_dir }}/{{ dir }} to {{ wso2_generic_data_dir }}/{{ dir }} remote dir
+  file:
+    src:   "{{ wso2_generic_data_dir }}/{{ dir }}"
+    dest:  "{{ wso2_generic_install_dir }}/{{ dir }}"
+    state: link
+    owner: "{{ install_dir.stat.pw_name|default(wso2_generic_service_name) }}"
+    group: "{{ install_dir.stat.gr_name|default(wso2_generic_service_name) }}"
+    force: yes
+  when:
+#    - install_dir.stat.exists
+    - install_dir.stat.islink is not defined #and install_dir.stat.islnk == False
+  tags: export_dir

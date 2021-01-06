@@ -1,0 +1,196 @@
+#!/usr/bin/env python2
+#
+# docker run -ti -p 2379:2379 --rm --network ogo_common bobrik/socat TCP4-LISTEN:2379 TCP4:etcd:2379
+#
+
+import etcd3
+import json
+import os
+import re
+import argparse
+
+data = {}
+vhost_no_tls = ["acme"]
+
+etcd_src_prefix = "/traefik/"
+etcd_dst_prefix = "traefikv2"
+
+# Output color
+class Bcolors:
+    GREEN = '\033[92m'
+    YELLOW = '\033[93m'
+    RED = '\033[91m'
+    BLUE = '\033[94m'
+    ENDC = '\033[0m'
+    BOLD = '\033[1m'
+    UNDERLINE = '\033[4m'
+
+
+#
+# Display function
+#
+def print_green(msg):
+  print(Bcolors.GREEN + msg + Bcolors.ENDC)
+
+
+def print_blue(msg):
+  print(Bcolors.BLUE + msg + Bcolors.ENDC)
+
+
+def print_bold(msg):
+  print(Bcolors.BOLD + msg + Bcolors.ENDC)
+
+
+def print_yellow(msg):
+  print(Bcolors.YELLOW + msg + Bcolors.ENDC)
+
+
+def print_red(msg):
+  print(Bcolors.RED + msg + Bcolors.ENDC)
+
+
+#
+# Push key in etcd
+#
+def etcd_put(key, value):
+  print(key + " => " + value)
+  etcd.put(key, value)
+
+#
+# Frontend
+#
+def parse_frontend(key, value):
+  print_green(key + " => " + value)
+
+  router = key.split('/')[3]
+  domain = router
+  vhost = "default"
+
+  if re.match("(.*)-(acme|except|ogocheck)", router):
+    g = re.match("(.*)-(acme|except|ogocheck)", router)
+    domain = g.groups()[0]
+    vhost = g.groups()[1]
+
+  prefix = etcd_dst_prefix + "/http/routers/" + router
+  suffix = "/".join(key.split('/')[4:]).lower()
+
+  if re.match("backend", suffix):
+    etcd_put(prefix + "/service", re.sub('-except$', '', value))
+    if not vhost in vhost_no_tls:
+      etcd_put(prefix + "-tls/service", re.sub('-except$', '', value))
+
+  elif re.match("redirect", suffix):
+    etcd_put(prefix + "/middlewares/0", "redirect-https")
+
+  elif re.match("entrypoints/\d", suffix) or \
+       re.match("passhostheader", suffix) or \
+       re.match("priority", suffix):
+    print_red("Ignore key: " + key)
+    pass
+
+  elif re.match("routes/host/rule", suffix):
+    if re.match("Host:", value) and re.match(".*;PathPrefix:", value):
+      rule_host = re.sub('Host:([^;]*);?', 'Host(`\\1`)', value.split(';')[0])
+      rule_path = re.sub('PathPrefix:([^;]*);?', 'PathPrefix(`\\1`)', value.split(';')[1])
+      rule_path = re.sub(',', '`, `', rule_path)
+      rule = rule_host + " && " + rule_path
+
+    elif re.match("Host:", value):
+      rule = re.sub('Host:([^;]*);?', 'Host(`\\1`)', value)
+
+    elif re.match("PathPrefix:", value):
+      rule = re.sub('PathPrefix:([^;]*);?', 'PathPrefix(`\\1`)', value)
+      rule = re.sub(',', '`, `', rule)
+      rule = "Host(`" + domain + "`) && " + rule
+
+    # Set priority
+    if vhost == "default":
+      priority = "1"
+    elif vhost == "acme":
+      priority = "3"
+    elif vhost == "except":
+      priority = "2"
+    elif vhost == "ogocheck":
+      priority = "4"
+
+    etcd_put(prefix + "/priority", priority)
+    etcd_put(prefix + "/rule", rule)
+    etcd_put(prefix + "/entrypoints/0", "http")
+
+    # If this vhost have https entrypoints
+    if not vhost in vhost_no_tls:
+      etcd_put(prefix + "-tls/priority", priority)
+      etcd_put(prefix + "-tls/rule", rule)
+      etcd_put(prefix + "-tls/entrypoints/0", "https")
+      # Set TLS offloading
+      etcd_put(prefix + "-tls/tls", "true")
+
+  else:
+    print_red("Unknow key: " + key)
+
+
+#
+# Backend parsing
+#
+def parse_backend(key, value):
+  print_blue(key + " => " + value)
+  service = re.sub('-except$', '', key.split('/')[3])
+  prefix = etcd_dst_prefix + "/http/services/" + service
+  suffix = "/".join(key.split('/')[4:])
+
+  if re.match("servers/server/url", suffix):
+    etcd_put(prefix + "/loadbalancer/servers/0/url", value)
+
+  elif re.match("healthcheck/", suffix) and service != "proxy-ogo":
+    etcd_put(prefix + "/loadbalancer/" + suffix, value)
+
+  else:
+    print_red("Unknow key: " + key)
+
+
+#
+# TLS parsing
+#
+def parse_tls(key, value):
+  print_yellow(key + " => " + value)
+  domain = key.split('/')[3]
+  prefix = etcd_dst_prefix + "/tls/certificates/" + domain
+  suffix = "/".join(key.split('/')[4:])
+
+  if re.match("certificate/certfile", suffix):
+    etcd_put(prefix + "/certfile", value)
+  elif re.match("certificate/keyfile", suffix):
+    etcd_put(prefix + "/keyfile", value)
+  else:
+    print_red("Unknow key: " + key)
+
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-f", "--file", help="Backup file to restore")
+args = parser.parse_args()
+
+if args.file:
+  if os.path.exists(args.file):
+    #with gzip.GzipFile(args.file, 'r') as fd:
+    with open(args.file, 'r') as fd:
+      json_bytes = fd.read()
+
+    data = json.loads(json_bytes.decode('utf-8'))
+  else:
+    print(args.file + ": No such file or directory")
+    exit(1)
+else:
+  print("Using etcd local instance with prefix " + etcd_src_prefix + " as input\n")
+  etcd = etcd3.client()
+  for value, metadata in etcd.get_prefix(etcd_src_prefix):
+    data[metadata.key.decode('utf-8')] = value.decode('utf-8')
+
+for key,value in data.items():
+  if re.match("/traefik/frontends/", key):
+    parse_frontend(key, value)
+  elif re.match("/traefik/backends/", key):
+    parse_backend(key, value)
+  elif re.match("/traefik/tls/", key):
+    parse_tls(key, value)
+  else:
+    print_red("Unkown key " + key)

@@ -1,0 +1,19 @@
+---
+- name: RedHat | Declare EPEL repository
+  package:
+    name:  epel-release
+    state: installed
+
+- name: RedHat | Declare KVM repository
+  yum:
+    name:  "{{ kvm_package_repo }}"
+    state: installed
+    disable_gpg_check: yes
+
+#- name: RedHat | Declare KVM repository
+#  yum_repository:
+#    name:        qemu-kvm-rhev
+#    description: oVirt rebuilds of qemu-kvm-rhev
+#    baseurl:     "{{ libvirt_repo.baseurl }}"
+#    mirrorlist:  "{{ libvirt_repo.mirrorlist }}"
+#    gpgcheck:    no

@@ -1,0 +1,11 @@
+---
+# Handler in charge of restarting MySQL when needed
+- name: "Restart Redis"
+  service:
+    name:    "{{ redis_service_name }}"
+    state:   restarted
+
+- name: "Restart Redis Sentinel"
+  service:
+    name:    "{{ redis_sentinel_service_name }}"
+    state:   restarted

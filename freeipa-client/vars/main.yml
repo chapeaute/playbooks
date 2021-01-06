@@ -1,0 +1,3 @@
+---
+# vars file for freeipa-client
+ipa_cli_install: ipa-client-install

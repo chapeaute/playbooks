@@ -1,0 +1,18 @@
+---
+
+- name: "config_file | Configure {{ file }}"
+  tags:
+    - config
+    - config_files
+  replace:
+    path: "{{ wso2_generic_confs_dir }}/{{ file }}"
+    regexp: "{{ config.regexp }}"
+    replace: "{{ config.line }}"
+    after: "{{ config.after|default(omit) }}"
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+    mode: 0640
+  with_items: "{{ configs }}"
+  loop_control:
+    loop_var: config
+  notify: "Restart service"

@@ -1,0 +1,23 @@
+---
+# defaults file for security-apache
+security_level: 1
+
+security_apache_module: true
+security_apache_ssl: true
+security_apache_ssl_protocol: TLSV1.2
+security_apache_custom_enforcement: []
+security_apache_disable_options_method: true
+security_apache_disable_head_method: true
+security_apache_disable_trace_method: true
+security_apache_disable_x_powered_by: true
+security_apache_allow_methods: "GET, POST, DELETE, PUT"
+security_apache_xss_protection: true
+security_apache_x_frame_same_origin: true
+security_apache_content_security_policy: true
+security_apache_cookie_http_only: true
+security_apache_cookie_secure: "{{ security_apache_strict_transport_security | bool }}"
+security_apache_strict_transport_security: false
+security_apache_strict_disable_default_headers:
+  - X-Powered-By
+  - X-Generator
+security_apache_strict_disable_headers: []

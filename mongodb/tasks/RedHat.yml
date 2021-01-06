@@ -1,0 +1,40 @@
+---
+
+- name: RedHat | Copy Repository File
+  template:
+    src: etc/yum.repos.d/mongo-org.repo.j2
+    dest: /etc/yum.repos.d/mongodb-org.repo
+  when: not use_satellite_repo
+
+- name: RedHat | Importing MongoDB {{ mongodb_version }} GPG key to the RPM database
+  rpm_key:
+    key: "{{ mongodb_repo_gpg_key }}"
+    state: present
+    validate_certs: no
+  when: not use_satellite_repo
+
+- name: RedHat | Open firewall port
+  firewalld:
+    port: "{{ item }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_items:
+    - "{{ mongodb_port }}"
+  when: manage_firewalld
+
+- name: RedHat | Install epel-release
+  package:
+    name: epel-release
+  when: not use_satellite_repo
+
+- name: RedHat | Install python libs for selinux
+  package:
+    name: "{{ mongodb_selinux_packages }}"
+    state: present
+
+- name: RedHat | Set SELinux context
+  sefcontext:
+    target: "{{ mongodb_data_dir }}(/.*)?"
+    setype: mongod_var_lib_t
+  when: mongodb_data_dir != mongodb_default_data_dir and ansible_selinux.status == "enabled"

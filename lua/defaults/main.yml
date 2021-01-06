@@ -1,0 +1,6 @@
+---
+
+# defaults file for lua
+lua_rpm_luarocks: true
+lua_manual_luarocks: false
+lua_luarocks_packages: []

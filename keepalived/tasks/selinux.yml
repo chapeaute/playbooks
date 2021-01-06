@@ -1,0 +1,19 @@
+---
+
+- name: selinux | Check SELinux module
+  shell: "semodule -l | grep -q ^keepalived-tmp && echo found || echo notfound"
+  changed_when: false
+  register: keepalived_semod
+
+- name: selinux | Copy SELinux module
+  copy:
+    src:   keepalived-tmp.pp
+    dest:  "{{ keepalived_tempdir }}/keepalived-tmp.pp"
+    owner: root
+    group: root
+    mode:  0644
+  register: keepalived_module
+
+- name: selinux | Apply SELinux module
+  command: "/sbin/semodule -i {{ keepalived_tempdir }}/keepalived-tmp.pp"
+  when: "'notfound' in keepalived_semod.stdout or keepalived_module.changed"

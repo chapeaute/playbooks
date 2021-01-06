@@ -1,0 +1,13 @@
+---
+
+- name: services | Deploy jicofo systemd unit
+  template:
+    src: "etc/systemd/system/jitsi-jicofo.service.j2"
+    dest: "/etc/systemd/system/{{ jicofo_service_name }}.service"
+  notify: Reload systemd
+
+- name: services| Start and enable jicofo
+  service:
+    name: "{{ jicofo_service_name }}"
+    state: started
+    enabled: true

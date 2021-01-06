@@ -1,0 +1,10 @@
+- hosts: all
+  roles:
+  - role: katello-agent
+    katello_server: katello.ovh.smile.lan
+    katello_organisation: Smile
+    katello_activation_key: Smile
+    katello_repofile_delete:
+      - CentOS-*.repo
+      - epel*.repo
+      - katello-client.repo

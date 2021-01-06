@@ -1,0 +1,11 @@
+# Backup director variables
+_backup_server_host: "{{ groups['bacula-director'][0] }}"
+_backup_mariadb_data_dir: "/var/lib/mysql"
+_backup_mariadb_backup_dir: "/var/backup/mysql"         # Dump directory
+
+# Backup storage daemon variables
+_backup_storage_hosts: "{{ groups['bacula-storage'] }}"
+_backup_storage_data_dir: "/var/lib/bacula"             # Bacula backup directory
+
+# Webacula variables
+_webacula_admin_pass: sigipsr                           # Webacula admin password

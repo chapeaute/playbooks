@@ -1,0 +1,5 @@
+---
+
+apache2_modsecurity_packages:
+  - mod_security
+  - mod_security_crs

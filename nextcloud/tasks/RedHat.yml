@@ -1,0 +1,4 @@
+---
+- name: RedHat | Ensure SElinux context is apply on {{ nextcloud_root_dir }}
+  command: "/sbin/restorecon -R {{ nextcloud_root_dir }}"
+  when: ansible_selinux is defined and ansible_selinux.status != "disabled"

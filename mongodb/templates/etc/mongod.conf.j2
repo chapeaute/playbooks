@@ -1,0 +1,33 @@
+# Derived from https://docs.mongodb.com/manual/reference/configuration-options/
+
+# The Linux package init scripts included in the official MongoDB packages depend on specific values for systemLog.path, storage.dbpath, and processManagement.fork.
+# If you modify these settings in the default configuration file, mongod may not start.
+# For the above reason, we do not allow changing of those values.
+
+systemLog:
+    path: "{{mongodb_log_dir}}/mongod.log"
+    logAppend: true
+    destination: "file"
+    timeStampFormat: "ctime"
+
+processManagement:
+    fork: true
+    pidFilePath: "/var/run/mongodb/mongod.pid"
+
+net:
+    port: {{mongodb_port}}
+    bindIp: {{mongodb_bind_address}}
+
+storage:
+    dbPath: "{{ mongodb_data_dir }}"
+    journal:
+        enabled: true
+
+{% if mongodb_pmm_enable %}
+operationProfiling:
+    slowOpThresholdMs: 200
+    mode: slowOp
+{% endif %}
+
+# replication:
+   # replSetName: rs0

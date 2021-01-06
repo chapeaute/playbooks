@@ -1,0 +1,7 @@
+client {{ ansible_hostname }} {
+        ipaddr = {{ ansible_hostname }}
+        proto = *
+        secret = {{ vhost.secret|default(freerad_prx_dft_secret) }}
+        virtual_server = {{ vhost.name }}
+        require_message_authenticator = no
+}

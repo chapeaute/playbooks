@@ -1,0 +1,23 @@
+---
+
+- name: Config | Deploy meet configuration
+  template:
+    src: "{{ item.src }}.j2"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src: config.js
+      dest: "{{ jitsi_meet_etc_dir }}/config.js"
+    - src: interface_config.js
+      dest: "{{ jitsi_meet_install_dir }}/interface_config.js"
+
+- name: "Config | Deploy apache vhost configuration"
+  template:
+    src:  etc/httpd/conf.d/jitsi-meet.conf.j2
+    dest: "/etc/httpd/conf.d/jitsi-meet.conf"
+  notify: Restart apache
+
+- name: Config | Deploy Generic custom Apache configuration
+  template:
+    src:  etc/httpd/conf.d/custom/jitsi-meet.conf.j2
+    dest: "/etc/httpd/conf.d/custom/jitsi-meet.conf"
+  notify: Restart apache

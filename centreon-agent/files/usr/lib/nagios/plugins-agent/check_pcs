@@ -1,0 +1,76 @@
+#!/bin/bash
+#
+# Ce script a pour but de vérifier les principaux indicateurs du cluster PCS
+#
+
+rc=0
+
+update_state() {
+	register_state=$1
+	current_state=$2
+
+	if [ $current_state -eq 2 -o $register_state -eq 2 ]; then
+		echo 2
+		return
+	fi
+
+	if [ $current_state -gt $register_state ]; then
+		echo $current_state
+		return
+	else
+		echo $register_state
+		return
+    fi
+}
+
+if [ ! `command -v pcs` ];
+then
+	echo "ERROR: pcs cluster command not found !"
+	exit 2
+fi
+
+MAINTENANCE=$(pcs property show maintenance-mode | grep maintenance-mode | awk '{print $2}')
+STANDBY_NODE=$(pcs property show | grep -i standby=on | awk -F':' '{print $1}')
+FAILED_ACTION=$(pcs status | grep '^Failed Actions:$')
+
+case "$MAINTENANCE" in
+	true)
+		echo -n "WARNING: Cluster in maintenance mode. "
+		rc=$(update_state $rc 1)
+		;;
+
+	*)
+		echo -n "OK: Cluster not in maintenance mode. "
+		;;
+esac
+
+if [ -n "$STANDBY_NODE" ]; then
+	echo -n "WARNING: Node $STANDBY_NODE is standby. "
+	rc=$(update_state $rc 1)
+else
+	echo -n "OK: No standby nodes. "
+fi
+
+if [ -n "$FAILED_ACTION" ]; then
+	echo -n "WARNING: Failed actions identified. "
+	rc=$(update_state $rc 1)
+else
+	echo -n "OK: No failed actions. "
+fi
+
+for svc in corosync pacemaker pcsd
+do
+	state=$(pcs status | grep "$svc:" | awk '{print $2}' | awk -F'/' '{print $1}')
+	case "$state" in
+		"active")
+			echo -n "OK: $svc is active. "
+			;;
+
+		*)
+			echo -n "CRITICAL: Service $svc is not in active state. "
+			rc=$(update_state $rc 2)
+			;;
+	esac
+done
+
+exit $rc

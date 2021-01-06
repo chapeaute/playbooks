@@ -1,0 +1,17 @@
+---
+
+- name: monitoring | Download jolokia jar
+  tags:
+    - config_monitoring
+    - monitoring
+  get_url:
+    url:  "https://search.maven.org/remotecontent?filepath=org/jolokia/jolokia-jvm/{{ cassandra_jolokia_version }}/jolokia-jvm-{{ cassandra_jolokia_version }}-agent.jar"
+    dest: /usr/share/cassandra/lib/jolokia-jvm-agent.jar
+
+- name: monitoring | Add jolokia agent to JVM_OPTS
+  lineinfile:
+    path: /etc/cassandra/conf/cassandra-env.sh
+    regexp: JVM_OPTS
+    line: 'JVM_OPTS="$JVM_OPTS $JVM_EXTRA_OPTS -javaagent:$CASSANDRA_HOME/lib/jolokia-jvm-agent.jar=port={{ cassandra_jolokia_port }},host={{ cassandra_jolokia_host }}"'
+  notify:
+    - "Restart Cassandra"

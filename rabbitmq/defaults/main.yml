@@ -1,0 +1,53 @@
+---
+## Global
+use_satellite_repo: false
+firewall_setup: true
+firewall_zone: public
+
+# Rabbitmq variables
+rabbitmq_version: 3.8.2
+rabbitmq_port: 5672
+rabbitmq_log_level: info
+rabbitmq_data_dir: "{{ rabbitmq_default_data_dir }}"
+
+# Rabbitmq cluster
+rabbitmq_cluster_name: rabbitmq
+rabbitmq_hosts: []
+
+# List of dependencies
+rabbitmq_dependencies: []
+
+# Ensure the plugins is installed
+rabbitmq_plugins:
+  - rabbitmq_management
+
+# Vhosts
+rabbitmq_vhosts: ["{{ ansible_fqdn }}"]                     # Ensure the vhosts are exists
+
+# Users
+# Generate admin user password
+rabbitmq_credential_prefix: "{% if rabbitmq_hosts|length > 1 %}{{ rabbitmq_cluster_name }}{% else %}{{ inventory_hostname }}{% endif %}"
+rabbitmq_admin_pass: "{{ lookup('password', 'credential/{{ rabbitmq_credential_prefix }}-rabbitmq-admin-pass chars=ascii_letters,digits') }}"
+rabbitmq_cookie: "{{ lookup('password', 'credential/{{ rabbitmq_credential_prefix }}-rabbitmq-cookie chars=ascii_letters,digit') }}"
+
+# Adminusers
+rabbitmq_admin_user:
+  - user: "admin"
+    password: "{{ rabbitmq_admin_pass }}"
+    vhost: /
+    configure_priv: .*
+    read_priv: .*
+    write_priv: .*
+    tags: administrator
+
+# Users list to create
+rabbitmq_users: []
+
+# Users list to remove
+rabbitmq_users_remove: []
+
+# Tuning
+rabbitmq_limit_nofiles: 64000
+rabbitmq_vm_memory_high_watermark_prct: 0.66
+rabbitmq_vm_memory_high_watermark: "{{ (ansible_memtotal_mb*rabbitmq_vm_memory_high_watermark_prct)|int }}MB"
+rabbitmq_disk_free_limit_absolute_prct: 0.1

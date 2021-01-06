@@ -1,0 +1,24 @@
+---
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: Create users
+  shell: "bin/add-user-keycloak.sh -u {{ keycloak_admin_user }} -p {{ keycloak_admin_pass }} -r master --roles admin"
+  args:
+    chdir: "{{ keycloak_root_dir }}/keycloak/"
+    creates: "{{ keycloak_root_dir }}/keycloak-7.0.0/standalone/configuration/keycloak-add-user.json"
+- name: start keycloak service
+  service:
+    name: keycloak
+    state: started
+    enabled: yes

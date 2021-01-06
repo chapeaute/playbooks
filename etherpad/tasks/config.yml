@@ -1,0 +1,14 @@
+---
+
+- name: config | Deploy etherpad configuration
+  template:
+    src: settings.json.j2
+    dest: "{{ etherpad_install_dir }}/settings.json"
+  notify: Restart etherpad
+  tags: config
+
+- name: config | Configure proxy WebSockket
+  template:
+    src:  etc/httpd/conf.d/custom/etherpad.conf
+    dest: "{{ apache2_confd_custom_dir }}/etherpad.conf"
+  notify: "Reload Apache"

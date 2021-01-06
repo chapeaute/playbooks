@@ -1,0 +1,35 @@
+---
+- name: RedHat | Open firewall ports
+  firewalld:
+    port: "{{item}}/tcp"
+    permanent: true
+    immediate: yes
+    state: enabled
+  with_items:
+    - "{{ redis_port }}"
+  when: manage_firewalld
+
+- name: RedHat | Install SELinux packages
+  package:
+    name: "{{ item }}"
+  with_items:
+    - policycoreutils-python
+  when: ansible_selinux and ansible_selinux.status == "enabled"
+
+- name: RedHat | Set SELinux context on {{ redis_data_dir }}
+  sefcontext:
+    target: "{{ redis_data_dir }}(/.*)?"
+    setype: redis_var_lib_t
+    state:  present
+  when: redis_data_dir != redis_default_data_dir and ansible_selinux and ansible_selinux.status == "enabled"
+
+- name: RedHat | Set SELinux Redis configuration file context
+  sefcontext:
+    target: "{{ item }}"
+    setype: redis_conf_t
+    state:  present
+  with_items:
+    - "{{ redis_custom_config_file}}"
+    - "{{ redis_extra_config_file}}"
+  when: ansible_selinux and ansible_selinux.status == "enabled"
+

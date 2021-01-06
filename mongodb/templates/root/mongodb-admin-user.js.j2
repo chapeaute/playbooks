@@ -1,0 +1,8 @@
+db = connect("127.0.0.1:27017/admin");
+db.createUser(
+    {
+      user: "{{ mongodb_admin_user }}",
+      pwd: "{{ mongodb_admin_pass }}",
+      roles: [ "root" ]
+    }
+)

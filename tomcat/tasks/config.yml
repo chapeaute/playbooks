@@ -1,0 +1,197 @@
+---
+- name: config | Create tomcat group
+  group:
+    name: "{{ tomcat_group }}"
+    gid:  "{{ tomcat_gid|default(omit) }}"
+    system: true
+
+- name: config | Create tomcat user
+  user:
+    name:   "{{ tomcat_user }}"
+    group:  "{{ tomcat_group }}"
+    uid:    "{{ tomcat_uid|default(omit) }}"
+    home:   "{{ tomcat_root_dir }}"
+    system: true
+    createhome: no
+
+- name: config | Install tomcat extra package
+  package:
+    name:  "{{ tomcat_extra_packages }}"
+    state: present
+
+- name: config | Download extract tomcat
+  unarchive:
+    copy: no
+    owner: "{{ tomcat_user }}"
+    group: "{{ tomcat_group }}"
+    src:  "{{ tomcat_download_url }}"
+    dest: "{{ tomcat_install_dir }}"
+    creates: "{{ tomcat_install_dir }}/{{ tomcat_archive_basename }}-{{ tomcat_full_version }}"
+    validate_certs: no
+
+- name: config | Set permission on tomcat root directory
+  file:
+    path: "{{ tomcat_install_dir }}/{{ tomcat_archive_basename }}-{{ tomcat_full_version }}"
+    mode:  0755
+    state: directory
+
+- name: config | Create home directory symlink
+  file:
+    src:   "{{ tomcat_install_dir }}/{{ tomcat_archive_basename }}-{{ tomcat_full_version }}"
+    path:  "{{ tomcat_root_dir }}"
+    state: link
+
+- name: config | Download tomcat extras libraries
+  get_url:
+    url:  "{{ tomcat_libraries_download_url }}/{{ item.name }}"
+    dest: "{{ tomcat_root_dir }}/{{ item.dir }}"
+    owner: "{{ tomcat_user }}"
+    group: "{{ tomcat_group }}"
+    mode:  0644
+  with_items: "{{ tomcat_libraries }}"
+  when: tomcat_major_version | int is version_compare("9", "<")
+
+- name: config | Remove docs apps
+  file:
+    path:  "{{ tomcat_root_dir }}/webapps/docs"
+    state: absent
+
+- name: config | Remove examples apps
+  file:
+    path:  "{{ tomcat_root_dir }}/webapps/examples"
+    state: absent
+
+- name: config | Remove logging.properties
+  file:
+    path:  "{{ tomcat_root_dir }}/conf/logging.properties"
+    state: absent
+
+- name: config | symlink log dir
+  file:
+    src: "{{ tomcat_root_dir }}/logs"
+    dest: "{{ tomcat_log_dir }}"
+    state: link
+
+- name: config | Remove group write permission on log directory
+  file:
+    path: "{{ tomcat_root_dir }}/logs"
+    mode: 0750
+
+- name: config | Add logback libraries
+  copy:
+    src:  tomcat/lib
+    dest: "{{ tomcat_root_dir }}"
+    owner: "{{ tomcat_user }}"
+    group: "{{ tomcat_group }}"
+    mode:  0644
+
+- name: config | Add tomcat environment file
+  tags:
+    - jvm
+    - config
+    - config_apm
+  template:
+    src:  "tomcat/bin/setenv.sh.j2"
+    dest: "{{ tomcat_root_dir }}/bin/setenv.sh"
+    mode: 0750
+  notify:
+    - Restart tomcat
+
+- name: config | Add tomcat configuration files
+  copy:
+    src:  "tomcat/conf/{{ item }}"
+    dest: "{{ tomcat_root_dir }}/conf/{{ item }}"
+  with_items:
+    - logback.xml
+    - logback-access.xml
+  notify:
+    - Restart tomcat
+
+- name: config | Create Catalina util directory for ServerInfo.properties file
+  file:
+    path:  "{{ tomcat_root_dir }}/lib/org/apache/catalina/util"
+    state: directory
+
+- name: config | Deploy file to hide tomcat version
+  template:
+    src:   lib/org/apache/catalina/util/ServerInfo.properties.j2
+    dest:  "{{ tomcat_root_dir }}/lib/org/apache/catalina/util/ServerInfo.properties"
+    mode:  0640
+  notify:
+    - Restart tomcat
+
+- name: config | Install MySQL JDBC connector
+  package:
+    name:  "{{ tomcat_mysql_connector_package }}"
+    state: install
+  when: tomcat_use_mysql
+
+- name: config | Set MySQL connector symlink
+  file:
+    src:   /usr/share/java/mysql-connector-java.jar
+    dest:  "{{ tomcat_root_dir }}/lib/mysql-connector-java.jar"
+    state: link
+  when: tomcat_use_mysql
+  notify:
+    - Restart tomcat
+
+- name: install | Create symlink from "{{ tomcat_default_root_dir }}" to tomcat root directory
+  file:
+    state: link
+    src:   "{{ tomcat_root_dir }}"
+    dest:  "{{ tomcat_default_root_dir }}"
+  when: tomcat_root_dir != tomcat_default_root_dir
+
+- name: config | Add tomcat systemd unit file
+  template:
+    src:   systemd/tomcat.service
+    dest:  /usr/lib/systemd/system/tomcat.service
+    owner: root
+    group: root
+  notify:
+    - Systemctl daemon-reload
+
+- name: config | stat {{ tomcat_default_root_dir }}/webapps/manager/WEB-INF/web.xml
+  stat:
+    path: "{{ tomcat_default_root_dir }}/webapps/manager/WEB-INF/web.xml"
+  register: manager_dir
+  tags:
+    - config
+
+- name: config | Update max upload filesize
+  lineinfile:
+    dest:   "{{ tomcat_default_root_dir }}/webapps/manager/WEB-INF/web.xml"
+    regexp: "(.*)<{{ item.key }}>.*</{{ item.key }}>"
+    line:   '\1<{{ item.key }}>{{ item.value }}</{{ item.key }}>'
+    backrefs: yes
+  with_items:
+    - key:   "max-file-size"
+      value: "{{ tomcat_upload_max_size }}"
+    - key:   "max-request-size"
+      value: "{{ tomcat_upload_max_size }}"
+  when: manager_dir.stat.exists
+  tags:
+    - config
+
+- name: config | Configure logrotate file
+  template:
+    src:   etc/logrotate.d/tomcat.j2
+    dest:  /etc/logrotate.d/tomcat
+    owner: root
+    group: root
+    mode:  0644
+  tags:
+    - config
+
+- name: config | Deploy scripts
+  template:
+    src: "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: "{{ tomcat_group }}"
+    mode: 0750
+  with_items:
+    - tomcat-app-deploy
+    - tomcat-app-undeploy
+  tags:
+    - script

@@ -1,0 +1,69 @@
+#!/bin/bash
+
+function syntax() {
+    cat <<EOF
+Wrapper script to Centreon database::mysql::plugin plugin for mode threads-connected with convert connection count to percentage.
+
+Usage: ${0##*/} [-h][-H <host> -u <username> -p <password> -P <port> -w <warning_threshold> -c <critical_threshold>]
+    -h                 Display this message
+    -H                 Database host address
+    -u <username>      Database username
+    -p <password>      Database password
+    -P <port>          Database port
+    -w <warning>       Threshold warning
+    -c <critical>      Threshold critical
+EOF
+}
+
+while getopts "hH:u:p:P:w:c:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        H)
+            HOST="${OPTARG}"
+            ;;
+        u)
+            USERNAME="${OPTARG}"
+            ;;
+        p)
+            PASSWORD="${OPTARG}"
+            ;;
+        P)
+            PORT="${OPTARG}"
+            ;;
+        w)
+            WARNING_PRCT="${OPTARG}"
+            ;;
+        c)
+            CRITICAL_PRCT="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+if [[ -z $HOST ]] || [[ -z $USERNAME ]] || [[ -z $PASSWORD ]] || [[ -z $PORT ]] || [[ -z $WARNING_PRCT ]] || [[ -z $CRITICAL_PRCT ]]; then
+    echo "HOST: $HOST"
+    echo "USERNAME: $USERNAME"
+    echo "PASSWORD: $PASSWORD"
+    echo "PORT: $PORT"
+    echo "WARNING: $WARNING"
+    echo "CRITICAL: $CRITICAL"
+    syntax
+    exit 1
+fi
+
+# Get MySQL max connections
+MAX_CNX=$(mysql -h $HOST -u $USERNAME -p$PASSWORD -BNe 'show variables like "max_connections"' | awk '{print $2}')
+
+# Get threshold in number of connections
+WARNING=$(expr $WARNING_PRCT \* $MAX_CNX / 100)
+CRITICAL=$(expr $CRITICAL_PRCT \* $MAX_CNX / 100)
+
+`dirname $0`/centreon_plugins.pl --plugin=database::mysql::plugin --host=$HOST --username="$USERNAME" --password="$PASSWORD" --port="$PORT" --mode='threads-connected' --warning="$WARNING" --critical="$CRITICAL"
+

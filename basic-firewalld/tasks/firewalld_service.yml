@@ -1,0 +1,13 @@
+---
+- name: firewalld_service | Ensure firewall services are {{ state }} on {{ zone }} zone
+  firewalld:
+    zone:      "{{ zone }}"
+    service:   "{{ item }}"
+    state:     "{{ state }}"
+    permanent: true
+    immediate: yes
+  with_items: "{{ services }}"
+  when:
+    - ansible_distribution_version >= '7'
+  tags:
+    - rule

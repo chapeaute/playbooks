@@ -1,0 +1,10 @@
+{% set tpl_list = [] %}
+{{ ansible_fqdn }};
+{{- centreon_bind_addr }};
+{{- snmp_community|default() }};
+{{- snmp_version|default() }};
+{%- for tpl in centreon_host_tpl %}{% if tpl.name in group_names %}{{ tpl.template }}|{% set _ = tpl_list.extend(tpl.template.split('|')) %}{% endif %}{% endfor %};
+{%- for grp in centreon_host_grp %}{% if grp.name in group_names %}{{ grp.template }}|{% endif %}{% endfor %};
+{{- centreon_poller|join("|") }};
+{%- for mcr in centreon_mcr_host %}{% if mcr.template in tpl_list %}{{ mcr.name }}:{{ mcr.value }}|{% endif %}{% endfor %};
+{%- for mcr in centreon_mcr_svc %}{{ mcr.template }}:{{ mcr.name }}:{{ mcr.value }}|{% endfor %}

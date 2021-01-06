@@ -1,0 +1,56 @@
+---
+
+# Installing ZIMBRA-ALLIONE
+
+- name: keystrokes | Uploading keystroke file for community version | ALLINONE
+  tags: keystroke
+  template: 
+    src: community-keystrokes.j2
+    dest: "{{ zimbra_tmp_dir }}/keystrokes"
+    mode: 0640
+  when: "zimbra_license_file is not defined"
+
+
+- name: zimbra.conf | Uploading installer configuration file | ALLINONE
+  template:
+    src: zimbra.conf.j2
+    dest: "{{ zimbra_tmp_dir }}/zimbra.conf"
+    owner: root
+    group: root
+    mode: 0640
+  when: "zimbra_license_file is not defined"
+
+
+- name: keystrokes | Installing Zimbra OSE | ALLINONE
+  shell: "./install.sh -s < {{ zimbra_tmp_dir }}/keystrokes"
+  args: 
+    chdir: "{{ zimbra_tmp_dir }}/{{ zimbra_package }}/"
+
+
+- name: zimbra.conf | Configuring Zimbra OSE's services for use | ALLINONE
+  command: "./zmsetup.pl -c {{ zimbra_tmp_dir }}/zimbra.conf"
+  args:
+    chdir: /opt/zimbra/libexec/
+
+
+- name: Restart Zimbra services
+  shell: su - zimbra -c "zmcontrol restart && echo Running || echo failed"
+  register: zmcontrol_status
+
+
+- name: zmconfigd.pid | Delete zmconfigd_file
+  file:
+    path: "{{ zmconfigd_file }}"
+    state: absent
+  when: "'failed' in zmcontrol_status.stdout"
+
+
+- name: Restart Zimbra services
+  shell: su - zimbra -c 'zmcontrol restart'
+  when: "'failed' in zmcontrol_status.stdout"
+
+
+- name: zimbra.conf | Removing Zimbra configuration file | ALLINONE
+  command: "rm -f {{ zimbra_tmp_dir }}/zimbra.conf"
+  args: 
+    removes: "{{ zimbra_tmp_dir }}/zimbra.conf"

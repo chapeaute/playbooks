@@ -1,0 +1,7 @@
+# v1.0
+---
+- hosts: bacula-agent
+  vars:
+    bacula_dir_host: "bacula-director"
+  roles:
+    - role: bacula-agent

@@ -1,0 +1,17 @@
+TYPE=Ethernet
+NM_CONTROLLED="no"
+BOOTPROTO=static
+NAME={{ new_name }}
+DEVICE={{ new_name }}
+ONBOOT=yes
+IPADDR={{ ip }}
+NETMASK={{ netmask }}
+{% if new_name == "adm" -%}
+GATEWAY=172.18.0.1
+{% endif -%}
+{% if new_name == "adm" -%}
+ZONE=public
+{% endif -%}
+{% if new_name == "data" -%}
+ZONE=trusted
+{% endif -%}

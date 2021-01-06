@@ -1,0 +1,1 @@
+SUBSYSTEM=="net", ACTION=="add", DRIVERS=="?*", ATTR{address}=="{{ interface.macaddress | lower }}", ATTR{type}=="1", KERNEL=="eth*", NAME="{{ new_name | default(interface.device) }}"

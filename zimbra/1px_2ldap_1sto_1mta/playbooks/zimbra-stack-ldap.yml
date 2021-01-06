@@ -1,0 +1,33 @@
+---
+- hosts: zimbra-stack-ldap
+  vars: 
+    _ldap_hosts: "{{ _zimbra_stack_ldap }}"
+    zimbra_domain: example.com
+    _ldap_server: zm-ldap.example.com 
+
+  roles:
+    - role: zimbra
+      zimbra_ldap_server: "{{ _ldap_server }}"
+      zimbra_timezone: UTC
+      zimbra_is_ldap_master: true
+      zimbra_services:
+        - ldap
+    - role: drbd
+      drbd_hosts: "{{ _ldap_hosts }}"
+      drbd_disk:  /dev/mapper/vg-data
+      drbd_netif:  eth1
+      drbd_res_name: data
+    - role: pacemaker
+      pcmk_hosts: "{{ _ldap_hosts }}"
+      pcmk_vip_rsc:
+        - interface: eth1
+          address: 192.168.8.38
+          netmask: 32
+      pcmk_svc_rsc:
+        - zimbra
+      pcmk_drbd_rsc:
+        rsc_name: data
+        mnt_point: /srv
+        dir:
+          - src_dir: /opt/zimbra 
+            dst_dir: /srv/zimbra 

@@ -1,0 +1,18 @@
+# Push update when 10 records are collected (10 if unset)
+limit = 10;
+# IP:port of Elasticsearch server
+{% if rspamd_es_hosts| length > 0 %}
+servers = "{% for server in rspamd_es_hosts %}{{ server }}:{{ rspamd_es_port }},{% endfor %}";
+{% endif %}
+# Timeout to wait for response (5 seconds if unset)
+timeout = 5;
+# Elasticsearch template file (json format)
+#template_file = "${PLUGINSDIR}/elastic/rspamd_template.json";
+# Kibana prebuild visualizations and dashboard template (json format)
+#kibana_file = "${PLUGINSDIR}/elastic/kibana.json";
+# Elasticsearch index name pattern
+index_pattern = "rspamd-%Y.%m.%d";
+# Import kibana template
+import_kibana = false;
+# Use https if needed
+use_https = false;

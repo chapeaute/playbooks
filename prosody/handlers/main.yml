@@ -1,0 +1,21 @@
+---
+
+- name: Reload prosody
+  service:
+    name: prosody
+    state: reloaded
+
+- name: Restart prosody
+  service:
+    name: prosody
+    state: restarted
+
+- name: Restart saslauthd
+  service:
+    name: saslauthd
+    state: restarted
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: True
+  tags: prosody

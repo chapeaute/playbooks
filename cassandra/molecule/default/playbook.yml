@@ -1,0 +1,29 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    # - debug: msg="user.name is {{ lookup('ini', 'user.name type=properties file=user.properties') }}"
+
+    - name: stat dumb file
+      stat:
+        path: /etc/ld.so.conf.d/dumb.conf
+      register: dumb_file
+    - name: create dumb file
+      file:
+        path: /etc/ld.so.conf.d/dumb.conf
+        state: touch
+      when: not dumb_file.stat.exists
+
+- name: Converge
+  hosts: all
+  roles:
+    - role: basic-firewalld
+    - role: cassandra
+      cassandra_hosts: "{{ play_hosts }}"
+      cassandra_heap_size: 128
+      cassandra_enable_password: true
+      cassandra_keyspaces:
+        log:
+          db_name: log
+          user: log
+          password: log

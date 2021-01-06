@@ -1,0 +1,52 @@
+---
+# tasks file for freeipa-client
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family }}.yml"
+
+- name: main | Install packages
+  package:
+    name: "{{ freeipa_packages | join(',') }}"
+    state: present
+  tags:
+    - setup
+    - install
+
+- name: main | Force client unregister from FreeIPA server
+  shell: "{{ ipa_cli_install }} --uninstall || echo Already unregister"
+  when:
+    - freeipa_force_register | bool
+  tags:
+    - setup
+    - install
+
+- name: main | Register client to FreeIPA server
+  command: >
+    {{ ipa_cli_install }} --unattended --force-join \
+    --domain {{ freeipa_domain }}
+    --realm {{ freeipa_realm }}
+    --server {{ freeipa_hosts[0] }}
+    --principal {{ freeipa_admin_user }} --password {{ freeipa_admin_pass }}
+    --mkhomedir
+  args:
+    creates: /etc/ipa/default.conf
+  when:
+    - inventory_hostname != freeipa_hosts[0]
+  tags:
+    - setup
+    - install
+
+- include: script.yml
+  tags:
+    - script

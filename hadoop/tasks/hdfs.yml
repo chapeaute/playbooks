@@ -1,0 +1,77 @@
+---
+
+- name: hdfs | add hdfs bin to $PATH
+  template:
+    src: "etc/profile.d/hadoop.sh.j2"
+    dest: "/etc/profile.d/hadoop.sh"
+
+- name: hdfs | Configure HEAP_SIZE
+  tags:
+    - config
+    - config_env
+  lineinfile:
+    path: "{{ hadoop_install_dir }}/etc/hadoop/hadoop-env.sh"
+    regexp: 'HADOOP_HEAPSIZE='
+    line: "HADOOP_HEAPSIZE={{ hadoop_hdfs_memory_size }}"
+  notify:
+    - Restart hdfs-name-node
+    - Restart hdfs-data-node
+
+- name: hdfs | create unit file
+  tags: config_service
+  template:
+    src: "etc/systemd/system/{{ item }}.service.j2"
+    dest: "/etc/systemd/system/{{ item }}.service"
+  with_items:
+    - hdfs-data-node
+    - hdfs-name-node
+  notify: reload systemd
+
+- name: yarn | start and enable hdfs-name-node
+  tags: config_service
+  service:
+    name: hdfs-name-node
+    enabled: yes
+  when: hadoop_master == inventory_hostname
+
+- name: yarn | start and enable hdfs-data-node
+  tags: config_service
+  service:
+    name: hdfs-data-node
+    enabled: yes
+
+- name: hdfs | check if hadoop is configured
+  stat:
+    path: "{{ hadoop_install_dir }}/etc/hadoop/hadoop_configured"
+  register: hadoop_configured
+
+- name: hdfs | Format hdfs folder
+  become: true
+  become_user: hadoop
+  command: bin/hdfs namenode -format
+  register: hadoop_is_configured
+  args:
+    chdir: "{{ hadoop_install_dir }}"
+  when: hadoop_master == inventory_hostname and not hadoop_configured.stat.exists
+
+- name: hdfs | Deploy Configs
+  tags: config
+  template:
+    src: "etc/hadoop/{{ item }}.j2"
+    dest: "{{hadoop_install_dir}}/etc/hadoop/{{ item }}"
+    owner: "{{ hadoop_user }}"
+    group: "{{ hadoop_group }}"
+    mode: 0755
+  notify:
+    - Restart hdfs-name-node
+    - Restart hdfs-data-node
+  with_items:
+    - hdfs-site.conf
+    - core-site.xml
+    - slaves
+
+- name: hdfs | Marking hadoop cluster as configured
+  file:
+    path:  "{{ hadoop_install_dir }}/etc/hadoop/hadoop_configured"
+    state: "touch"
+  when: hadoop_configured is succeeded

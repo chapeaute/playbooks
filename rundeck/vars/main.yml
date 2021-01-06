@@ -1,0 +1,15 @@
+---
+# vars file for rundeck
+rundeck_config_dir: "/etc/rundeck"
+rundeck_owner: rundeck
+rundeck_group: rundeck
+rundeck_package_repo: http://repo.rundeck.org/latest.rpm
+
+rundeck_packages:
+  - rundeck
+
+rundeck_services:
+  - rundeckd
+
+rundeck_firewall_port:
+  - "{{ rundeck_port }}/tcp"

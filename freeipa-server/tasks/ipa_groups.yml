@@ -1,0 +1,17 @@
+---
+- name: ipa_groups | Create FreeIPA groups based on Ansible groups
+  ipa_hostgroup:
+    name:     "{{ item }}"
+    state:    present
+    host:     "{{ groups[item] }}"
+    ipa_host: "{{ freeipa_hosts[0] }}"
+    ipa_user: "{{ freeipa_admin_user }}"
+    ipa_pass: "{{ freeipa_admin_pass }}"
+  with_items:
+    - "{{ freeipa_ansible_groups }}"
+
+- name: ipa_groups | debug
+  debug:
+    msg: "{{ groups[item] }}"
+  with_items:
+    - "{{ freeipa_ansible_groups }}"

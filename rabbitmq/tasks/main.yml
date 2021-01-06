@@ -1,0 +1,65 @@
+---
+# tasks file for rabbitmq
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  tags: always
+
+- include: "{{ ansible_os_family }}.yml"
+  tags: config
+
+- include: preconfig.yml
+  tags: config
+
+- name: main | Get partition device of {{ rabbitmq_data_dir }}
+  shell: "df --output=source {{ rabbitmq_data_dir }} | tail -1"
+  register: device
+  check_mode: no
+  changed_when: false
+
+- name: main | Get {{ device.stdout }} partition size
+  set_fact:
+    rabbitmq_disk_free_limit_absolute: "{{ ((ansible_mounts | selectattr('device','match',device.stdout) | list | first).size_total * rabbitmq_disk_free_limit_absolute_prct)|int }}"
+  check_mode: no
+
+- include: install.yml
+  tags: install
+
+- include: config.yml
+  tags: config
+
+- include: tuning.yml
+  tags: tuning
+
+- name: main | Ensure RabbitMQ is running
+  service:
+    name:    "{{ item }}"
+    state:   started
+    enabled: yes
+  with_items: "{{ rabbitmq_services }}"
+
+- include: config_vhost.yml
+  tags: config_vhost
+
+- include: config_user.yml
+  tags: config_user
+
+- include: plugin.yml
+  tags: plugin
+
+- include: script.yml
+  tags: script
+
+- include: cluster.yml
+  when:
+    - rabbitmq_hosts|length > 1
+  tags: cluster

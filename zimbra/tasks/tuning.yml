@@ -1,0 +1,25 @@
+---
+
+# TODO
+- name : my.cnf | Setting the dirty pages percentage for MariaDB/MySQL
+  lineinfile: 
+    dest: "{{ mariadb_config_file }}"
+    regexp: "^innodb_max_dirty*"
+    line: "innodb_max_dirty_pages_pct = 10"
+  when: "'store' in zimbra_services"
+
+- name: sysctl.conf | Setting the swappiness value
+  command: "sysctl -w vm.swappiness=0"
+  args:
+    chdir: "/usr/sbin"  
+  when: "'store' in zimbra_services and 'ldap' not in zimbra_services and 'proxy' not in zimbra_services and 'mta' not in zimbra_services"
+
+- name: Default Class of Service | Enforcing password policy
+  shell: su - zimbra -c "{{ item }}"
+  with_items: 
+    - "zmprov -l mc default zimbraPasswordMinUpperCaseChars 1"
+    - "zmprov -l mc default zimbraPasswordMinLowerCaseChars 1"
+    - "zmprov -l mc default zimbraPasswordMinLength 8"
+    - "zmprov -l mc default zimbraPasswordMinNumericChars 1"
+    - "zmprov -l mc default zimbraPasswordMinPunctuationChars 1"
+  when: "'store' in zimbra_services"

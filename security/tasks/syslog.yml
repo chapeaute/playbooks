@@ -1,0 +1,13 @@
+---
+- name: syslog | Set permissions on log file to 0640
+  command: find /var/log -type f -exec chmod -c 0640 {} \;
+  register: chmod_result
+  changed_when: "chmod_result.stdout != \"\""
+  when: security_level >= 3
+
+- name: syslog | Set default $FileCreateMode to 0640
+  lineinfile:
+    dest:   /etc/rsyslog.conf
+    regexp: "^\\$FileCreateMode .*"
+    line:   "$FileCreateMode 0640"
+  when: security_level >= 3

@@ -1,0 +1,24 @@
+---
+- name: config | Deploy main traefik configuration file (version 1)
+  template:
+    src:   "etc/traefik/traefik.toml.j2"
+    dest:  "{{ traefik_conf_dir }}/traefik.toml"
+    owner: "{{ traefik_user }}"
+    group: "{{ traefik_group }}"
+    force: "{{ traefik_override_conf }}"
+  when:
+    - traefik_version is version_compare('2.0.0', '<')
+  notify:
+    - Restart traefik
+
+- name: config | Deploy main traefik configuration file (version 2)
+  template:
+    src:   "etc/traefik/traefik.yml.j2"
+    dest:  "{{ traefik_conf_dir }}/traefik.yml"
+    owner: "{{ traefik_user }}"
+    group: "{{ traefik_group }}"
+    force: "{{ traefik_override_conf }}"
+  when:
+    - traefik_version is version_compare('2.0.0', '>=')
+  notify:
+    - Restart traefik

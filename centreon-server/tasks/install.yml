@@ -1,0 +1,30 @@
+---
+- name: install | Install centreon server package
+  package:
+   name:  "{{ item }}"
+   state: present
+  with_items:
+   - centreon-base-config-centreon-engine
+   - centreon
+   - MySQL-python
+   - centreon-widget-*
+  notify:
+    - Restart Apache
+    - Restart MariaDB
+
+- name: install | stop httpd 2.4 service
+  service:
+    name: httpd24-httpd.service
+    state: stopped
+    enabled: false
+
+- name: install
+  file:
+    src: /opt/rh/httpd24/root/etc/httpd/conf.d/10-centreon.conf
+    dest: /etc/httpd/conf.d/10-centreon.conf
+    state: link
+  notify:
+    - Restart Apache
+
+- name: install | Restart service now to avoid problem during wizard installation
+  meta: flush_handlers

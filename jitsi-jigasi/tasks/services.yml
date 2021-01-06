@@ -1,0 +1,15 @@
+---
+
+- name: Deploy systemd unit
+  template:
+    src: "etc/systemd/system/jitsi-jigasi.service.j2"
+    dest: "/etc/systemd/system/{{ jigasi_service_name }}.service"
+  notify:
+    - Reload systemd
+    - Restart jigasi
+
+- name: Start and enable jigasi
+  systemd:
+    name: "{{ jigasi_service_name }}"
+    state: started
+    enabled: yes

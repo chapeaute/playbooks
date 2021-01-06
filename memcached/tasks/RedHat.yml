@@ -1,0 +1,10 @@
+---
+- name: RedHat | Setting firewall rules
+  firewalld:
+    port:      "{{ item }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - 11211/tcp
+    - 11211/udp

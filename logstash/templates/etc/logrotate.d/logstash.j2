@@ -1,0 +1,12 @@
+{{ ls_path_logs }}/*log {
+    su logstash logstash
+    {{ ls_logrotate_days }}
+    missingok
+    notifempty
+    sharedscripts
+    delaycompress
+    notifempty
+    copytruncate
+    rotate  {{ ls_logrotate_rotate }}
+    size    {{ ls_logrotate_size }}
+}

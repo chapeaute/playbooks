@@ -1,0 +1,7 @@
+[all]
+apache-modsecurity ansible_connection=docker
+
+[group1]
+apache-modsecurity
+
+

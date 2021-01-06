@@ -1,0 +1,73 @@
+#!/usr/bin/env python
+import json
+import argparse
+
+def load_file(file):
+    opennedfile = open(file,'r')
+    file_data = json.load(opennedfile)
+    opennedfile.close()
+    return file_data
+
+def list_dashboard(data):
+    dashboard = {}
+    for i in data:
+        if i["_type"] == "dashboard":
+            dashboard[i['_id']] = i['_source']['title']
+        else:
+            pass
+    print("Available dashboard:")
+    for i,j in dashboard.iteritems():
+        print("- {} ( uuid = {})".format(j,i))
+
+def list_search(data):
+    search = []
+    for i in data:
+        if i["_type"] == "search":
+            search.append(i['_source']['title'])
+        else:
+            pass
+    print("Available search:")
+    for i in search:
+        print("- {}".format(i))
+
+def list_visualization(data):
+    visualization = []
+    for i in data:
+        if i["_type"] == "visualization":
+            visualization.append(i['_source']['title'])
+        else:
+            pass
+    print("Available visualization:")
+    for i in visualization:
+        print("- {}".format(i))
+
+def list_all(data):
+    list_dashboard(data)
+    list_visualization(data)
+    list_search(data)
+
+
+def main():
+    parser = argparse.ArgumentParser(description="List object in full export")
+    parser.add_argument('file')
+    parser.add_argument('--dashboard', dest='dashboard', action='store_true')
+    parser.add_argument('--search', dest='search', action='store_true')
+    parser.add_argument('--visualization', dest='visualization', action='store_true')
+    args = parser.parse_args()
+
+    loaded_data = load_file(args.file)
+
+    if not args.dashboard and not args.search and not args.visualization:
+        list_all(loaded_data)
+
+    if args.dashboard:
+        list_dashboard(loaded_data)
+
+    if args.search:
+        list_search(loaded_data)
+
+    if args.visualization:
+        list_visualization(loaded_data)
+
+if __name__ == "__main__":
+    main()

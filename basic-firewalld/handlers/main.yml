@@ -1,0 +1,6 @@
+---
+# handlers file for basic-firewalld
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes

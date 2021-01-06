@@ -1,0 +1,10 @@
+---
+- hosts: all
+  vars:
+    gitlab_server_host: gitlab-server # Gitlab server where runner will be register
+    gitlab_server_token: ""           # Must be get from Gitlab server after installation Admin > Runners
+  roles:
+    - role: gitlab-runner
+      gitlab_runner_executor: docker
+      gitlab_runner_docker_image:
+        - "ansible/centos7-ansible"

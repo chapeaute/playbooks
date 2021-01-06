@@ -1,0 +1,19 @@
+---
+
+- name: "Restart Apache"
+  service:
+    name: "{{ apache2_service_name }}"
+    state: restarted
+  register: apache_restarted
+
+- name: "Reload Apache"
+  service:
+    name: "{{ apache2_service_name }}"
+    state: reloaded
+
+- name: "Reload Systemd"
+  systemd:
+    daemon_reload: yes
+
+- name: Apply SELinux module
+  command: "/sbin/semodule -i /var/tmp/httpd_mysqld_db_t_lnk_file.pp"

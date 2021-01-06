@@ -1,0 +1,177 @@
+---
+- name: install | Ensure config fragment directory exists
+  file:
+    path: "{{ mysql_config_fragment_dir }}"
+    state: directory
+    owner: root
+    group: root
+  tags:
+    - install
+
+- name: install | Install dangerous settings
+  template:
+    src:  etc/mysql/conf.d/01-dangerous-settings.cnf.j2
+    dest: "{{ mysql_config_fragment_dir }}/01-dangerous-settings.cnf"
+    force: false
+  notify:
+    - "Restart MySQL"
+  tags:
+    - install
+
+# Change not dangerous settings
+# Need MySQL to be restarted
+- name: install | Database configuration
+  template:
+    src:  etc/mysql/conf.d/02-dynamic-settings.cnf.j2
+    dest: "{{ mysql_config_fragment_dir }}/02-dynamic-settings.cnf"
+  notify:
+    - "Restart MySQL"
+  tags:
+    - install
+    - update_config
+
+- name: install | Install MySQL using APT
+  apt:
+    name:  "{{ mysql_packages | join(',') }}"
+    state: present
+  register: mysql_apt_installation
+  when: ansible_os_family == "Debian"
+  tags:
+    - install
+
+- name: install | Install MySQL using YUM
+  yum:
+    name:  "{{ mysql_packages | join(',') }}"
+    state: present
+  register: mysql_yum_installation
+  when: ansible_os_family == "RedHat"
+  tags:
+    - install
+
+- name: install | Combine A and B variables
+  set_fact:
+    mysql_installation: "{{ mysql_apt_installation if mysql_apt_installation.changed else mysql_yum_installation }}"
+
+- name: install | Ensure slow log directory exists
+  file:
+    path:  "{{ mysql_config_slow_query_log_file | dirname }}"
+    state: directory
+    owner: "{{ mysql_log_owner }}"
+    group: "{{ mysql_log_group }}"
+  tags:
+    - install
+
+- name: install | Ensure bin log directory exists
+  file:
+    path:  "{{ mysql_config_log_bin | dirname }}"
+    state: directory
+    owner: "{{ mysql_log_owner }}"
+    group: "{{ mysql_log_group }}"
+    follow: yes
+  when: mysql_config_use_binlog
+  tags:
+    - install
+
+- name: install | Ensure config file includes fragment directory
+  lineinfile:
+    dest:   "{{ mysql_config_file }}"
+    line:   "!includedir {{ mysql_config_fragment_dir }}"
+    regexp: '^!includedir'
+  notify:
+    - "Restart MySQL"
+  tags:
+    - install
+
+# The following tasks are executed only if we proceed to a new install
+# They are in charge of dangerous settings like ibdata file configuration
+- name: install | Stop MySQL
+  service:
+    name:  "{{ mysql_service_name }}"
+    state: "stopped"
+  when: mysql_installation.changed #Only when installing the server
+  notify:
+    - "Restart MySQL"
+  tags:
+    - install
+
+# Make sure MySQL is running before appending root user
+- name: install | Make sure MySQL is running
+  service:
+    name:    "{{ mysql_service_name }}"
+    state:   started
+    enabled: yes
+  register: mysql_running
+  when: mysql_installation.changed or not manage_by_cluster
+
+- name: install | Check if MySQL is running
+  shell: "systemctl status {{ mysql_service_name }} > /dev/null 2>&1 && echo started || echo stopped"
+  changed_when: false
+  check_mode: no
+  register: mysql_running
+
+# Make sure root user is present
+- name: install | Append Root Users
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    name:     root
+    host:     "{{ item }}"
+    password: "{{ mysql_root_password }}"
+  when: "'started' in mysql_running.stdout"
+  with_items:
+    - ::1
+    - localhost
+  tags:
+    - install
+    - update
+    - update_config
+
+# Passwordless root login on the machine
+- name: install | Copy .my.cnf file with root password credentials
+  template:
+    src:   root/my.cnf.j2
+    dest:  /root/.my.cnf
+    owner: root
+    mode:  0600
+  tags:
+    - install
+    - update
+    - update_config
+
+- name: install | Drop test database
+  mysql_db:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    name:  test
+    state: absent
+  when: "'started' in mysql_running.stdout"
+  tags:
+    - install
+    - update_data
+    - update_config
+
+# Removes all anonymous user accounts
+- mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    name: ''
+    host_all: yes
+    state: absent
+  when: "'started' in mysql_running.stdout"
+  tags:
+    - install
+    - update_data
+    - update_config
+
+- name: install | Drop empty MySQL root users
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    name:  'root'
+    state: absent
+    host:  "{{ item }}"
+    password: ''
+  with_items:
+    - "{{ ansible_hostname }}"
+    - "{{ ansible_fqdn }}"
+  when: "'started' in mysql_running.stdout"
+  tags:
+    - install
+    - update_data
+    - update_config

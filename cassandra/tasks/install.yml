@@ -1,0 +1,27 @@
+---
+
+- name: install | Create cassandra home dir
+  file:
+    path:   "{{ cassandra_path_home }}"
+    state:  directory
+    mode:   0750
+  when: cassandra_path_home != cassandra_default_path_home
+
+- name: install | symlink cassandra home dir
+  file:
+    src:   "{{ cassandra_path_home }}"
+    dest:  "{{ cassandra_default_path_home }}"
+    state: link
+    force: yes
+  when: cassandra_path_home != cassandra_default_path_home
+
+- name: install | Install Cassandra
+  package:
+    name: "{{ cassandra_package }}"
+    state: present
+# notify: "Change cassandra password"
+
+- name: install | Install Cassandra Driver
+  package:
+    name: "{{ cassandra_driver }}"
+    state: present

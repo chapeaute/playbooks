@@ -1,0 +1,15 @@
+---
+# Global settings
+firewall_setup: true
+firewall_zone: public
+main_interface: eth0
+
+# Defaults file for freeipa-client
+freeipa_domain: example.lan
+freeipa_realm: "{{ freeipa_domain | upper }}"
+freeipa_hosts: ["{{ inventory_hostname }}"]
+
+freeipa_admin_user: admin
+freeipa_admin_pass: changeme
+
+freeipa_force_register: false

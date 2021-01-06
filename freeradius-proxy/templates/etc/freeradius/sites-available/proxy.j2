@@ -1,0 +1,14 @@
+# Proxy server configuration file
+server {{ vhost.name }} {
+  authorize {
+    update control {
+      Proxy-To-Realm := "fake_{{ vhost.name }}"
+    }
+  }
+
+  accounting {
+    update control {
+      Proxy-To-Realm := "fake_{{ vhost.name }}"
+    }
+  }
+}

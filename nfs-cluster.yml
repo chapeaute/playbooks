@@ -1,0 +1,36 @@
+---
+- hosts: nfs-server
+  vars:
+    net_itf:  "eth1"
+    vip_cidr: "192.168.122.5/24"
+    drbd_res: "data"
+    drbd_dev: "/dev/vdb"
+    drbd_dir: "/srv/drbd"
+    manage_by_cluster: True
+  roles:
+    - role: nfs-server
+      tags: nfs-server
+      nfs_data_dir: "{{ drbd_dir }}/nfs/data"
+      nfs_exports:
+        - directory: "{{ nfs_data_dir }}"
+          hosts: "*"
+    - role: drbd
+      drbd_hosts: "{{ play_hosts }}"
+      drbd_disk: "{{ drbd_dev }}"
+      drbd_netif:  "{{ net_itf }}"
+      drbd_res_name: "{{ drbd_res }}"
+    - role: pacemaker
+      pcmk_hosts: "{{ play_hosts }}"
+      pcmk_vip_rsc: 
+        - interface: "{{ net_itf }}"
+          address: "{{ vip_cidr.split('/')[0] }}"
+          netmask: "{{ vip_cidr.split('/')[1] }}"
+      pcmk_nfs_rsc: "{{ drbd_dir }}/nfs/lib"
+      pcmk_drbd_rsc:
+        rsc_name: "{{ drbd_res }}"
+        mnt_point: "{{ drbd_dir }}"
+        dir:
+          - src_dir: /etc/exports.d
+            dst_dir: "{{ drbd_dir }}/nfs/exports.d"
+          - src_dir: /var/lib/nfs_data
+            dst_dir: "{{ drbd_dir }}/nfs/data"

@@ -1,0 +1,8 @@
+---
+
+- name: main | Rename interface
+  command: "/usr/local/sbin/interface-rename {{ oldname }} {{ newname }}"
+  notify:
+    - Restart network service
+    - Update facts
+  when: oldname in ansible_interfaces

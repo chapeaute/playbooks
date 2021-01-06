@@ -1,0 +1,27 @@
+- src: git@git.smile.ci:adminsys/ansible/role/basic-server.git
+  scm: git
+  version: v1.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-user.git
+  scm: git
+  version: v1.0.5
+
+- src: git@git.smile.ci:adminsys/ansible/role/debian-backports.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/elasticsearch.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/ldap-user.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/nodejs.git
+  scm: git
+  version: v1.0.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/openjdk.git
+  scm: git
+  version: v1.0.0

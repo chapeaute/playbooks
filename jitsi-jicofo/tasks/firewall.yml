@@ -1,0 +1,9 @@
+---
+
+- name: Firewall | Open ports
+  firewalld:
+    port: "{{ item }}/tcp"
+    permanent: true
+    immediate: true
+    state: enabled
+  with_items: "{{ jicofo_ports }}"

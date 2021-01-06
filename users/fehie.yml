@@ -1,0 +1,22 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users_groups:
+        - name: exploit
+      sudoers:
+        exploit:
+          state: present
+          lines:
+            - "%exploit ALL=(ALL) NOPASSWD: ALL"
+        default:
+          state: present
+          lines:
+            - 'Defaults    env_keep += "SSH_AUTH_SOCK"'
+      users:
+        - login: fehie
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC5eRnuF+4z8vPABkfS00VcofVXPkccQLS7ivW6mhmUo17ZdXCqsxSs3VgGp8fjmp7B23Fhs8m8DnOa+bCaNlbWB12ux3kGz9is0OuWCTaVwHHXHKQUyeOHDMhZnu8+S7c9WhPVP7ggNBw+6BTuE4vwAUx2ayl/zitG/0lR4Hxdrf1ZpTwtvwaRnU/8lkTeOR3HkpDltr6MXM2Cvp+n10ycSdrlpsz8M7xHmxnPLwUE431E7SNcSW8avUTbhtRXlYFLi1UfNrQ8FV4V19EoeHOOnAlvfLg0YT6kUTB6zplqyMtqUAeX1pQ34QY8i6A8IPNi+IILdYv+0aSe8Eeb7fmf frederic.hie@smile.ci

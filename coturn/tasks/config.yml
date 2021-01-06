@@ -1,0 +1,10 @@
+---
+
+- name: Configure coturn
+  template:
+    src: etc/coturn/turnserver.conf.j2
+    dest: /etc/coturn/turnserver.conf
+    owner: "{{ coturn_user_name }}"
+    group: "{{ coturn_user_name }}"
+    mode: 0755
+  notify: Restart coturn

@@ -1,0 +1,26 @@
+---
+
+- name: main | Write environment files
+  template:
+    src:  env.j2
+    dest: /etc/default/{{ genericservice.name }}
+  when: genericservice.env_vars is defined
+  notify:
+    - restart generic service
+
+- name: main | Copy unit files
+  template:
+    src:  unit.j2
+    dest: /etc/systemd/system/{{ genericservice.name }}.service
+  when: genericservice.create_service|default(True)
+  register: copyunit
+  notify:
+    - reload systemd
+    - restart generic service
+
+- name: main | Start service
+  service:
+    name:    "{{ genericservice.name }}"
+    state:   started
+    enabled: yes
+  when: not genericservice.do_start is defined or genericservice.do_start

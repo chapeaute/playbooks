@@ -1,0 +1,52 @@
+---
+- name: libvirt | Deploy backup and restore script
+  template:
+    src:   "usr/local/sbin/{{ item }}"
+    dest:  "{{ libvirt_script_dir }}"
+    owner: root
+    group: root
+    mode:  0755
+  with_items:
+    - libvirt-vm-backup
+    - libvirt-vm-backup-all
+    - libvirt-vm-backup-compress
+    - libvirt-vm-restore
+    - libvirt-vm-disk-check
+  tags:
+    - script
+
+- name: libvirt | Setup daily backup cron
+  cron:
+    name: "Daily backup all vms"
+    minute: 05
+    hour: 00
+    weekday: mon,tue,wed,thu,fri,sat
+    state: present
+    disabled: "{{ libvirt_cron_backup_disabled }}"
+    job: "/usr/local/sbin/libvirt-vm-backup-all {{ libvirt_backup_daily_dir }} {{ libvirt_backup_daily_retention }} > /dev/null{% if libvirt_cron_backup_compress %} && /usr/local/sbin/libvirt-vm-backup-compress {{ libvirt_backup_daily_dir }}{% endif %}"
+  tags:
+    - crontab
+
+- name: libvirt | Setup weekly backup cron
+  cron:
+    name: "Weekly backup all vms"
+    minute: 05
+    hour: 00
+    weekday: sun
+    state: present
+    disabled: "{{ libvirt_cron_backup_disabled }}"
+    job: "[ `date +\\%d` -gt 7 ] && /usr/local/sbin/libvirt-vm-backup-all {{ libvirt_backup_weekly_dir }} {{ libvirt_backup_weekly_retention }} > /dev/null{% if libvirt_cron_backup_compress %} && /usr/local/sbin/libvirt-vm-backup-compress {{ libvirt_backup_weekly_dir }}{% endif %} || :"
+  tags:
+    - crontab
+
+- name: libvirt | Setup monthly backup cron
+  cron:
+    name: "Monthly backup all vms"
+    minute: 05
+    hour: 00
+    weekday: sun
+    state: present
+    disabled: "{{ libvirt_cron_backup_disabled }}"
+    job: "[ `date +\\%d` -le 7 ] && /usr/local/sbin/libvirt-vm-backup-all {{ libvirt_backup_monthly_dir }} {{ libvirt_backup_monthly_retention }} > /dev/null{% if libvirt_cron_backup_compress %} && /usr/local/sbin/libvirt-vm-backup-compress {{ libvirt_backup_monthly_dir }}{% endif %} || :"
+  tags:
+    - crontab

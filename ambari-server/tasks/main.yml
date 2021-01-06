@@ -1,0 +1,40 @@
+---
+
+- name: Load variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'
+        - main.yml
+      paths:
+        - ../vars
+
+- name: Install the ambari-server package
+  package:
+    name: ambari-server
+    state: present
+  notify: Reload systemd
+
+- include_tasks: config.yml
+  tags: config
+
+- import_tasks: deploy.yml
+  tags:
+    - deploy
+    - setup
+
+- name: Make sure the ambari-server service is started
+  service:
+    name: ambari-server
+    state: started
+
+- name: Make sure the ambari-server service is enabled
+  service:
+    name: ambari-server
+    enabled: yes
+  ignore_errors: true

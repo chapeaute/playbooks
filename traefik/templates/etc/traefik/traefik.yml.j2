@@ -1,0 +1,53 @@
+# Traefik configuration file
+global:
+  checkNewVersion: true
+  sendAnonymousUsage: false
+
+entryPoints:
+  http:
+    address: :80
+  https:
+    address: :443
+  traefik:
+    address: :{{ traefik_dashboard_port }}
+  metrics:
+    address: :{{ traefik_metrics_port }}
+
+providers:
+  providersThrottleDuration: 2s
+  file:
+    directory: {{ traefik_conf_dir }}/traefik.d
+    watch: true
+{% if traefik_etcd_enable %}
+  etcd:
+    endpoints:
+{% for h in traefik_etcd_hosts %}
+      - {{ h }}:{{ traefik_etcd_port }}
+{% endfor %}
+{% endif %}
+
+{% if traefik_dashboard_enable %}
+api:
+  insecure: false
+  dashboard: true
+{% endif %}
+
+{% if traefik_metrics_enable %}
+metrics:
+  prometheus:
+    entryPoint: metrics
+    buckets: ["0.1" ,"0.3" ,"1.2 ", "5.0"]
+{% endif %}
+
+ping:
+  entryPoint: traefik
+
+log:
+  level: INFO
+  filePath: {{ traefik_log_dir }}/traefik.log
+  format: common
+
+accessLog:
+  format: common
+  filePath: {{ traefik_log_dir }}/access.log
+

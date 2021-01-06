@@ -1,0 +1,58 @@
+---
+- name: admin | Check root authentication file
+  stat:
+    path: /root/.mongorc.js
+  register: mongodb_auth_file
+
+- name: admin | Install python-mongo package
+  pip:
+    name: pymongo
+
+- name: admin | Create mongodb database
+  mongodb_user:
+    login_database: admin
+    name: "{{ mongodb_admin_user }}"
+    password: "{{ mongodb_admin_pass }}"
+    database: admin
+    roles: ['root']
+    state: present
+    update_password: always
+  when: not mongodb_auth_file.stat.exists
+
+- name: admin | Deploy admin user file
+  template:
+    src:   root/mongorc.js.j2
+    dest:  /root/.mongorc.js
+    owner: root
+    group: root
+    mode:  0600
+
+- name: admin | Generate keyfile
+  shell: "/usr/bin/openssl rand -base64 741 > credential/{{ mongodb_keyfile_path | basename }}"
+  args:
+    creates: "credential/{{ mongodb_keyfile_path | basename }}"
+  delegate_to: localhost
+  run_once: true
+  when: mongodb_hosts | length > 2
+
+- name: admin | Copy keyfile to servers
+  copy:
+    src:   "credential/{{ mongodb_keyfile_path | basename }}"
+    dest:  "{{ mongodb_keyfile_path }}"
+    owner: "{{ mongodb_user }}"
+    group: "{{ mongodb_group }}"
+    mode:  0400
+  when: mongodb_hosts | length > 2
+
+- name: admin | Create override service directory
+  file:
+    path: /etc/systemd/system/mongod.service.d/
+    state: directory
+
+- name: admin | Ensure access control is enable on database
+  template:
+    src:  etc/systemd/system/mongod.service.d/override.conf.j2
+    dest: /etc/systemd/system/mongod.service.d/override.conf
+  notify:
+    - Systemd reload
+    - Restart MongoDB

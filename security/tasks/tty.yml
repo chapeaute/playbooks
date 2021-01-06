@@ -1,0 +1,9 @@
+---
+- name: tty | Replace /etc/securetty
+  template:
+    src:   etc/securetty.j2
+    dest:  /etc/securetty
+    owner: root
+    group: root
+    mode:  0600
+  when: security_level >= 1

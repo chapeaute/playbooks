@@ -1,0 +1,4 @@
+- hosts: all
+  roles:
+    - role: ssl-certs
+      ssl_certs_common_name: verdure-esb.plateforme.ci

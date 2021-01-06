@@ -1,0 +1,49 @@
+---
+#
+# Etcd data directory
+#
+- name: install | Check if {{ etcd_data_dir }} data directory exists
+  stat:
+    path: "{{ etcd_data_dir }}"
+  register: data_dir
+
+- name: install | Create {{ etcd_data_dir }} data directory
+  file:
+    state:   directory
+    path:    "{{ etcd_data_dir }}"
+    recurse: yes
+  when: not data_dir.stat.exists
+
+- name: install | Create {{ etcd_default_data_dir | dirname }} home directory
+  file:
+    state:   directory
+    path:    "{{ etcd_default_data_dir | dirname }}"
+    recurse: yes
+
+- name: install | Create symlink from {{ etcd_default_data_dir }} to {{ etcd_data_dir }} data directory
+  file:
+    state: link
+    src:   "{{ etcd_data_dir }}"
+    dest:  "{{ etcd_default_data_dir }}"
+    force: true
+  when:  etcd_data_dir != etcd_default_data_dir
+
+
+#
+# Etcd backup directory
+#
+- name: install | Create backup directory
+  file:
+    state:   directory
+    path:    "{{ etcd_backup_dir }}"
+    recurse: yes
+
+#
+# Install Etcd
+#
+- name: install | Install Etcd
+  package:
+    name:  "{{ item }}"
+    state: present
+  with_items:
+    - "{{ etcd_package_name }}"

@@ -1,0 +1,61 @@
+---
+
+# Include per-environment variables
+- name: Include per-environment variables
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include_tasks: "{{ ansible_os_family }}.yml"
+  tags: config
+
+- import_tasks: config.yml
+  tags: config
+
+- import_tasks: install.yml
+  tags: setup
+
+- name: main | Check if MongoDB is running
+  shell: "systemctl status {{ mongodb_services[0] }} > /dev/null 2>&1 && echo started || echo stopped"
+  changed_when: false
+  check_mode: no
+  register: mongodb_running
+  tags: ['monitoring', 'pmm', 'user']
+
+- import_tasks: db.yml
+  when: "'started' in mongodb_running.stdout"
+  tags: user
+
+- import_tasks: pmm.yml
+  when:
+    - "'started' in mongodb_running.stdout"
+    - mongodb_pmm_enable
+  tags: pmm
+
+- import_tasks: monitoring.yml
+  when:
+    - "'started' in mongodb_running.stdout"
+    - mongodb_monitoring_enable
+  tags: monitoring
+
+- import_tasks: admin.yml
+  tags: admin
+
+- import_tasks: cluster.yml
+  when: mongodb_hosts | length > 2
+  tags: cluster
+
+- import_tasks: script.yml
+  tags: script
+
+- import_tasks: prompt.yml
+  tags: prompt
+  when: mongodb_hosts | length > 2

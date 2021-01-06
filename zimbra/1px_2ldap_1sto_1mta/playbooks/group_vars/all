@@ -1,0 +1,4 @@
+_zimbra_stack_mta: "{{ groups['zimbra-stack-mta'] }}"
+_zimbra_stack_ldap: "{{ groups['zimbra-stack-ldap'] }}"
+_zimbra_stack_proxy: "{{ groups['zimbra-stack-proxy'] }}"
+_zimbra_stack_store: "{{ groups['zimbra-stack-store'] }}"

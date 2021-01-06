@@ -1,0 +1,11 @@
+<Directory />
+Require all granted
+Options FollowSymLinks
+AllowOverride None
+</Directory>
+
+WSGIDaemonProcess privacyidea processes=1 threads=15 display-name=%{GROUP} user=privacyidea python-home=/opt/privacyidea
+WSGIProcessGroup privacyidea
+WSGIPassAuthorization On
+WSGIScriptAlias / /etc/privacyidea/privacyideaapp.wsgi
+

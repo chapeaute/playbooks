@@ -1,0 +1,52 @@
+---
+# tasks file for elasticsearch
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | Install metricbeat
+  package:
+    name: "metricbeat-{{ mb_full_version|default(mb_major_version + '*') }}"
+  notify: "Restart metricbeat"
+
+- name: main | Copy configuration file
+  tags: config
+  template:
+    src: "etc/metricbeat-{{ mb_major_version }}.x/metricbeat.yml.j2"
+    dest:  "/etc/metricbeat/metricbeat.yml"
+  notify: "Restart metricbeat"
+
+- name: main | Get all metricbeat modules
+  shell: "ls -1 *disabled"
+  args:
+    chdir: /etc/metricbeat/modules.d
+  register: mb_all_modules
+
+- name: main | Deploy template metricbeat modules
+  command: "/bin/metricbeat modules enable {{ item.split('.')[0] }}"
+  args:
+    creates: "/etc/metricbeat/modules.d/{{ item }}.yml"
+    chdir: /etc/metricbeat
+  when:
+    - "item.split('.')[0] in group_names"
+    - mb_deploy_modules
+  with_items:
+    - "{{ mb_all_modules.stdout_lines }}"
+    - "{{ mb_modules }}"
+    - "{{ mb_default_modules }}"
+  notify: "Restart metricbeat"
+
+- name: main | Start and enable service
+  service:
+    name:    metricbeat
+    state:   started
+    enabled: yes

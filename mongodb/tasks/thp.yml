@@ -1,0 +1,31 @@
+---
+- name: thp | Install service to Disable THP
+  template:
+    src: "templates/etc/systemd/system/disable-transparent-huge-pages.service.j2"
+    dest: "/etc/systemd/system/disable-transparent-huge-pages.service"
+    mode: 0644
+  when: mongodb_thp_disable
+
+- name: thp | Enable service to Disable THP
+  systemd:
+    name:    disable-transparent-huge-pages.service
+    state:   started
+    enabled: yes
+    daemon_reload: yes
+  changed_when: False
+  when: mongodb_thp_disable
+
+- name: thp | Create tuned directory
+  file:
+    path:  /etc/tuned/no-thp
+    state: directory
+    mode:  0755
+  when: mongodb_thp_disable
+
+- name: thp | Install Disable THP Tuned Configuration
+  template:
+    src: "templates/etc/tuned/no-thp/tuned.conf.j2"
+    dest: "/etc/tuned/no-thp/tuned.conf"
+    mode: 0644
+  when: mongodb_thp_disable
+  notify: "thp | Enable new profile"

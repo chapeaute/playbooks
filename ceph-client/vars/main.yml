@@ -1,0 +1,9 @@
+---
+# vars file for ceph-client
+ceph_client_extra_packages:
+  - epel-release
+
+ceph_client_packages:
+  - ceph-common
+
+ceph_fs_volume: common

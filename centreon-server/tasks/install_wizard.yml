@@ -1,0 +1,227 @@
+---
+- name: generate host | Remove 127.0.0.1 {{ ansible_hostname }}
+  lineinfile:
+    dest: /etc/hosts
+    regexp: "127.0.0.1.*{{ ansible_hostname }}$"
+    state: absent
+
+- name: install_wizard | Centreon Wizard - Reset installation steps
+  lineinfile:
+    path: /usr/share/centreon/www/install/tmp/step.json
+    create: yes
+    regexp: 'step'
+    line: '{"step":1}'
+    owner: apache
+    group: apache
+    mode: 0644
+
+- name: install_wizard | Centreon Wizard - Generate configuration.json
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/step.php?action=stepContent"
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Go the step 2
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/step.php?action=nextStep"
+    method: GET
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Go the step 3
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/step.php?action=nextStep"
+    method: GET
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+
+- name: install_wizard | Centreon Wizard - Step Monitoring engine information
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/process_step3.php"
+    method: POST
+    body: "install_dir_engine=%2Fusr%2Fshare%2Fcentreon-engine&centreon_engine_stats_binary=%2Fusr%2Fsbin%2Fcentenginestats&monitoring_var_lib=%2Fvar%2Flib%2Fcentreon-engine&centreon_engine_connectors=%2Fusr%2Flib64%2Fcentreon-connector&centreon_engine_lib=%2Fusr%2Flib64%2Fcentreon-engine&centreonplugins=%2Fusr%2Flib%2Fcentreon%2Fplugins%2F"
+    status_code: 200
+    timeout: 120
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Go the step 4
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/step.php?action=nextStep"
+    method: GET
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Step Broker module information
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/process_step4.php"
+    method: POST
+    body: "centreonbroker_etc=%2Fetc%2Fcentreon-broker&centreonbroker_cbmod=%2Fusr%2Flib64%2Fnagios%2Fcbmod.so&centreonbroker_log=%2Fvar%2Flog%2Fcentreon-broker&centreonbroker_varlib=%2Fvar%2Flib%2Fcentreon-broker&centreonbroker_lib=%2Fusr%2Fshare%2Fcentreon%2Flib%2Fcentreon-broker"
+    status_code: 200
+    timeout: 120
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Go the step 5
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/step.php?action=nextStep"
+    method: GET
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Step Admin information
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/process_step5.php"
+    method: POST
+    body: "admin_password={{ centreon_clapi_pass }}&confirm_password={{ centreon_clapi_pass }}&firstname=admin&lastname=admin&email={{ centreon_admin_email }}"
+    status_code: 200
+    timeout: 120
+    headers:
+      Content-Type: "application/x-www-form-urlencoded"
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Go the step 6
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/step.php?action=nextStep"
+    method: GET
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Step Database information
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/process_step6.php"
+    method: POST
+    body: "address={{ centreon_db_host }}&port=3306&root_password={{ centreon_db_admin_pass }}&db_configuration=centreon&db_storage=centreon_storage&db_user=centreon&db_password={{ centreon_db_pass }}&db_password_confirm={{ centreon_db_pass }}"
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+      Content-Type: "application/x-www-form-urlencoded"
+
+
+- name: install_wizard | Centreon Wizard - Go the step 7
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/step.php?action=nextStep"
+    method: GET
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Step Configuration File
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/configFileSetup.php"
+    method: POST
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Step Configuration database
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/installConfigurationDb.php"
+    method: POST
+    status_code: 200
+    timeout: 1200
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Step Storage database
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/installStorageDb.php"
+    method: POST
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Step Creating database user
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/createDbUser.php"
+    method: POST
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Step Setting up basic configuration
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/insertBaseConf.php"
+    method: POST
+    status_code: 200
+    timeout: 240
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Step Partitioning database tables
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/partitionTables.php"
+    method: POST
+    status_code: 200
+    timeout: 300
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+# This will be needed for future version
+# - name: install_wizard | Centreon Wizard - Step Generating application cache
+#   uri:
+#     url: "http://{{ inventory_hostname }}/centreon/install/steps/process/generationCache.php"
+#     method: POST
+#     status_code: 200
+#     timeout: 300
+#     headers:
+#       Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Go the step 8
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/step.php?action=nextStep"
+    method: GET
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Install extra modules
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/process_step8.php"
+    method: GET
+    status_code: 200
+    body: "modules%5B%5D=centreon-license-manager&modules%5B%5D=centreon-pp-manager&modules%5B%5D=centreon-autodiscovery-server"
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Go the step 9
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/step.php?action=nextStep"
+    method: GET
+    status_code: 200
+    timeout: 120
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+
+- name: install_wizard | Centreon Wizard - Step Installation finished
+  uri:
+    url: "http://{{ inventory_hostname }}/centreon/install/steps/process/process_step9.php"
+    method: POST
+    status_code: 200
+    timeout: 120
+    body: "send_statistics=0"
+    headers:
+      Cookie: "PHPSESSID=lue98qvtlo5fb4koormjhqsmp6"
+      Content-Type: "application/x-www-form-urlencoded"

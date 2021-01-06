@@ -1,0 +1,8 @@
+- hosts: all
+  roles:
+     - role: proftpd
+       proftpd_enable_sftp: True
+       proftpd_users:
+         - name: fondation.orange.ci
+           password: zKeSoSB6d0d2f9hz # Password is encrypted
+           home_dir: /var/www/fondation.orange.ci/htdocs

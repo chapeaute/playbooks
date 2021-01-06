@@ -1,0 +1,116 @@
+Vagrant.require_version ">= 2.0.0"
+
+# Require JSON module
+require 'json'
+
+# Load JSON file with global configuration settings
+settings = JSON.parse(File.read(File.join(File.dirname(__FILE__), 'settings.json')))
+
+# Load JSON file with box details
+boxes = JSON.parse(File.read(File.join(File.dirname(__FILE__), 'servers.json')))
+
+# Vagrant configuration file
+Vagrant.configure("2") do |config|
+  # DNS and SSH settings
+  dns = settings['dns']
+  kvm = settings['kvm']
+  net = settings['net']
+  ssh = settings['ssh']
+  cfmg = settings['ansible']
+  ssh_keys = []
+
+  # Default configuration settings
+  config.ssh.username = ssh['user']
+  config.ssh.password = ssh['pass']
+
+  config.vm.box = settings['box']
+  config.vm.synced_folder '.', '/vagrant', disabled: true
+  config.vm.provider "libvirt" do |domain|
+    domain.driver = 'kvm'
+    domain.default_prefix = ''
+    domain.nested = true
+    domain.volume_cache = 'none'
+  end
+
+  # VM creation
+  boxes.each do |box|
+    ssh_keys << "-o IdentityFile=.vagrant/machines/#{box['name']}/libvirt/private_key"
+
+    vmname = if dns['domain'] == "" then "#{box['name']}" else "#{box['name']}.#{dns['domain']}" end
+    ip = box['ip'].split(':')[1] || box['ip'].split(':')[0]
+
+    config.vm.define "#{vmname}" do |host|
+      if not box.key?('pool') then box['pool'] = kvm['pool'] end
+      if not box.key?('net') then box['net'] = kvm['net'] end
+
+      mem = box['mem']
+      if mem.to_s.include? "G"
+        mem = mem.split('G')[0].to_i * 1024
+      end
+
+      # VM configuration via libvirt
+      host.vm.hostname = vmname
+      host.vm.network "public_network",
+        :ip => ip,
+        :dhcp => false,
+        :dev => box['net'],
+        :type => "bridge"
+
+      host.vm.provider "libvirt" do |domain|
+        domain.cpus = box['cpu']
+        domain.cpu_mode = 'host-passthrough'
+        domain.cpu_fallback = 'forbid'
+        domain.memory = mem
+        domain.storage_pool_name = box['pool']
+        if box.key?('disk') && (box['disk'] != '')
+          domain.storage :file, :size => box['disk']
+        end
+        domain.channel :type => 'unix', :target_name => 'org.qemu.guest_agent.0', :target_type => 'virtio'
+        domain.channel :type => 'spicevmc', :target_name => 'com.redhat.spice.0', :target_type => 'virtio'
+      end
+
+      host.vm.provision "shell",
+        run: "always",
+        inline: "ip route replace default via #{net['gateway']}"
+
+      if dns.key?('server') && (dns['server'] != '')
+        dns_key_path = File.join(File.dirname(__FILE__), dns['key'])
+
+        # Trigger execute during VM creation
+        config.trigger.before [:up, :resume, :reload] do |trigger|
+          trigger.run = {inline: "vagrant-ddns -a add -s #{dns['server']} -k #{dns['key']} -h #{box['name']}.#{dns['domain']} -i #{box['ip']}"}
+        end
+
+        # Trigger execute during VM destroy
+        config.trigger.before [:destroy] do |trigger|
+          trigger.run = {inline: "vagrant-ddns -a delete -s #{dns['server']} -k #{dns['key']} -h #{box['name']}.#{dns['domain']} -i #{box['ip']}"}
+        end
+
+        # Trigger execute after VM destroy
+        config.trigger.after [:destroy] do |trigger|
+          trigger.run = {inline: "virsh pool-refresh #{box['pool']}"}
+        end
+      end
+
+      # Provisionning via ansible only when last VM was instantiate
+      if box['name'] == boxes.last['name'] && cfmg['autoprov']
+        cfmg['playbooks'].strip.split(" ").each do |plbk|
+          host.vm.provision "ansible" do |ansible|
+            ansible.playbook = plbk
+            ansible.limit = "all"
+            ansible.inventory_path = cfmg['inventory']
+            if File.file?(cfmg['roles_file'])
+              ansible.galaxy_role_file = cfmg['roles_file']
+              ansible.galaxy_roles_path = cfmg['roles_path']
+    end
+            ansible.extra_vars = { vagrant_provision: "true" }
+            ansible.raw_arguments  = [ "--flush-cache" ]
+            ansible.raw_ssh_args = ssh_keys
+            ansible.compatibility_mode = "2.0"
+#            ansible.verbose = "vvv"
+  end
+end
+      end
+    end
+  end
+end

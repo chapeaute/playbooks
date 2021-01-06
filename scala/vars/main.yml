@@ -1,0 +1,3 @@
+---
+# vars file for scala
+scala_package: "https://scala-lang.org/files/archive/scala-{{scala_version}}.rpm"

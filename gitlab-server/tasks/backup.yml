@@ -1,0 +1,38 @@
+---
+- name: main | Gitlab scripts
+  template:
+    src: "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    mode: 0755
+  tags: script
+  with_items:
+    - gitlab-backup-clean
+    - gitlab-backup-dump
+    - gitlab-backup-restore
+
+- name: backup_dir | Check if directory exists
+  stat:
+    path: "{{ gitlab_backup_dir }}"
+  register: backup_dir
+
+- name: install | Create backup directory
+  file:
+    state:   directory
+    path:    "{{ gitlab_backup_dir }}"
+    owner:   git
+    group:   git
+    recurse: yes
+  when: not backup_dir.stat.exists
+
+- name: backup_dir | Create default backup directory
+  file:
+    state:   directory
+    path:    "{{ gitlab_default_backup_dir | dirname }}"
+    recurse: yes
+
+- name: backup_dir | Create symlink from {{ gitlab_default_backup_dir }} to backup directory
+  file:
+    state: link
+    src:   "{{ gitlab_backup_dir }}"
+    dest:  "{{ gitlab_default_backup_dir }}"
+  when: gitlab_backup_dir != gitlab_default_backup_dir

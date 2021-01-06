@@ -1,0 +1,4 @@
+    RewriteEngine On
+    RewriteCond %{HTTP:Connection} Upgrade [NC]
+    RewriteCond %{HTTP:Upgrade} websocket [NC]
+    RewriteRule /(.*) ws://localhost:{{ rocketchat_port }}/$1 [P,L]

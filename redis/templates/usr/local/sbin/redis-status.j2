@@ -1,0 +1,14 @@
+#!/bin/bash
+{% if redis_enable_password %}
+
+# Get redis version
+redis_version=$(redis-cli --version | awk '{print $2}' | cut -d. -f1)
+redis_extra_opts=""
+
+if [ $redis_version -lt 5 ]; then
+	redis_extra_opts="-a $REDISCLI_AUTH"
+fi
+redis-cli --stat $redis_extra_opts
+{% else %}
+redis-cli --stat
+{% endif %}

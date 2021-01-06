@@ -1,0 +1,6 @@
+---
+
+generic_webapp_packages:
+  - unzip
+  - rsync
+  - bzip2

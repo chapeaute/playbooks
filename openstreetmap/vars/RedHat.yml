@@ -1,0 +1,26 @@
+
+osm_php_modules:
+  - PHP_CodeSniffer
+
+osm_dependencies:
+  - epel-release
+  - cmake
+  - make
+  - gcc
+  - gcc-c++
+  - libtool
+  - postgis
+  - policycoreutils-python
+  - libpqxx-devel
+  - proj-epsg
+  - bzip2-devel
+  - proj-devel
+  - geos-devel
+  - libxml2-devel
+  - boost-devel
+  - expat-devel
+  - zlib-devel
+  - python-devel
+  - python-pip
+  - python-Levenshtein
+  - python-psycopg2

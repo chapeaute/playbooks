@@ -1,0 +1,28 @@
+---
+
+- name: selinux | Allow SElinux to relay apache network connection to non standard port
+  seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+  when: ansible_selinux.status == "enabled"
+
+- name: selinux | Check SELinux module
+  shell: "set -o pipefail && semodule -l | grep -q ^httpd_mysqld_db_t_lnk_file && echo found || echo notfound"
+  changed_when: false
+  register: httpd_mysqld_db_t_lnk_file_semod
+  check_mode: no
+
+- name: selinux | Copy SELinux module
+  copy:
+    src:   httpd_mysqld_db_t_lnk_file.pp
+    dest:  /var/tmp/httpd_mysqld_db_t_lnk_file.pp
+    owner: root
+    group: root
+    mode:  0644
+  notify: Apply SELinux module
+  # register: httpd_mysqld_db_t_lnk_file_module
+
+# - name: selinux | Apply SELinux module
+#   command: "/sbin/semodule -i /var/tmp/httpd_mysqld_db_t_lnk_file.pp"
+#   when: "'notfound' in httpd_mysqld_db_t_lnk_file_semod.stdout or httpd_mysqld_db_t_lnk_file_module.changed"

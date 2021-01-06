@@ -1,0 +1,7 @@
+---
+
+- name: vg | add {{ vg.pvs }} to centos volume group
+  lvg:
+    vg: "{{ vg.name }}"
+    pvs: "{{ vg.pvs }}"
+    state: "{{ vg.state | default('present') }}"

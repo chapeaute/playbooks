@@ -1,0 +1,6 @@
+---
+- hosts: all
+  roles:
+    - role: basic-server
+      disable_network_manager: True
+      generate_hosts_from_inventory: False

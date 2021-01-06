@@ -1,0 +1,32 @@
+
+<VirtualHost *:80>
+
+    ServerName {{ jitsi_meet_domain }}
+    ServerAlias {{ jitsi_domain }}
+
+{% if jitsi_meet_ssl_cert_path is defined and jitsi_meet_redirect_https|default(false)  %}
+    <Location "/">
+      RewriteEngine On
+      RewriteCond %{HTTPS} off
+      RewriteRule (.*) https://{{ jitsi_meet_domain }}$1 [R,L]
+    </Location>
+{% endif %}
+
+    IncludeOptional {{ apache2_confd_dir }}/custom/jitsi-meet.con[f]
+
+</VirtualHost>
+
+{% if jitsi_meet_ssl_cert_path is defined %}
+<VirtualHost *:443>
+
+    ServerName {{ jitsi_meet_domain }}
+    ServerAlias {{ jitsi_domain }}
+
+    SSLEngine on
+    SSLCertificateFile {{ jitsi_meet_ssl_cert_path }}
+    SSLCertificateKeyFile {{ jitsi_meet_ssl_key_path }}
+
+    IncludeOptional {{ apache2_confd_dir }}/custom/jitsi-meet.con[f]
+
+</VirtualHost>
+{% endif %}

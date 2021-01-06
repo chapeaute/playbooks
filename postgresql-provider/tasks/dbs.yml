@@ -1,0 +1,36 @@
+---
+# tasks file for postgresql-databases
+
+- name: dbs | Create PostgreSQL users
+  delegate_to: "{{ postgresql_host }}"
+  become: true
+  become_user: postgres
+  postgresql_user:
+    name: "{{ item.value.user }}"
+    password: "{{ item.value.password }}"
+    state: present
+    role_attr_flags: "{{ item.roles|default(omit) }}"
+  when: "item.value.user is defined"
+  with_dict: "{{ postgresql_databases }}"
+
+- name: dbs | Create databases with specified owner
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: "{{ item.value.db_name|default(item.key) }}"
+    owner: "{{ item.value.user| default(omit) }}"
+    state: present
+    template: template0
+    encoding: "{{ item.value.encoding| default(postgresql_db_default_encoding) }}"
+  with_dict: "{{ postgresql_databases }}"
+  register: created_dbs
+  delegate_to: "{{ postgresql_host }}"
+  notify:
+    - "Ensure dump download directory exists"
+    - "Retrieve PostgreSQL dump (from SSH)"
+    - "Retrieve PostgreSQL dump (from URL)"
+    - "Retrieve PostgreSQL dump (from local copy)"
+    - "Import PostgreSQL dump"
+
+- name: dbs | Run hanlders
+  meta: flush_handlers

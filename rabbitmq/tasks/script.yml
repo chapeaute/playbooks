@@ -1,0 +1,11 @@
+---
+- name: script | Copy administration scripts to server
+  copy:
+    src:   "usr/local/sbin/{{ item }}"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - rabbitmq-queue-status
+    - rabbitmq-client-status

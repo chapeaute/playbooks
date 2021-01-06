@@ -1,0 +1,15 @@
+---
+# defaults file for cerebro
+cerebro_service_name: cerebro
+cerebro_version: 0.6.8
+cerbero_service_type:
+cerebro:
+  source_url: "https://github.com/lmenezes/cerebro/releases/download/v{{ cerebro_version }}/cerebro-{{ cerebro_version }}.tgz"
+  subpath: "cerebro-{{ cerebro_version }}"
+
+# enable http_reverse proxy
+cerebro_enable_http_reverse: True
+cerebro_reverse_vhost_name: cerebro
+cerebro_reverse_vhost_alias: []
+cerebro_es_hosts:
+  - localhost

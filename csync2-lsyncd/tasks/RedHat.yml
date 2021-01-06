@@ -1,0 +1,24 @@
+---
+- name: RedHat | Enable Smile CentOS repository
+  copy:
+    src:  etc/yum.repos.d/CentOS-Smile.repo
+    dest: /etc/yum.repos.d/CentOS-Smile.repo
+  when: use_satellite_repo == false
+
+- name: RedHat | Install dependencies
+  package:
+    name: "{{ csync2_extra_packages | join(',') }}"
+
+- name: RedHat | Set firewall rules
+  firewalld:
+    port:      "{{item}}/tcp"
+    zone:      "{{ firewall_zone }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - 30865
+  when:
+    - ansible_distribution_version >= '7'
+    - firewall_setup
+

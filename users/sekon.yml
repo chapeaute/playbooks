@@ -1,0 +1,12 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users_groups:
+        - name: exploit
+      users:
+        - login: sekon
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCr00ir/UUATo2hqF7bHKrruYXj6/LqWwPIwIF6Bjf24GlU55gvbt3gkFVv+SIKItIdmv35Vdv9vbjEAQA0vEApE13s5MmSuxR7kIuBROwx026JFIVwfIJ6cyOivM/dCYHsXjLUlLeX9vZd5xYst1gp9yr8G8yhKBlGerEXifpkQFYNbNDdkrjm4QO6Fy+fHgYk5wsFy4tfoR1etErl0fobSuCNAAliXopTMIGNMT3jzyL6QofukiauqWPxraNahK7Gcmsu9zNcK2WZPwSc3jc7XbThG0P2/wG3bG1N4//FR7BBsccfS6OYfkMkQfYPu/+o166miqpHtauO5LFkRpR3 sekon@smile.ci

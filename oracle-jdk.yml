@@ -1,0 +1,4 @@
+---
+- hosts: oracle-jdk
+  roles:
+    - oracle-java

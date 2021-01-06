@@ -1,0 +1,21 @@
+---
+
+- name: configure_pmm | Adding pmm db user to access databases
+  mysql_user:
+    name: "{{ monitoring_pmm_db_user }}"
+    password: "{{ monitoring_pmm_db_pass }}"
+    host: "{{ item }}"
+    priv: "performance_schema.*:SELECT,UPDATE,DELETE,DROP/*.*:SELECT,PROCESS,SUPER,REPLICATION CLIENT,RELOAD"
+    state: "present"
+  with_items:
+    - 127.0.0.1
+    - localhost
+  run_once: true
+
+- name: configure_pmm | Create MySQL specific configuration file
+  template:
+    src: "etc/my.cnf.d/03-pmm.cnf.j2"
+    dest: "{{ mariadb_config_fragment_dir }}/03-pmm.cnf"
+    owner: "root"
+    group: "root"
+    mode: 0644

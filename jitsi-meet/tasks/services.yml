@@ -1,0 +1,7 @@
+---
+- name: Start and enable confmapper
+  service:
+    name: jitsi-confmapper
+    state: "{{ jitsi_use_jigasi | bool | ternary('started', 'stopped') }}"
+    enabled: "{{ jitsi_use_jigasi | bool }}"
+  tags: jitsi

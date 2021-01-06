@@ -1,0 +1,10 @@
+---
+- hosts: all
+  roles:
+    - role: basic-server
+      rootpromptcolor: red
+      userpromptcolor: green
+      copy_admin_scripts: true
+      atop_interval: 60
+      atop_retention_week: 3
+      install_sudoers: false

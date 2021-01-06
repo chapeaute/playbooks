@@ -1,0 +1,5 @@
+---
+# CephFS doesn't support SELinux :-(
+- name: install | Disable SELinux
+  selinux:
+    state: disabled

@@ -1,0 +1,6 @@
+---
+
+- name: Enable Apache CGI module
+  apache2_module:
+    name: cgid
+    state: present

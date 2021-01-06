@@ -1,0 +1,5 @@
+---
+
+foreman_dependencies:
+  - epel-release
+

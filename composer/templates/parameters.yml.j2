@@ -1,0 +1,11 @@
+parameters:
+    database_host: {{ database_host | default('127.0.0.1') }}
+    database_port: {{ database_port | default('null') }}
+    database_name: {{ database_name | default('symfony') }}
+    database_user: {{ database_user | default('root') }}
+    database_password: {{  database_password | default('') }}
+    mailer_transport: smtp
+    mailer_host: 127.0.0.1
+    mailer_user: null
+    mailer_password: null
+    secret: ThisTokenIsNotSoSecretChangeIt

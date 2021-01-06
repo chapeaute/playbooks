@@ -1,0 +1,45 @@
+---
+
+
+ # See https://github.com/rspamd/rspamd/issues/2796
+ # This task can be remove after version rspamd 1.4
+- name: "config | fix rspamd bug with redis sentinel support"
+  tags:
+    - config
+    - config_fix_bug
+  copy:
+    src: usr/share/rspamd/lualib/lua_redis.lua
+    dest: /usr/share/rspamd/lualib/lua_redis.lua
+    owner: _rspamd
+    group: root
+    mode: 0640
+  when: rspamd_redis_sentinel_fix_bug
+
+- name: "config | encrypt password"
+  tags: config
+  command: "/bin/rspamadm pw --encrypt -p {{ rspamd_password }}"
+  register: rspamd_hash_password
+
+- name: "config | Configure rspamd"
+  tags:
+    - config
+    - config_rspamd
+  template:
+    src: "etc/rspamd/local.d/{{ item }}.j2"
+    dest: "/etc/rspamd/local.d/{{ item }}"
+    owner: _rspamd
+    group: root
+    mode: 0640
+  with_items:
+    - ../rspamd.conf
+    - milter_headers.conf
+    - neural.conf
+    - neural_group.conf
+    - redis.conf
+    - worker-normal.inc
+    - worker-proxy.inc
+    - statistic.conf
+    - options.inc
+    - elastic.conf
+    - worker-controller.inc
+  notify: "Restart rspamd"

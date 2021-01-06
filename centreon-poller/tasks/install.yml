@@ -1,0 +1,8 @@
+---
+- name: install | Install centreon poller package
+  package:
+   name:  "{{ item }}"
+   state: present
+  with_items:
+   - "centreon-poller-centreon-engine-{{ centreon_version }}*"
+   - "{{ centreon_extra_packages }}"

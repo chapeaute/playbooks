@@ -1,0 +1,15 @@
+---
+- name: logrotate | Ensure logrotate is installed log compression
+  package:
+    name: logrotate
+  when:
+    - logrotate_enable | bool
+
+- name: logrotate | Enable log compression
+  lineinfile:
+    dest: /etc/logrotate.conf
+    regexp: "^#?compress"
+    line: "compress"
+  when:
+    - logrotate_enable | bool
+    - logrotate_compress | bool

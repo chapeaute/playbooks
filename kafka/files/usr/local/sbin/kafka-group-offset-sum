@@ -1,0 +1,10 @@
+#!/usr/bin/env bash
+
+if [ $# -ne 1 ]; then
+	echo "Usage: ${0##*/} group"
+	echo "Example: ${0##*/} logstash"
+	exit 1
+fi
+
+kafka-consumer-groups  --bootstrap-server 127.0.0.1:9092 --describe --group $1 | grep -v LAG | awk '{ sum+=$6} END {print sum}'
+

@@ -1,0 +1,9 @@
+---
+
+- hosts: all
+  vars: 
+    hadoop_master: omer-spark-test-1.dev06.smile.lan
+    hadoop_version: 2.6.5
+  roles:
+    - role: hadoop
+

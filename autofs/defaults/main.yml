@@ -1,0 +1,3 @@
+---
+# defaults file for autofs
+autofs_default_mount_options: nfs,rw,soft,noatime

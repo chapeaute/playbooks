@@ -1,0 +1,33 @@
+---
+# tasks file for webmin
+# Include per-environment variables
+- name: Include per-environment variables
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family }}.yml"
+
+- name: main | Install dependencies
+  package:
+    name: "{{ item }}"
+  with_items:
+    - "{{ webmin_dependencies }}"
+
+- name: main | install webmin
+  package:
+    name: webmin
+
+- name: main | start webmin
+  sysvinit:
+    name: webmin
+    state: started
+    enabled: true

@@ -1,0 +1,20 @@
+[Unit]
+Description=Odoo
+{% if odoo_db_remote_host == inventory_hostname %}
+Requires=postgresql.service
+After=network.target postgresql.service
+{% else %}
+After=network.target
+{% endif %}
+
+[Service]
+Type=simple
+SyslogIdentifier=odoo
+PermissionsStartOnly=true
+User=odoo
+Group=odoo
+ExecStart=/usr/bin/scl enable rh-python{{ python_version }} -- {{ odoo_home_dir }}/venv/bin/python3 {{ odoo_src_dir }}/odoo-bin -c {{ odoo_conf_dir }}/odoo.conf
+StandardOutput=journal+console
+
+[Install]
+WantedBy=multi-user.target

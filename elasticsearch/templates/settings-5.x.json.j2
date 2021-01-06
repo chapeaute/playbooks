@@ -1,0 +1,9 @@
+{
+  "template": "*",
+  "settings": {
+    "number_of_shards": "{{ es_shard_count }}",
+    "number_of_replicas": "{{ es_replica_count }}",
+    "refresh_interval": "{{ es_index_refresh_interval }}",
+    "index.unassigned.node_left.delayed_timeout": "{{ es_index_unassigned_node_left_delayed_timeout }}"
+  }
+}

@@ -1,0 +1,49 @@
+---
+
+- name: add configs to deployment.toml for manager nodes
+  template:
+    src: "repository/manager/{{ item }}.j2"
+    dest: "{{ wso2_generic_install_dir }}/repository/{{ item }}"
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+    mode: 0640
+  with_items:
+    - conf/deployment.toml
+  notify: "Restart service"
+
+- name: add configs to deployment.toml for worker nodes
+  template:
+    src: "repository/worker/{{ item }}.j2"
+    dest: "{{ wso2_generic_install_dir }}/repository/{{ item }}"
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+    mode: 0640
+  with_items:
+    - conf/deployment.toml
+  when: ansible_fqdn in wso2_generic_amworker_nodes
+  notify: "Restart service"
+
+- name: cluster configuration | add jndi file
+  template:
+    src: "repository/{{ item }}.j2"
+    dest: "{{ wso2_generic_install_dir }}/repository/{{ item }}"
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+    mode: 0640
+  with_items:
+    - conf/jndi2.properties
+  when: wso2_generic_amnodes|length > 1
+  notify: "Restart service"
+
+- name: cluster configuration | add JMS event publisher files- name
+  copy:
+    src: "{{ item }}"
+    dest: "{{ wso2_generic_install_dir }}/repository/deployment/server/eventpublishers/{{ item }}"
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+    mode: 0640
+  with_items:
+    - jmsEventPublisher_1.10.0-2.xml
+    - jmsEventPublisher-2.xml
+  when: wso2_generic_amnodes|length > 1
+    

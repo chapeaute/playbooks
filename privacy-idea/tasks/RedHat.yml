@@ -1,0 +1,22 @@
+---
+
+- name: RedHat | Set selinux permissions
+  sefcontext:
+    target: '/var/log/privacyidea(/.*)?'
+    setype: httpd_sys_rw_content_t
+    state: present
+
+- name: RedHat | Apply new SELinux file context to filesystem
+  command: restorecon -irv /var/log/privacyidea
+
+- name: RedHat | Set httpd_can_network_connect_db flag on and keep it persistent across reboots
+  seboolean:
+    name: httpd_can_network_connect_db
+    state: yes
+    persistent: yes
+
+- name: RedHat | Set httpd_can_connect_ldap flag on and keep it persistent across reboots
+  seboolean:
+    name: httpd_can_connect_ldap
+    state: yes
+    persistent: yes

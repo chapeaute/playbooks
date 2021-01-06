@@ -1,0 +1,51 @@
+---
+- name: ansible | Install ansible
+  package:
+    name: ansible
+    state: present
+
+- name: ansible | Set owner on /etc/ansible
+  file:
+    path:    /etc/ansible
+    owner:   root
+    group:   "{{ vagrant_group_owner }}"
+    recurse: yes
+  when: vagrant_ansible_deploy_role
+
+- name: ansible | Set permissions on /etc/ansible/roles
+  file:
+    path:    /etc/ansible/roles
+    group: "{{ vagrant_group_owner }}"
+    mode:    "g+w"
+    state:   directory
+    recurse: yes
+  when: vagrant_ansible_deploy_role
+
+- name: ansible | clone roles repository
+  git:
+    repo: "ssh://git@{{ vagrant_ansible_git_roles }}"
+    dest: /etc/ansible/roles
+    accept_hostkey: yes
+  become: false
+  when: vagrant_ansible_deploy_role
+  register: git_role
+
+- name: ansible | Set owner on /etc/ansible/roles
+  file:
+    path:   /etc/ansible/roles
+    owner:  root
+    mode:   "g+w"
+    group:  "{{ vagrant_group_owner }}"
+    recurse: yes
+  when: vagrant_ansible_deploy_role
+  changed_when: false
+
+- name: ansible | Set permissions on /etc/ansible/roles/.git
+  file:
+    path:    /etc/ansible/roles/.git
+    owner:   root
+    group:   "{{ vagrant_group_owner }}"
+    mode:    "g+w"
+    recurse: yes
+  when: vagrant_ansible_deploy_role
+  changed_when: false

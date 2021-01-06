@@ -1,0 +1,40 @@
+#!/bin/bash
+
+BACKUP_DIR="{{ gitlab_backup_dir }}"
+BACKUP_AGE="{{ gitlab_backup_age }}"
+
+function syntax() {
+    cat <<EOF
+Script to purge Gitlab dump.
+
+Usage: ${0##*/} [-h|-o <days>]
+    -h           Display this message
+    -o <days>    Purge dump older than n days. If not specified, purge all dump.
+EOF
+}
+
+while getopts "ho:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        o)
+            BACKUP_AGE="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+# Backup log max retention (1200 = 20h)
+ROTATE_MIN=1200
+
+# Deleting old backups and keeping 1 log
+rm -f $BACKUPD_DIR/*.tar
+find $BACKUP_DIR -regex "${BACKUP_DIR}/*.log" -type f -mmin +$ROTATE_MIN -print -exec rm -f {} \; 2>&1
+
+exit $?

@@ -1,0 +1,43 @@
+---
+
+- name: main | Create group
+  group:
+    name: "{{ ts_group }}"
+
+- name: main | Create user
+  user:
+    name: "{{ ts_user }}"
+    group: "{{ ts_group }}"
+    home: "{{ ts_install_dir }}"
+    create_home: no
+
+- name: main | Create install dir
+  file:
+    path: "{{ ts_install_dir }}"
+    state: directory
+    owner: "{{ ts_user }}"
+    group: "{{ ts_group }}"
+
+- name: main | link install dir to default install dir
+  file:
+    src: "{{ ts_install_dir }}"
+    dest: "{{ ts_default_install_dir }}"
+    state: link
+  when: ts_root_dir != ts_default_root_dir
+
+- name: main | Install dependencies
+  package:
+    name: "{{ ts_dependencies }}"
+    state: present
+
+- name: main | Download trafficserver package
+  get_url:
+    url: "{{ ts_download_url }}"
+    dest: "{{ ts_download_dir }}/{{ ts_package }}"
+  register: ts_package_downloaded
+
+- name: main | Install trafficserver package
+  package:
+    name: "{{ ts_download_dir }}/{{ ts_package }}"
+    state: present
+  when: ts_package_downloaded is changed

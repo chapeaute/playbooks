@@ -1,0 +1,81 @@
+#!/bin/bash
+#
+# This scripts aims to realize some Ogo Proxy check
+#
+
+rc=0
+
+update_state() {
+	register_state=$1
+	current_state=$2
+
+	if [ $current_state -eq 2 -o $register_state -eq 2 ]; then
+		echo 2
+		return
+	fi
+
+	if [ $current_state -gt $register_state ]; then
+		echo $current_state
+		return
+	else
+		echo $register_state
+		return
+    fi
+}
+
+if [ "$UID" -ne 0 ]; then
+	echo "This script must be executed with root privileges !"
+	exit 3
+fi
+
+if [ ! `command -v docker` ]; then
+	echo "ERROR: docker command not found !"
+	exit 2
+fi
+
+# Check if all docker Swarm services are running
+for svc in $(docker service ls | awk '{print $2"/"$4}' | sed 1d)
+do
+	svc_name=$(echo $svc | awk -F'/' '{print $1}')
+	svc_run=$(echo $svc | awk -F'/' '{print $2}')
+	svc_total=$(echo $svc | awk -F'/' '{print $3}')
+
+	if [ "$svc_run" -eq 0 ]; then
+		echo -n "CRITICAL: No instance running for service $svc_name. "
+		rc=$(update_state $rc 2)
+	elif [ "$svc_run" != "$svc_total" ]; then
+		echo -n "WARNING: $svc_run/$svc_total instance running for service $svc_name. "
+		rc=$(update_state $rc 2)
+	fi
+done
+
+if [ $rc -eq 0 ]; then
+	echo -n "OK: All services running. "
+fi
+
+# Check Ogo version
+svc_list=$(docker service ls | grep ogo_proxy | awk '{print $2" "}' | tr -d "\n")
+vers_lst=$(docker service ps $svc_list | grep 'Running' | awk '{print $3}' | cut -d':' -f 3 | sort | uniq)
+vers_cnt=$(docker service ps $svc_list | grep 'Running' | awk '{print $3}' | cut -d':' -f 3 | sort | uniq | wc -l)
+
+if [ "$vers_cnt" -ne 1 ]; then
+	echo -n "WARNING: $vers_cnt versions of Ogo running on cluster: " `echo $vers_lst | sed 's/ /, /g' `". "
+	rc=$(update_state $rc 1)
+else
+    echo -n "OK: All Ogo instances running with same version ($vers_lst). "
+fi
+
+for svc in $svc_list
+do
+        isnt_cnt=$(docker service ps $svc| grep 'Running' | awk '{print $3}' | cut -d':' -f 3 | wc -l)
+	if [ $isnt_cnt -eq 0 ]; then
+		echo -n "CRITICAL: No Ogo instance running on service $svc. "
+		rc=$(update_state $rc 2)
+	else
+		echo -n "OK: $isnt_cnt instance on $svc. "
+	fi
+done
+
+echo
+
+exit $rc

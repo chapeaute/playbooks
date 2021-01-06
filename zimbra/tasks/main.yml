@@ -1,0 +1,61 @@
+---
+# Include per-environment variables
+- include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"           # CentOS-6.5
+        - "{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml"              # RedHat-6.5
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"     # CentOS-6
+        - "{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"        # RedHat-6
+        - "{{ ansible_distribution }}.yml"                                              # CentOS
+        - "{{ ansible_os_family }}.yml"                                                 # RedHat
+        - "main.yml"
+      paths: "../vars"
+
+
+# Validations before run the playbook
+- name: main | Checking if there is Zimbra install already
+  shell: "getent passwd zimbra && echo found || echo notfound"
+  register: getent_passwd
+  changed_when: false
+
+- name: main | Include os specific tasks
+  include_tasks: "{{ ansible_os_family }}.yml"
+
+# Installation process
+- import_tasks: "install.yml"
+  when: "'notfound' in getent_passwd.stdout"
+
+
+# Installing ZIMBRA-LDAP Service
+- import_tasks: "install_ldap.yml"
+  when: "'ldap' in zimbra_services and 'mta' not in zimbra_services and 'proxy' not in zimbra_services and 'store' not in zimbra_services"
+
+
+# Installing ZIMBRA-MTA Service
+- import_tasks: "install_mta.yml"
+  when: "'mta' in zimbra_services and 'ldap' not in zimbra_services and 'proxy' not in zimbra_services and 'store' not in zimbra_services"
+
+
+# Installing ZIMBRA-PROXY Service
+- import_tasks: "install_proxy.yml"
+  when: "'proxy' in zimbra_services and 'mta' not in zimbra_services and 'ldap' not in zimbra_services and 'store' not in zimbra_services"
+
+
+# Installing ZIMBRA-STORE Service
+- import_tasks: "install_store.yml"
+  when: "'store' in zimbra_services and 'mta' not in zimbra_services and 'ldap' not in zimbra_services and 'proxy' not in zimbra_services"
+
+
+# Installing ZIMBRA ALLIONE
+- import_tasks: "install_allinone.yml"
+  when: "'ldap' in zimbra_services and 'mta' in zimbra_services and 'store' in zimbra_services and 'proxy' in zimbra_services"
+
+
+- name: main | Include tuning tasks
+  include_tasks: tuning.yml
+
+
+- name: main | Include monitoring tasks
+  include_tasks: monitoring.yml
+  when: "'snmp' in zimbra_services"

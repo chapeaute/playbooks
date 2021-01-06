@@ -1,0 +1,226 @@
+###################### Filebeat Configuration Example #########################
+
+# This file is an example configuration file highlighting only the most common
+# options. The filebeat.reference.yml file from the same directory contains all the
+# supported options with more comments. You can use it as a reference.
+#
+# You can find the full configuration reference here:
+# https://www.elastic.co/guide/en/beats/filebeat/index.html
+
+# For more available modules and options, please see the filebeat.reference.yml sample
+# configuration file.
+
+#=========================== Filebeat inputs =============================
+
+filebeat.inputs:
+
+# Each - is an input. Most options can be set at the input level, so
+# you can use different inputs for various configurations.
+# Below are the input specific configurations.
+
+{% for app in applications %}
+{% if app.name in group_names %}
+- type: log
+  enabled: true
+  paths:
+{% for files in app.files %}
+    - {{ files }}
+{% endfor %}
+  fields:
+    fqdn: "{{ ansible_fqdn }}"
+    type: "{{ app.type|default(app.name) }}"
+{% if multiline_pattern is defined %}
+    multiline.pattern: {{ multiline_pattern }}
+    multiline.negate: {{ multiline_negate|default(false) | lower}}
+    multiline.match: {{ multiline_match|default('after') }}
+{% endif %}
+
+{% endif %}
+{% endfor %}
+
+
+#============================= Filebeat modules ===============================
+
+filebeat.config.modules:
+  # Glob pattern for configuration loading
+  path: ${path.config}/modules.d/*.yml
+
+  # Set to true to enable config reloading
+  reload.enabled: false
+
+  # Period on which files under path should be checked for changes
+  #reload.period: 10s
+
+#==================== Elasticsearch template setting ==========================
+
+setup.template.settings:
+  index.number_of_shards: 3
+  #index.codec: best_compression
+  #_source.enabled: false
+
+#================================ General =====================================
+
+# The name of the shipper that publishes the network data. It can be used to group
+# all the transactions sent by a single shipper in the web interface.
+name: {{ ansible_fqdn }}
+
+# The tags of the shipper are included in their own field with each
+# transaction published.
+tags: [{% for tag in fb_tags -%}
+"{{ tag }}" {%- if not loop.last -%}, {% endif -%}
+{%- endfor %}]
+
+# Optional fields that you can specify to add additional information to the
+# output.
+fields:
+{% for key in fb_default_extra_fields %}
+  {{ key }}: {{ fb_default_extra_fields[key] }}
+{% endfor %}
+{% for key in fb_extra_fields %}
+  {{ key }}: {{ fb_extra_fields[key] }}
+{% endfor %}
+
+fields_under_root: true
+
+
+#============================== Dashboards =====================================
+# These settings control loading the sample dashboards to the Kibana index. Loading
+# the dashboards is disabled by default and can be enabled either by setting the
+# options here, or by using the `-setup` CLI flag or the `setup` command.
+#setup.dashboards.enabled: false
+
+# The URL from where to download the dashboards archive. By default this URL
+# has a value which is computed based on the Beat name and version. For released
+# versions, this URL points to the dashboard archive on the artifacts.elastic.co
+# website.
+#setup.dashboards.url:
+
+#============================== Kibana =====================================
+
+# Starting with Beats version 6.0.0, the dashboards are loaded via the Kibana API.
+# This requires a Kibana endpoint configuration.
+setup.kibana:
+
+  # Kibana Host
+  # Scheme and port can be left out and will be set to the default (http and 5601)
+  # In case you specify and additional path, the scheme is required: http://localhost:5601/path
+  # IPv6 addresses should always be defined as: https://[2001:db8::1]:5601
+  #host: "localhost:5601"
+
+  # Kibana Space ID
+  # ID of the Kibana Space into which the dashboards should be loaded. By default,
+  # the Default Space will be used.
+  #space.id:
+
+#============================= Elastic Cloud ==================================
+
+# These settings simplify using filebeat with the Elastic Cloud (https://cloud.elastic.co/).
+
+# The cloud.id setting overwrites the `output.elasticsearch.hosts` and
+# `setup.kibana.host` options.
+# You can find the `cloud.id` in the Elastic Cloud web UI.
+#cloud.id:
+
+# The cloud.auth setting overwrites the `output.elasticsearch.username` and
+# `output.elasticsearch.password` settings. The format is `<user>:<pass>`.
+#cloud.auth:
+
+#================================ Outputs =====================================
+
+# Configure what output to use when sending the data collected by the beat.
+
+{% if fb_kafka_hosts|length > 0 %}
+#-------------------------- Kafka ---------------------------------------------
+
+output.kafka:
+  enabled: true
+  hosts: [{% for item in fb_kafka_hosts -%}"{{ item }}:{{ fb_kafka_port }}"{%- if not loop.last -%},{% endif -%}{%- endfor %}]
+  topic: "{{ fb_kafka_topic }}"
+  worker: {{ fb_kafka_worker }}
+  broker_timeout: {{ fb_kafka_broker_timeout }}
+  version: "{{ fb_kafka_version }}"
+{% endif %}
+
+{% if fb_es_hosts|length > 0 %}
+#-------------------------- Elasticsearch output ------------------------------
+output.elasticsearch:
+  # Array of hosts to connect to.
+  enabled: true
+  hosts: [{% for item in fb_es_hosts -%}"{{ item }}:{{ fb_es_port }}"{%- if not loop.last -%},{% endif -%}{%- endfor %}]
+
+  # Optional protocol and basic auth credentials.
+  protocol: "{{ fb_es_protocol }}"
+  username: "{{ fb_es_username }}"
+  password: "{{ fb_es_password }}"
+{% endif %}
+
+
+{% if fb_logstash_hosts|length > 0 %}
+#----------------------------- Logstash output --------------------------------
+output.logstash:
+  # The Logstash hosts
+  hosts: [{% for item in fb_logstash_hosts -%}"{{ item }}:{{ fb_logstash_port }}"{%- if not loop.last -%},{% endif -%}{%- endfor %}]
+
+  # Optional SSL. By default is off.
+  # List of root certificates for HTTPS server verifications
+  #ssl.certificate_authorities: ["/etc/pki/root/ca.pem"]
+
+  # Certificate for SSL client authentication
+  #ssl.certificate: "/etc/pki/client/cert.pem"
+
+  # Client Certificate Key
+  #ssl.key: "/etc/pki/client/cert.key"
+{% endif %}
+
+#================================ Processors =====================================
+
+# Configure processors to enhance or manipulate events generated by the beat.
+
+processors:
+  - add_host_metadata: ~
+  - add_cloud_metadata: ~
+
+#================================ Logging =====================================
+
+# Sets log level. The default log level is info.
+# Available log levels are: error, warning, info, debug
+#logging.level: debug
+
+# At debug level, you can selectively enable logging only for some components.
+# To enable all selectors use ["*"]. Examples of other selectors are "beat",
+# "publish", "service".
+#logging.selectors: ["*"]
+
+#============================== Xpack Monitoring ===============================
+# filebeat can export internal metrics to a central Elasticsearch monitoring
+# cluster.  This requires xpack monitoring to be enabled in Elasticsearch.  The
+# reporting is disabled by default.
+
+# Set to true to enable the monitoring reporter.
+xpack.monitoring.enabled: {{ fb_monitoring_enabled|lower }}
+
+{% if fb_monitoring_es_hosts | length == 0 %}
+# Uncomment to send the metrics to Elasticsearch. Most settings from the
+# Elasticsearch output are accepted here as well. Any setting that is not set is
+# automatically inherited from the Elasticsearch output configuration, so if you
+# have the Elasticsearch output configured, you can simply uncomment the
+# following line.
+xpack.monitoring.elasticsearch:
+
+  # Array of hosts to connect to.
+  # Scheme and port can be left out and will be set to the default (http and 9200)
+  # In case you specify and additional path, the scheme is required: http://localhost:9200/path
+  # IPv6 addresses should always be defined as: https://[2001:db8::1]:9200
+  hosts: [{% for item in fb_monitoring_es_hosts -%}
+"{{ fb_monitoring_es_protocol }}://{{ item }}:{{ fb_monitoring_es_port }}" {%- if not loop.last -%}, {% endif -%}
+{%- endfor %}]
+
+  # Set gzip compression level.
+  #compression_level: 0
+
+  # Optional protocol and basic auth credentials.
+  protocol: "{{ fb_monitoring_es_protocol }}"
+  username: "{{ fb_monitoring_es_username }}"
+  password: "{{ fb_monitoring_es_password }}"
+
+{% endif %}

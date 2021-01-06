@@ -1,0 +1,22 @@
+---
+
+- name: RedHat | Import webmin key
+  rpm_key:
+    state: present
+    key: http://www.webmin.com/jcameron-key.asc
+
+- name: RedHat | add webmin repo
+  yum_repository:
+    name: webmin
+    description: Webmin Distribution Neutral
+    mirrorlist: http://download.webmin.com/download/yum/mirrorlist
+    enabled: yes
+  when: use_satellite_repo == true
+
+- name: RedHat | Open firewall port
+  firewalld:
+    port: "10000/tcp"
+    permanent: true
+    immediate: yes
+    state: enabled
+  when: manage_firewalld == true

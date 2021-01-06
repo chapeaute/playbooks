@@ -1,0 +1,21 @@
+---
+# vars file for wso2
+wso2is_service_name: "wso2is"
+wso2is_data_dir_list:
+  - "repository/components/lib"
+  - "repository/deployment/server/userstores"
+
+wso2is_default_deployment_conf:
+  database.identity_db:
+    type: "{{ wso2is_db_type }}"
+    url: "{% if wso2is_db_host is defined %}jdbc:mysql://{{ wso2is_db_host }}:3306/{{ wso2is_db_app_name }}{% else %}jdbc:h2:./repository/database/WSO2IDENTITY_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000{% endif %}"
+    username: "{{ wso2is_db_user }}"
+    password: "{{ wso2is_db_pass }}"
+
+wso2is_default_configs:
+   identity/EndpointConfig.properties:
+      - regexp: Carbon.Security.KeyStore.Password.*
+        line: Carbon.Security.KeyStore.Password={{  wso2_generic_keystore_pass}}
+      - regexp: Carbon.Security.TrustStore.Password.*
+        line: Carbon.Security.TrustStore.Password={{ wso2_generic_keystore_pass }}
+

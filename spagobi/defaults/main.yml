@@ -1,0 +1,12 @@
+---
+# defaults file for spagobi
+spagobi_service_name: spagobi
+spagobi:
+  source_url: http://download.forge.ow2.org/spagobi/All-In-One-SpagoBI-5.1-21012015.zip
+  source_checksum: sha256:0cc25730f18c53e914352e559f97f122069e0933851ccc6a49f6eff1f830a5a9
+  subpath: All-In-One-SpagoBI-5.1.0_21012015
+spagobi_java_version: 7
+spagobi_java_impl: openjdk
+spagobi_memory_size_prct: 0.6
+spagobi_memory_size: "{{ (ansible_memtotal_mb*spagobi_memory_size_prct)|int }}M"
+spagobi_root_dir: /var/lib

@@ -1,0 +1,10 @@
+---
+- hosts: freeradius-proxy
+  roles:
+    - role: freeradius
+      freerad_client_vhost: proxy
+    - role: freeradius-proxy
+      freerad_vhost:
+       - name: default
+         servers: [ 'radius-srv-1', 'radius-srv-2' ]
+         secret: enNzZQvZNSk92sWT

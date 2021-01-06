@@ -1,0 +1,16 @@
+---
+
+# Global vars
+use_satellite_repo: false
+
+# defaults file for gitlab-runner
+gitlab_runner_executor: docker
+gitlab_runner_concurrent: 3
+gitlab_runner_check_interval: 0
+gitlab_runner_docker_image:
+  - "ansible/centos7-ansible"
+gitlab_runner_env_vars: {}
+gitlab_server_host: "{{ ansible_fqdn }}"
+gitlab_server_url: "http://{{ gitlab_server_host }}"
+gitlab_server_token: ""
+#gitlab_user_deploy:

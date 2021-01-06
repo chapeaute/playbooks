@@ -1,0 +1,2 @@
+[Service]
+Environment="OPTIONS=-f /etc/mongod.conf --auth  {% if mongodb_hosts | length > 2 %}--replSet {{  mongodb_replica_set_name }} --keyFile {{ mongodb_keyfile_path }}{% endif %}"

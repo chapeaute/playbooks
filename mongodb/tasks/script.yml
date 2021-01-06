@@ -1,0 +1,19 @@
+---
+
+- name: script | Deploy mongodb helper scripts
+  tags: script
+  template:
+    src: "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0755
+  with_items:
+    - mongodb-backup-clean
+    - mongodb-backup-dump
+    - mongodb-backup-restore
+    - mongodb-user-create
+    - mongodb-user-list
+    - mongodb-cluster-state
+    - mongodb-cluster-status
+    - mongodb-replica-status

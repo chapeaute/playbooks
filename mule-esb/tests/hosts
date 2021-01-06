@@ -1,0 +1,5 @@
+[all]
+mule-esb ansible_connection=docker
+
+[mule-esb]
+mule-esb

@@ -1,0 +1,12 @@
+---
+- hosts: logstash
+  vars:
+    ls_version: "{{ _elk_version }}"
+    ls_es_hosts: "{{ _elasticsearch_hosts }}"
+    ls_kafka_hosts: "{{ _kafka_hosts }}"
+    ls_kafka_topic: "{{ _kafka_topic }}"
+  roles:
+    - role: logstash
+      ls_input_kafka: true
+      ls_output_elasticsearch: true
+      ls_batch_size: 4096

@@ -1,0 +1,15 @@
+---
+- name: register_poller | Check if poller is already declare on centreon server
+  shell: 'centreon -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o INSTANCE -a show  | grep ";{{ ansible_fqdn }};" | wc -l'
+  delegate_to: "{{ centreon_server }}"
+  delegate_facts: True
+  changed_when: false
+  check_mode: no
+  register: register_poller
+  when: inventory_hostname != centreon_server
+
+- name: register_poller | Declare poller on centreon server
+  command: 'centreon -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o INSTANCE -a add -v "{{ ansible_fqdn }};{{ ansible_default_ipv4.address }};22;NAGIOS"'
+  delegate_to: "{{ centreon_server }}"
+  delegate_facts: True
+  when: inventory_hostname != centreon_server and register_poller.stdout|int == 0

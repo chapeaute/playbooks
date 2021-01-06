@@ -1,0 +1,24 @@
+---
+
+# defaults file for drupal
+
+# Apache
+drupal_ssl_enabled: false
+drupal_ssl_key_file: "{{ apache2_default_ssl_key }}"
+drupal_ssl_cert_file: "{{ apache2_default_ssl_key }}"
+drupal_ssl_redirect: true
+
+# PHP
+drupal_php_version: "7.2"
+drupal_php_extensions: []
+drupal_php_memory_prct: 0.4
+drupal_php_memory: "{{ ansible_memtotal_mb*(drupal_memory_prct|float) }}M"
+drupal_php_max_execution: 120
+
+# Database
+drupal_site_dir: "/var/www"
+drupal_site_aliases: []
+drupal_files_dir: "sites/default/files"
+drupal_tmp_dir: "tmp"
+drupal_web_dir: "web"
+drupal_site_root: "{{ drupal_site_dir }}/{{ drupal_site_name }}/htdocs/{{ drupal_web_dir }}"

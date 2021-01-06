@@ -1,0 +1,74 @@
+Director {
+    Name = {{ bacula_dir_name }}
+    DIRport = {{ bacula_dir_port }}
+    QueryFile = "/etc/bacula/query.sql"
+    WorkingDirectory = "/var/spool/bacula"
+    PidDirectory = "/var/run"
+    Maximum Concurrent Jobs = {{ bacula_dir_max_concurrent_jobs  }}
+    Password = "{{ bacula_dir_password }}"
+    Messages = Daemon
+    Statistics Retention = 1 year
+}
+
+Job {
+    Name = "BackupCatalog"
+    JobDefs = "DefaultJob-{{ bacula_sd_hosts[0] }}"
+    Level = Full
+    Client = {{ bacula_dir_name }}
+    FileSet = "Catalog"
+    Schedule = "WeeklyCycleAfterBackup"
+    RunBeforeJob = "/usr/libexec/bacula/make_catalog_backup.pl MyCatalog"
+    RunAfterJob  = "/usr/libexec/bacula/delete_catalog_backup"
+    Write Bootstrap = "/var/spool/bacula/%n.bsr"
+    Priority = 12
+}
+
+FileSet {
+    Name = "Unix Configuration Set"
+    Include {
+        Options {
+            signature = MD5
+            compression = GZIP
+        }
+        File = /etc
+    }
+}
+
+FileSet {
+    Name = "Catalog"
+    Include {
+        Options {
+            signature = MD5
+            compression = GZIP
+        }
+
+        File = "/var/spool/bacula/bacula.sql"
+    }
+}
+
+Catalog {
+    Name = MyCatalog
+    dbname = "{{ bacula_db_name}}"
+    dbuser = "{{ bacula_db_user }}"
+    dbpassword = "{{ bacula_db_pass }}"
+    dbaddress = "{{ bacula_db_host }}"
+}
+
+Messages {
+    Name = Daemon
+    Console = all, !skipped, !saved
+    catalog = all, !skipped, !saved
+    Syslog = all, !skipped
+}
+
+Messages {
+    Name = Standard
+    Console = all, !skipped, !saved
+    catalog = all, !skipped, !saved
+    Syslog = all, !skipped
+}
+
+@/etc/bacula/pool.conf
+@/etc/bacula/schedule.conf
+@|"sh -c 'for f in /etc/bacula/storages.d/*.conf ; do echo @${f} ; done'"
+@|"sh -c 'for f in /etc/bacula/clients.d/*.conf ; do echo @${f} ; done'"

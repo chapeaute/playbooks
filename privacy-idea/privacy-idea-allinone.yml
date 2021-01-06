@@ -1,0 +1,14 @@
+---
+
+- hosts: privacy-idea
+  vars:
+    # MariaDB variables
+    mysql_data_dir: "/var/lib/mysql"
+    mysql_config_innodb_buffer_pool_size_prct: 0.4
+    mysql_config_max_connections: 500
+    # privacyidea variable
+    privacy_version: 3.3.3
+  roles:
+    - role: mariadb-server
+    - role: privacy-idea
+

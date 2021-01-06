@@ -1,0 +1,16 @@
+---
+- name: Converge
+  hosts: all
+  roles:
+    - role: apache-proxy
+      apache2_proxies:
+        www.smile.ci:
+          ssl:
+            enabled: true
+            redirect_to_https: true
+          server_aliases:
+            - www.smile.ci
+            - smile.ci
+          http_backends_port: 80
+          http_backends:
+            - 195.154.89.84

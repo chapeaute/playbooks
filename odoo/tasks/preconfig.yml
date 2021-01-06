@@ -1,0 +1,30 @@
+---
+
+- name: preconfig | Create symlink from {{ odoo_default_home_dir }} to {{ odoo_home_dir }} data directory
+  file:
+    state: link
+    src:   "{{ odoo_home_dir }}"
+    dest:  "{{ odoo_default_home_dir }}"
+    force: true
+  when:  odoo_home_dir != odoo_default_home_dir
+
+- name: preconfig | Create group user {{ odoo_user }}
+  group:
+    name:   "{{ odoo_user }}"
+    system: true
+
+- name: preconfig | Create system user {{ odoo_user }}
+  user:
+    name:   "{{ odoo_user }}"
+    group:  "{{ odoo_user }}"
+    home:   "{{ odoo_home_dir }}"
+    create_home: no
+    shell:  /bin/bash
+    system: true
+
+- name: preconfig | Create {{ odoo_home_dir }}
+  file:
+    state:  directory
+    path:   "{{ odoo_home_dir }}"
+    owner:  "{{ odoo_user }}"
+    group:  "{{ odoo_user }}"

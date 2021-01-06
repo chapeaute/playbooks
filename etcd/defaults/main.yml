@@ -1,0 +1,42 @@
+---
+# defaults file for etcd
+firewall_setup: true
+firewall_zone: public
+
+etcd_data_dir: "{{ etcd_default_data_dir }}"
+etcd_client_port: 2379
+etcd_peer_port: 2380
+etcd_bind_interface: "{{ ansible_default_ipv4.interface }}"
+etcd_api_version: 3
+
+# Etcd tuning parameters
+etcd_snapshot_count: 100
+
+# Etcd backup
+etcd_backup_dir: /var/backup/etcd
+
+# Cluster configuration
+etcd_hosts: [ "{{ inventory_hostname }}" ]
+etcd_cluster_name: "etcd-cluster"
+etcd_scheme: http
+etcd_initial_cluster_state: "new"
+
+# Cluster election tuning
+etcd_election_timeout: 30000
+etcd_heartbeat_interval: 500
+
+# List of URLs to listen on for client traffic.
+etcd_listen_client_urls: "{{ etcd_scheme }}://{{ hostvars[inventory_hostname]['ansible_'+etcd_bind_interface].ipv4.address }}:{{ etcd_client_port }},{{ etcd_scheme }}://127.0.0.1:{{ etcd_client_port }}"
+# List of this member's client URLs to advertise to the rest of the cluster.
+etcd_advertise_client_urls: "{{ etcd_scheme }}://{{ hostvars[inventory_hostname]['ansible_'+etcd_bind_interface].ipv4.address }}:{{ etcd_client_port }}"
+
+# List of URLs to listen on for peer traffic.
+etcd_listen_peer_urls: "{{ etcd_scheme }}://{{ hostvars[inventory_hostname]['ansible_'+etcd_bind_interface].ipv4.address }}:{{ etcd_peer_port }},{{ etcd_scheme }}://127.0.0.1:{{ etcd_peer_port }}"
+# List of this member's peer URLs to advertise to the rest of the cluster.
+etcd_initial_advertise_peer_urls: "{{ etcd_scheme }}://{{ hostvars[inventory_hostname]['ansible_'+etcd_bind_interface].ipv4.address }}:{{ etcd_peer_port }}"
+
+# Initial cluster configuration for bootstrapping.
+etcd_initial_cluster: >-
+  {%- for host in etcd_hosts -%}
+  {{ hostvars[host]['ansible_hostname'] }}={{ etcd_scheme }}://{{ hostvars[host]['ansible_'+etcd_bind_interface]['ipv4']['address'] }}:{{ etcd_peer_port }}{%- if not loop.last -%},{% endif -%}
+  {%- endfor -%}

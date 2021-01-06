@@ -1,0 +1,7 @@
+---
+kubelet_environment_file_path: /etc/sysconfig/kubelet
+kubernetes_packages:
+  - kubelet-{{ k8s_version }}*
+  - kubectl-{{ k8s_version }}*
+  - kubeadm-{{ k8s_version }}*
+  - kubernetes-cni

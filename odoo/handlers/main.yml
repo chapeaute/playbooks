@@ -1,0 +1,10 @@
+---
+# handlers file for ansible-odoo
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: Restart odoo
+  service:
+    name: odoo
+    state: restarted

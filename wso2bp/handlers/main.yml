@@ -1,0 +1,10 @@
+---
+# handlers file for wso2bp
+
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: Restart wso2bp
+  service:
+    name: wso2bp
+    state: restarted

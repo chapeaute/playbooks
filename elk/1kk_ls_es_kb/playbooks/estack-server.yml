@@ -1,0 +1,24 @@
+---
+- hosts: estack-server
+  vars:
+    _es_hosts: "{{ _estack_elasticsearch_hosts }}"
+    _kafka_hosts: "{{ _estack_kafka_hosts }}"
+  roles:
+    - role: kafka
+    - role: elasticsearch
+      es_cluster_name: estack
+      es_shard_count: "{{ _es_hosts | length }}"
+      es_heap_size_prct: 0.40
+      es_install_curator: True
+      es_install_admin_scripts: True
+      es_install_elasticdump: True
+      es_install_prompt_scripts: True
+    - role: logstash
+      ls_input_kafka: True
+      ls_kafka_hosts: "{{ _kafka_hosts }}"
+      ls_output_elasticsearch: True
+      ls_elasticsearch_hosts: "{{ _es_hosts }}"
+      ls_heap_size_prct: 0.25
+      ls_batch_size: 4096
+      ls_deploy_sample: True
+    - role: kibana

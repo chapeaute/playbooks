@@ -1,0 +1,8 @@
+---
+
+- name: RedHat | Allow service ipsec in firewall
+  firewalld:
+    service: ipsec
+    permanent: true
+    immediate: yes
+    state: enabled

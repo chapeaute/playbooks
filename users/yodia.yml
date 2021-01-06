@@ -1,0 +1,22 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users_groups:
+        - name: exploit
+      sudoers:
+        exploit:
+          state: present
+          lines:
+            - "%exploit ALL=(ALL) NOPASSWD: ALL"
+        default:
+          state: present
+          lines:
+            - 'Defaults    env_keep += "SSH_AUTH_SOCK"'
+      users:
+        - login: yodia
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDFDrvq7Huv/B38qfR4ZCpcvM+oEo8OrnI0435llwZoED9xYXnYImiSFUrRIOwu22G0lbGXZZ4AQs7ZVkL53t7LGgjA9Q9F5Ug6nQOlhHlkSJvZuKMg4Uu7NiQ8Y8D4rtoiIhJ+lv8AuxmV89OjNtCowLj6w+VOVm/C7bXerfjd3cFzrx/b7v+Poh4cHspJfjNsrt1/PyHB1cjvA9vKOKg/leTZvmxszey7WyrwxAcvxApx9zfZJPUiyYLlQ84SulWixi1jEfFVbup3YQeGzajxmr9e0XzWVODHgLw5y/R+X8LLksHrmm5Si0ZtKnrmsIg2v/5GREPr3smWO2A4nySt youssouf@youssouf-Inspiron-5570

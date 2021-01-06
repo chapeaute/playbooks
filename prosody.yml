@@ -1,0 +1,7 @@
+---
+
+- hosts: prosody
+  roles:
+    - role: prosody
+      prosody_modules: []
+

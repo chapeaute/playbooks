@@ -1,0 +1,36 @@
+---
+# Default settings for kafka
+# Scala Version (2.10.5 or 2.11.7 available)
+kafka_scala_version: "{{ zk_scala_version }}"
+
+# Kafka base settings
+kafka_advertised_hostname: "{{ ansible_fqdn }}"
+
+# Kafka network config
+kafka_port: 9092
+
+# Kafka storage path
+kafka_log_dir: "/var/log/kafka"
+kafka_data_dir: "/var/lib/kafka"
+
+# Retention policy:
+kafka_log_retention_hour: 48
+kafka_log_retention_bytes: 1073741824
+kafka_log_retention_disk_prct: 0.6
+kafka_log_segment_bytes: 536870912
+
+# Kafka tuning properties
+kafka_num_partitions: 1
+kafka_default_replication_factor: 1
+kafka_num_network_threads: 4
+kafka_num_io_threads: 4
+kafka_socket_send_buffer_bytes: 1048576
+kafka_socket_receive_buffer_bytes: 1048576
+kafka_socket_request_max_bytes: 104857600
+
+# Kafka topic
+kafka_topics: {}
+
+# Firewall setting
+firewall_setup: True
+firewall_type: "firewalld"

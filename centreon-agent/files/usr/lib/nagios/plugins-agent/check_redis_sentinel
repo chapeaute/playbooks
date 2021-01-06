@@ -1,0 +1,125 @@
+#!/bin/bash
+
+rc=0
+
+syntax() {
+    echo "Usage: ${0##*/} [-x password|-C password-file]"
+    echo
+    echo "Options:"
+    echo "  -x password       Password used to access redis service"
+    echo "  -C password-file  Credentials file to read for Redis authentication"
+
+    exit 1
+}
+
+update_state() {
+	register_state=$1
+	current_state=$2
+
+	if [ $current_state -eq 2 -o $register_state -eq 2 ]; then
+		echo 2
+		return
+	fi
+
+	if [ $current_state -gt $register_state ]; then
+		echo $current_state
+		return
+	else
+		echo $register_state
+		return
+	fi
+}
+
+while true; do
+    case $1 in
+	-x)	export REDISCLI_AUTH=$1
+	        shift
+        	case $1 in
+          		-* | "") ;;
+	          	*) export REDISCLI_AUTH=$1; shift ;;
+		esac
+	;;
+	-C)	shift
+	        case $1 in
+        		-* | "") ;;
+			*) 
+				if [ -r $1 ]; then
+					export REDISCLI_AUTH=$(cat $1)
+				else
+					echo "Can't open authentication file: $1"
+					exit 3
+				fi
+		esac
+	;;
+	-*) syntax ;;
+	*) break ;;
+    esac
+done
+
+cluster_info=$(redis-cli -p 26379 info sentinel | grep -i ^master)
+
+if [ $? -ne 0 ]; then
+	rc=$(update_state $rc 2)
+	exit $rc
+fi
+
+cluster_name=$(echo $cluster_info | cut -d, -f1 | cut -d= -f2)
+slave_count=$(echo $cluster_info | cut -d, -f4 | cut -d= -f2)
+sentinel_count=$(echo $cluster_info | cut -d, -f5 | cut -d= -f2)
+output=$(redis-cli -p 26379 sentinel get-master-addr-by-name $cluster_name)
+
+master_host=$(echo $output | awk '{print $1}')
+master_port=$(echo $output | awk '{print $2}')
+
+redis_version=$(redis-cli --version | awk '{print $2}' | cut -d. -f1)
+redis_extra_opts=""
+
+if [ $redis_version -lt 5 ]; then
+	redis_extra_opts="-a $REDISCLI_AUTH"
+fi
+
+server_role=$(redis-cli $redis_extra_opts role)
+server_state=$(echo $server_role | awk '{print $1}')
+
+if [ $server_state == "slave" ]; then
+	sync_state=$(echo $server_role | awk '{print $4}')
+	case "$sync_state" in
+		connect)
+			echo -n "CRITICAL: "
+			rc=$(update_state $rc 2)
+			;;
+		connecting|sync)
+			echo -n "WARNING: "
+			rc=$(update_state $rc 1)
+			;;
+		connected)
+			echo -n "OK: "
+			rc=$(update_state $rc 0)
+			;;
+		*)
+			echo -n "UNKOWN: unkown state '$sync_state'"
+			rc=$(update_state $rc 3)
+			;;
+	esac
+
+	echo -n "Node State: slave "
+        echo -n "(master: `getent hosts $master_host | awk '{print $2}' ; [[ ${PIPESTATUS[0]} != 0 ]] && echo $master_host`)"
+	echo -n " / Sync State: $sync_state"
+elif [ $server_state == "master" ]; then
+	echo -n "Node State: master "
+        echo -n "(slaves:"
+	for s in `redis-cli $redis_extra_opts -h $master_host -p $master_port info replication | grep ^slave`
+	do
+        	slave_ip=$(echo $s | awk -F'[=,]' '{print $2}')
+	        echo -n " "`getent hosts $slave_ip | awk '{print $2}' ; [[ ${PIPESTATUS[0]} != 0 ]] && echo -n $slave_ip`
+	done
+	echo -n ")"
+else
+	echo "Unknown node state: $server_state"
+	rc=$(update_state $rc 3)
+exit $rc
+fi
+
+echo " | slave_node=$slave_count sentinel_node=$sentinel_count"
+
+exit $rc

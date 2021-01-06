@@ -1,0 +1,43 @@
+---
+
+- name: config | log4j configurations
+  tags:
+    - config
+    - config_log
+  copy:
+    src: "conf/{{ item }}"
+    dest: "{{ wso2ei_install_dir }}/conf/{{ item }}"
+    owner: wso2ei
+    group: wso2ei
+    mode: 0640
+  with_items:
+    - log4j.properties
+  notify: "Restart wso2ei"
+
+- name: config | Configure axis2.xml
+  tags:
+    - config
+  template:
+    src: "conf/{{ item }}.j2"
+    dest: "{{ wso2ei_install_dir }}/conf/{{ item }}"
+    owner: wso2ei
+    group: wso2ei
+    mode: 0640
+  with_items:
+    - axis2/axis2.xml
+  notify: "Restart wso2ei"
+
+- name: config | Configure to use remote db
+  tags:
+    - config
+    - config_mysql
+  template:
+    src: "conf/{{ item }}.j2"
+    dest: "{{ wso2ei_install_dir }}/conf/{{ item }}"
+    owner: wso2ei
+    group: wso2ei
+    mode: 0640
+  with_items:
+    - datasources/master-datasources.xml
+  notify: "Restart wso2ei"
+  when: wso2ei_db_host is defined

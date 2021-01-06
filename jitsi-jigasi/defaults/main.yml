@@ -1,0 +1,50 @@
+---
+
+# Global jitsi variables
+jitsi_auth: false
+jitsi_base_dir: /usr/share
+jitsi_domain: "{{ ansible_fqdn }}"
+jitsi_xmpp_domain: "{{ jitsi_domain }}"
+jitsi_xmpp_server: "{{ ansible_fqdn }}"
+jitsi_xmpp_auth_domain: auth.{{ jitsi_xmpp_domain }}
+jitsi_xmpp_jigasi_user: jigasi
+jitsi_xmpp_internal_muc: "internal.{{ jitsi_xmpp_auth_domain }}"
+
+# Global Monitoring
+jolokia_port: 8781
+jolokia_version: 1.6.2
+
+# Jigasi vars
+jigasi_java_version: 8
+jigasi_version: 1.1-126-g6df3db2-1
+jigasi_deb_url: "http://download.jitsi.org/stable/jigasi_{{ jigasi_version }}_amd64.deb"
+
+# XMPP server to connect to. Default is the same machine
+jigasi_xmpp_server: "{{ jitsi_xmpp_server }}"
+jigasi_xmpp_user: "{{ jitsi_xmpp_jigasi_user }}"
+jigasi_xmpp_pass: "{{ lookup('password', 'credential/{{ jitsi_xmpp_domain }}-jigasi_xmpp_pass chars=ascii_letters,digits') }}"
+jigasi_xmpp_domain: "{{ jitsi_xmpp_domain }}"
+jigasi_xmpp_auth_domain: "{{ jitsi_xmpp_auth_domain }}"
+
+# Set to true to disable certificate verification
+jigasi_disable_cert_check: true
+
+# Jigasi settings
+
+# Default room on which to connect inbound SIP calls
+# if no Jitsi-Conference-Room SIP header is found
+jigasi_default_room: sip
+
+# SIP settings
+# jigasi_sip_user:
+jigasi_sip_secret: jigasi
+jigasi_sip_server: "{{ ansible_fqdn }}"
+jigasi_sip_port: 5060
+jigasi_sip_transport: UDP
+
+# Jigasi Memory
+jigasi_memory_size_prct: 0.7
+jigasi_memory_size: "{{ (ansible_memtotal_mb*jigasi_memory_size_prct)|int }}m"
+
+jigasi_min_port: 20000
+jigasi_max_port: 30000

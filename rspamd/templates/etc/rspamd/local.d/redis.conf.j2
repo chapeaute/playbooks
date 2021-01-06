@@ -1,0 +1,13 @@
+# Initial list of servers
+servers = "{% for item in rspamd_redis_hosts -%}
+{{ item }}:{{ rspamd_redis_port }} {%- if not loop.last -%},{% endif -%}
+{%- endfor %}";
+password = "{{ rspamd_redis_password }}"
+
+{% if rspamd_redis_hosts | length > 2 %}
+# Enable sentinels
+sentinels    = "{% for item in rspamd_redis_hosts -%}
+{{ item }}:{{ rspamd_redis_sentinel_port }}{%- if not loop.last -%},{% endif -%}
+{%- endfor %}";
+sentinel_watch_time = {{ rspamd_redis_sentinel_watch_time }}; # How often Rspam will query sentinels for masters and slaves
+{% endif %}

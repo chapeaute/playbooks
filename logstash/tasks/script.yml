@@ -1,0 +1,26 @@
+---
+- name: script | Deploy admin script
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: logstash
+    mode:  0750
+  with_items:
+    - logstash-configtest
+    - logstash-update-ua-db
+  when:
+    - ls_major_version >= '5'
+    - ls_deploy_script
+
+
+- name: Update user agent regexes.yml database from github offial repository
+  cron:
+    name:   "Update logstash user agent database"
+    hour:   6
+    minute: 5
+    job:    "/usr/local/sbin/logstash-update-ua-db"
+  tags:
+    - cron
+  when:
+    - ls_uadb_update

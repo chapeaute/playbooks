@@ -1,0 +1,24 @@
+[general]
+db.adapter         = PDO_MYSQL
+db.config.host     = {{ webacula_db_host}}
+db.config.username = {{ webacula_db_user }}
+db.config.password = "{{ webacula_db_pass }}"
+db.config.dbname   =  {{ webacula_db_name}}
+def.timezone = "{{ webacula_timezone }}"
+locale = "en"
+bacula.sudo        = ""
+bacula.bconsole    = "/usr/sbin/bconsole"
+bacula.bconsolecmd = "-n -c  /usr/share/webacula/bconsole.conf"
+{% for bacula_sd_host in bacula_sd_hosts %}
+bacula_restore_job[] = "RestoreFiles-{{ bacula_sd_host }}"
+{% endfor %}
+[timeline]
+fontsize   = 10
+[webacula]
+email.to_admin = root@localhost
+email.from = webacula@localhost
+[feed]
+feed_title = "My Bacula backup server #1"
+feed_desc  = "Description feed here"
+[layout]
+path = "default"

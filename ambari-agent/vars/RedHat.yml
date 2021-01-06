@@ -1,0 +1,18 @@
+---
+
+ambari_repo_url: "{{ ambari_repo_base_url }}/ambari/centos{{ ansible_distribution_major_version }}/2.x/updates/{{ ambari_version }}"
+ambari_client_packages:
+  - openssh-clients         # scp required by Ambari
+  - curl                    # curl required by Ambari
+  - unzip                   # unzip required by Ambari
+  - tar                     # tar required by Ambari
+  - wget                    # wget required by Ambari
+  - openssl                 # openssl required by Ambari
+  - chrony                  # ntp required by Hadoop
+  - openssl-devel           # openssl-devel recommended for Ranger KMS
+  - libtirpc-devel          # libtirpc required by HDP 2.6+
+  - libselinux-python       # libselinux-python required by Ansible
+  - ambari-agent
+
+ntp_service_name: ntp
+firewall_service_name: firewalld

@@ -1,0 +1,17 @@
+---
+# defaults file for ipsec
+
+ipsec_tunnels: []
+ipsec_default_name: "default"
+ipsec_default_secret: "aimahkooch5Ahch"
+ipsec_hosts: "{{ play_hosts }}"
+ipsec_default_params:
+  auto: start
+  authby: "secret"
+  dpdaction: "restart"
+  dpddelay: 30
+  dpdtimeout: 120
+  type: "tunnel"
+  ike: aes256-sha1;modp2048
+  phase2: esp
+  phase2alg: aes256-sha1;modp2048

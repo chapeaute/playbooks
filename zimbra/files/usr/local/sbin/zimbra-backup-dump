@@ -1,0 +1,3 @@
+#!/bin/bash
+
+su - zimbra -c "zmbkpose -i -p `nproc`"

@@ -1,0 +1,14 @@
+<configuration>
+    <property>
+        <name>dfs.namenode.name.dir</name>
+        <value>{{ hadoop_install_dir }}/data/nameNode</value>
+    </property>
+    <property>
+        <name>dfs.datanode.data.dir</name>
+        <value>{{ hadoop_install_dir }}/data/dataNode</value>
+    </property>
+        <property>
+        <name>dfs.replication</name>
+        <value>{{ hadoop_hdfs_replication }}</value>
+    </property>
+</configuration>

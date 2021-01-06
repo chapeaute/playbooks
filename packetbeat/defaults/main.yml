@@ -1,0 +1,127 @@
+---
+# defaults file for packetbeat
+
+pb_version: "7.6"
+pb_string_version: "{{ pb_version | string }}"
+pb_major_version: "{{ pb_string_version.split('.')[0] }}"
+
+# tags
+pb_tags: "{{ group_names }}"
+pb_extra_fields: []
+pb_default_extra_fields: []
+  # ansible_groups: "[{% for group in group_names %}'{{ group }}',{% endfor %}]"
+
+# Kibana
+pb_kibana_host: ""
+pb_kibana_port: 5601
+pb_kibana_dashboard_prov: false
+
+# protocols
+pb_protocols_flows_enable: false
+pb_protocols_icmp_enable: false
+pb_protocols_http_decode_body_for: ['json','application/x-ndjson','application/json','application/xml']
+pb_protocols_http_decode_body: true
+pb_protocols_http_transaction_timeout: 60s
+
+# all log files for CentOS and Debian are declare event if there not used
+applications:
+  - name: activemq
+    protocol: amqp
+    ports: [5672]
+  - name: apache
+    protocol: http
+    ports: [80]
+  - name: cassandra
+    protocol: cassandra
+    ports: [9042]
+  - name: dns
+    protocol: dns
+    ports: [53]
+  - name: galera
+    protocol: mysql
+    ports: [3306]
+  - name: nodejs
+    protocol: http
+    ports: [3000]
+  - name: mariadb
+    protocol: mysql
+    ports: [3306]
+  - name: memcache
+    protocol: memcache
+    ports: [11211]
+  - name: mongodb
+    protocol: mongodb
+    ports: [27017]
+  - name: mule-esb
+    protocol: http
+    ports: [8081,8082,8083]
+  - name: nginx
+    protocol: http
+    ports: [80]
+  - name: nodejs
+    protocol: http
+    ports: [3000]
+  - name: nfs-server
+    protocol: nfs
+    ports: [2049]
+  - name: postgresql
+    protocol: pgsql
+    ports: [5432]
+  - name: rabbitmq
+    protocol: amqp
+    ports: [5672]
+  - name: redis
+    protocol: redis
+    ports: [6379]
+  - name: tomcat
+    protocol: http
+    ports: [8080]
+  - name: varnish
+    protocol: http
+    ports: [80]
+  - name: wso2am
+    protocol: http
+    ports: [8280,9763]
+  - name: wso2bp
+    protocol: http
+    ports: [8280,9763]
+  - name: wso2ei
+    protocol: http
+    ports: [8280,9763]
+  - name: wso2is
+    protocol: http
+    ports: [8280,9763]
+  - name: wso2ms
+    protocol: http
+    ports: [9090]
+
+# logstash output
+pb_logstash_hosts: []
+pb_logstash_port: 5044
+
+# elasticsearch output
+pb_es_hosts: []
+pb_es_port: 9200
+pb_es_password:
+pb_es_username:
+pb_es_protocol: http
+
+# kafka outpout
+pb_kafka_hosts: []
+pb_kafka_port: 9092
+pb_kafka_worker: 3
+pb_kafka_version: "0.10.1"
+pb_kafka_broker_timeout: 6
+pb_kafka_topic: logstash
+
+# Monitoring Elasticsearch hosts
+pb_monitoring_enabled: "{% if pb_monitoring_es_hosts|length > 0 %}true{% else %}false{% endif %}"
+pb_monitoring_es_hosts: "{{ pb_es_hosts }}"
+pb_monitoring_es_port: "{{ pb_es_port }}"
+pb_monitoring_es_protocol: "{{ pb_es_protocol }}"
+pb_monitoring_es_username: "{{ pb_es_username }}"
+pb_monitoring_es_password: "{{ pb_es_password }}"
+pb_monitoring_collection_interval: "10s"
+pb_monitoring_http_enabled: false
+pb_monitoring_http_host: localhost
+pb_monitoring_http_port: 5068

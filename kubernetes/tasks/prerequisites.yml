@@ -1,0 +1,29 @@
+---
+
+- name: Remove swapfile from /etc/fstab
+  mount:
+    name: swap
+    fstype: swap
+    state: absent
+
+- name: Disable swap
+  command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+  register: ansible_swap_disabled
+
+- name: main | Update facts
+  setup:
+  tags:
+    - config
+  when: ansible_swap_disabled is changed
+
+- name: Disable selinux
+  selinux:
+    policy: targeted
+    state: permissive
+  when: ansible_selinux is defined and ansible_selinux.status == "enabled"
+
+- name: bridge-nf-call-iptables
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: 1

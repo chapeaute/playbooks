@@ -1,0 +1,27 @@
+---
+- name: module | Remove uneeded configuration file
+  file:
+    path: "{{ item }}"
+    state: absent
+  with_items:
+    - /etc/httpd/conf.modules.d/00-lua.conf
+    - /etc/httpd/conf.modules.d/00-dav.conf
+    - /etc/httpd/conf.d/autoindex.conf
+    - /etc/httpd/conf.d/userdir.conf
+  notify:
+    - Restart Apache
+  when: security_level >= 1
+
+- name: module | Disable Module
+  lineinfile:
+    dest: /etc/httpd/conf.modules.d/00-base.conf
+    regexp: '(?i)^(LoadModule {{ item }}_module modules/.*)'
+    line:   '#\1'
+    backrefs: yes
+  with_items:
+    - autoindex
+    - userdir
+    - info
+  notify:
+    - Restart Apache
+  when: security_level >= 2

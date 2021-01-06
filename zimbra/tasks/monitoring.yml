@@ -1,0 +1,43 @@
+---
+
+- name: zimbra_monitoring_packages | Install monitoring packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "{{ zimbra_monitoring_packages }}"
+
+- name: /usr/lib/nagios/plugins-agent | Creating plugins dir
+  file:
+    path: /usr/lib/nagios/plugins-agent/
+    state: directory
+    recurse: true
+
+- name: check_zimbra | Copy monitoring scripts
+  copy:
+    src: "usr/lib/nagios/plugins-agent/{{ item }}"
+    dest: "/usr/lib/nagios/plugins-agent/{{ item }}"
+    mode: 0755
+  with_items:
+    - check_zimbra_services
+    - check_zimbra_spam_count
+
+- name: Monitoring Mailbox | Create monitoring mailbox
+  shell: su - zimbra -c "/opt/zimbra/bin/zmprov -l ca {{ zimbra_monitoring_user }}@{{ zimbra_domain }} {{ zimbra_monitoring_pass }}"
+  when: "'store' in zimbra_services"
+
+- stat: 
+    path: "{{ postfix_spool_dir }}"
+  register: postfix_spool_dir
+
+# Allowing the monitor daemon to perform the monitoring of Postfix mail queue
+- name : /opt/zimbra/data/postfix/spool | Creating a symbolic link for monitoring purposes
+  mount: 
+    path: "{{ postfix_spool_dir }}"
+    src: "{{ zimbra_spool_dir }}"
+    opts: bind
+    state: mounted
+    fstype: none
+  when: 
+    - "postfix_spool_dir.stat.isdir"
+    - "'mta' in zimbra_services"

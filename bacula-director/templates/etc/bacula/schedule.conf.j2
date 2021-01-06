@@ -1,0 +1,6 @@
+
+Schedule {
+    Name = "WeeklyCycleAfterBackup"
+    Run = Pool=WeeklyFilePool-{{ bacula_sd_hosts[0] }} Full {{bacula_schedule_full}}
+    Run = Pool=DailyFilePool-{{ bacula_sd_hosts[0] }}  Differential {{bacula_schedule_diff}}
+}

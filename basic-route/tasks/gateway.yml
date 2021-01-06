@@ -1,0 +1,23 @@
+---
+- name: gateway | Remove gateway on all configuration file
+  lineinfile:
+    path:   "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
+    regexp: '^GATEWAY.*='
+    state:  absent
+  with_items:
+    - "{{ ansible_interfaces | difference(gateway_itf) }}"
+  when: gateway_itf is defined
+
+- name: gateway | Set gateway on {{ gateway_itf }} configuration file
+  lineinfile:
+    path:   "/etc/sysconfig/network-scripts/ifcfg-{{ gateway_itf }}"
+    regexp: '^GATEWAY.*=.*'
+    line: 'GATEWAY={{ gateway_addr }}'
+  when: gateway_itf is defined
+  notify:
+    - Restart network
+
+- hostname:
+    name: "{{ ansible_hostname }}"
+
+- setup:

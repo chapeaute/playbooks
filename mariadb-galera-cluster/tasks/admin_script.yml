@@ -1,0 +1,40 @@
+---
+
+- name: admin_script | Deploy admin script
+  copy:
+    src:   "usr/local/sbin/{{ ansible_os_family | lower }}.galera-ctl"
+    dest:  "/usr/local/sbin/galera-ctl"
+    owner: root
+    group: root
+    mode:  0755
+
+- name: admin_script | Deploy status script
+  copy:
+    src:   "usr/local/sbin/{{ item }}"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0755
+  with_items:
+    - galera-status
+    - mysql-status
+  tags: script
+
+- name: backup | Deploy backup scripts
+  template:
+    src:  "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode: 0750
+  with_items:
+    - mysql-db-create
+    - mysql-db-delete
+    - mysql-db-import
+    - mysql-db-list
+    - mysql-user-create
+    - mysql-user-delete
+    - mysql-user-list
+    - mysql-backup-dump
+    - mysql-backup-clean
+  tags: script

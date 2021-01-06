@@ -1,0 +1,33 @@
+---
+- name: selinux | Set SELinux boolean
+  seboolean:
+    name: "{{ item }}"
+    state: yes
+    persistent: yes
+  with_items:
+    - daemons_dump_core
+
+- name: selinux | Check SELinux module
+  shell: "semodule -l | grep -q ^bacula-client && echo found || echo notfound"
+  changed_when: false
+  register: bacula_client_semod
+  check_mode: no
+
+- name: selinux | Copy SELinux module
+  copy:
+    src:   bacula-client.pp
+    dest:  /var/tmp/bacula-client.pp
+    owner: root
+    group: root
+    mode:  0644
+  register: bacula_client_module
+
+- name: selinux | Apply SELinux module
+  command: "/sbin/semodule -i /var/tmp/bacula-client.pp"
+  when: "'notfound' in bacula_client_semod.stdout or bacula_client_module.changed"
+
+- name: main | Set context bacula_spool_t on tmp backup directory
+  sefcontext:
+    target: '{{ bacula_tmp_backup_dir }}(/.*)?'
+    setype: bacula_spool_t
+    state: present

@@ -1,0 +1,6 @@
+---
+- name: "reload systemd"
+  command: systemctl daemon-reload
+
+- name: "restart brms"
+  command: systemctl restart brms

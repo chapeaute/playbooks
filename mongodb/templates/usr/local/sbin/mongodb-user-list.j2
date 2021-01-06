@@ -1,0 +1,15 @@
+#!/bin/bash
+#
+# List MongoDB user
+#
+# Syntax : mongodb-user-list
+#
+
+AUTH_FILE="/root/.mongorc.js"
+AUTH_LINE=$(grep "^db.getSiblingDB" ${AUTH_FILE} | sed 's/.*"\(.*\)".*"\(.*\)".*"\(.*\)".*/\1:\2:\3/')
+MONGO_ADB=$(echo ${AUTH_LINE} | cut -d: -f1)
+MONGO_USER=$(echo ${AUTH_LINE} | cut -d: -f2)
+MONGO_PASS=$(echo ${AUTH_LINE} | cut -d: -f3)
+MONGO_AUTH_OPTS="--username ${MONGO_USER} --password ${MONGO_PASS} --authenticationDatabase ${MONGO_ADB}"
+
+mongo ${MONGO_AUTH_OPTS} --quiet --eval "db.system.users.find()" admin | jq '. | "=== " + .user + " ===", .roles[]'

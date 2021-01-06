@@ -1,0 +1,48 @@
+---
+
+
+- name: install | Install MongoDB dependencies
+  package:
+    name: "{{ mongodb_dependencies }}"
+
+- name: install | Install MongoDB
+  package:
+    name:  "{{ mongodb_packages }}"
+  register: mongodb_installation
+
+- include: selinux.yml
+  when: ansible_selinux is defined and ansible_selinux.status == "enabled"
+
+- name: install | Set permission on data directory
+  file:
+    state:   directory
+    path:    "{{ mongodb_data_dir }}"
+    owner:   "{{ mongodb_user }}"
+    group:   "{{ mongodb_group }}"
+    setype:  mongod_var_lib_t
+    recurse: yes
+    follow:  yes
+
+- name: install | MongoDB Configuration
+  template:
+    src: etc/mongod.conf.j2
+    dest: /etc/mongod.conf
+
+- name: install | Copy MongoDB Log Rotation Configuration
+  template:
+    src: etc/logrotate.d/mongodb.j2
+    dest: /etc/logrotate.d/mongodb
+
+- name: install | Enable and start MongoDB service
+  service:
+    name:    "{{ item }}"
+    state:   started
+    enabled: yes
+  with_items: "{{ mongodb_services }}"
+  when: not manage_by_cluster
+
+- import_tasks: thp.yml
+  when: not mongodb_thp_disable
+
+- import_tasks: sysctl.yml
+  when: mongodb_thp_disable

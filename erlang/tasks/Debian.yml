@@ -1,0 +1,13 @@
+---
+
+- name: Debian | Install dependencies
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - apt-transport-https
+
+- name: Debian | Add Erlang repository
+  apt_repository:
+    repo: https://packagecloud.io/rabbitmq/erlang/debian/ {{ ansible_distribution_release }} main"
+    update_cache: yes

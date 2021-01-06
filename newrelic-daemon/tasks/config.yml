@@ -1,0 +1,10 @@
+---
+
+# - name: config | Configuring module
+#   template:
+#     src: "{{ item }}.j2"
+#     dest: "/{{ item }}"
+#     mode: "0640"
+#   notify: restart newrelic
+#   with_items:
+#     - "etc/newrelic/newrelic.cfg"

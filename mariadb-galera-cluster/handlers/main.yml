@@ -1,0 +1,20 @@
+---
+# handlers file for ansible-mariadb-galera-cluster
+- name: restart mariadb
+  service:
+    name:  mariadb
+    state: restarted
+
+- name: reload mariadb
+  service:
+    name:  mariadb
+    state: reloaded
+
+- name: restart xinetd
+  service:
+    name:  xinetd
+    state: restarted
+
+- name: reload systemd
+  systemd:
+    daemon_reload: yes

@@ -1,0 +1,53 @@
+---
+
+- name: config | log4j configurations
+  tags:
+    - config
+    - config_log
+  copy:
+    src: "conf/{{ item }}"
+    dest: "{{ wso2bp_install_dir }}/conf/{{ item }}"
+    owner: wso2bp
+    group: wso2bp
+    mode: 0640
+  with_items:
+    - log4j.properties
+  notify: "Restart wso2bp"
+
+- name: config | Configure to use remote db
+  tags:
+    - config
+    - config_axis2
+  template:
+    src: "conf/axis2/axis2.xml.j2"
+    dest: "{{ wso2bp_install_dir }}/conf/axis2/axis2.xml"
+    owner: wso2bp
+    group: wso2bp
+    mode: 0640
+  notify: "Restart wso2bp"
+
+- name: config | Configure to use remote db
+  tags:
+    - config
+    - config_mysql
+  template:
+    src:  "conf/datasources/{{ item }}.j2"
+    dest: "{{ wso2bp_install_dir }}/conf/datasources/{{ item }}"
+    owner: wso2bp
+    group: wso2bp
+    mode: 0640
+  with_items:
+    - activiti-datasources.xml
+    - bps-datasources.xml
+    - master-datasources.xml
+  notify: "Restart wso2bp"
+  when: wso2bp_db_host is defined
+
+- name: "config | Link {{ wso2bp_root_dir }}/wso2bp to {{ wso2bp_default_root_dir }}/wso2bp"
+  tags:
+    - config
+  file:
+    src: "{{ wso2bp_root_dir }}/wso2bp"
+    dest: "{{ wso2bp_default_root_dir }}/wso2bp"
+    state: link
+  when: wso2bp_root_dir != wso2bp_default_root_dir

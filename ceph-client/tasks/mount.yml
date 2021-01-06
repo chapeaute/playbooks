@@ -1,0 +1,39 @@
+---
+- name: mount | Create access for client {{ client }} on volume {{ vol }}
+  command: "ceph fs authorize {{ vol }} client.{{ client }} {{ caps }}"
+  register: "ceph_keyring"
+  run_once: true
+  delegate_to: "{{ ceph_mon_hosts[0] }}"
+  check_mode: no
+  changed_when: false
+
+- name: mount | Deploy ceph configuration file
+  copy:
+    content: "{{ ceph_keyring.stdout }}\n"
+    dest:    "/etc/ceph/ceph.client.{{ client }}.keyring"
+    owner:    root
+    group:    root
+    mode:     0600
+
+- name: mount | Enable snapshot
+  command: "ceph fs set {{ vol }} allow_new_snaps true"
+  run_once: true
+  delegate_to: "{{ ceph_mon_hosts[0] }}"
+  check_mode: no
+  changed_when: false
+  when:
+    - snap
+
+- name: mount | Create {{ dir }}
+  file:
+    name: "{{ dir }}"
+    state: directory
+    recurse: True
+
+- name: mount | Mount volume {{ vol }} on {{ dir }}
+  mount:
+    name:   "{{ dir }}"
+    src:    "{{ ceph_mon_hosts | join(',') }}:/"
+    fstype: ceph
+    state:  "{{ mount.mounted | default(True) | ternary('mounted', 'unmounted') }}"
+    opts:   "name={{ client }},_netdev,{{ mount.options | default('rw,noatime,acl,wsize=16777216') }}"

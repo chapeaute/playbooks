@@ -1,0 +1,6 @@
+---
+# defaults file for memcached
+memcached_port: 11211
+memcached_max_conn: 1024
+memcached_cache_size_prct: 0.8
+memcached_cache_size: "{{ (ansible_memtotal_mb*memcached_cache_size_prct)|int }}"

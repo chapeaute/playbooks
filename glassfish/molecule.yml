@@ -1,0 +1,14 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: glassfish
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+      capabilities: ['SYS_ADMIN']
+verifier:
+  name: testinfra

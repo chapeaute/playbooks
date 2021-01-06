@@ -1,0 +1,17 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: whmcs
+    image: centos/systemd
+    dns_servers: ['8.8.8.8']
+    privileged: true
+    volume_mounts:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    command: "/usr/sbin/init"
+provisioner:
+  name: ansible
+verifier:
+  name: ansible

@@ -1,0 +1,17 @@
+# Inventory
+[all:children]
+basic-server
+
+[basic-server:children]
+elasticsearch
+
+# Elasticsearch
+[elasticsearch:children]
+elasticsearch-master
+elasticsearch-data
+
+[estack-elasticsearch-master]
+esmaster[1:3]
+
+[estack-elasticsearch-data]
+esdata[1:3]

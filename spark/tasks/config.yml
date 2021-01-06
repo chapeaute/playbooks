@@ -1,0 +1,68 @@
+---
+
+- name: config | Set spark profile
+  tags: config
+  template:
+    src: etc/profile.d/spark.sh.j2
+    dest: /etc/profile.d/spark.sh
+    mode: 0744
+
+- name: config | Configure spark logs dir
+  file:
+    path:  "{{ spark_logs_dir }}"
+    mode:  755
+    state: directory
+    owner: spark
+    group: spark
+
+- name: config | Configure spark tmp dir
+  file:
+    path:  "{{ spark_tmp_dir }}"
+    mode:  0777
+    state: directory
+    owner: spark
+    group: spark
+
+- name: config | Link spark log dir
+  file:
+    src:  "{{ spark_logs_dir }}"
+    dest:  /var/log/spark
+    state: link
+
+- name: config | Link install dir
+  file:
+    src:  "{{ spark_root_dir }}/spark"
+    dest: "{{ spark_default_root_dir }}/spark"
+    state: link
+  when: spark_default_root_dir != spark_root_dir
+
+- name: config | Configure spark
+  tags: config
+  template:
+    src: "spark/conf/{{ item }}.j2"
+    dest: "{{ spark_install_dir }}/conf/{{ item }}"
+  with_items:
+    - spark-defaults.conf
+    - spark-env.sh
+  notify:
+    - "Restart Spark Master"
+    - "Restart Spark Worker"
+
+- name: config | create spark worker unit file
+  tags:
+    - config
+    - config_service
+  template:
+    src: etc/systemd/system/spark-worker.service.j2
+    dest: /etc/systemd/system/spark-worker.service
+  notify: Reload systemd
+
+- name: config | create spark master unit file
+  tags:
+    - config
+    - config_service
+  template:
+    src: etc/systemd/system/spark-master.service.j2
+    dest: /etc/systemd/system/spark-master.service
+  notify: Reload systemd
+  when: ansible_fqdn in spark_masters

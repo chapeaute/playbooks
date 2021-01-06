@@ -1,0 +1,10 @@
+---
+- hosts: elasticsearch
+  vars:
+    es_shard_count: 6
+    es_replica_count: 1
+    es_cluster_name: estack
+  roles:
+    - role: elasticsearch
+      es_hosts: "{{ play_hosts }}"
+      es_install_prompt_scripts: True

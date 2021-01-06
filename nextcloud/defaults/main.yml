@@ -1,0 +1,62 @@
+---
+# defaults file for nextcloud
+
+# Download
+nextcloud_version: "19.0.1"
+nextcloud_version_channel: "releases" # mandatory # releases | prereleases | daily
+nextcloud_archive_format: "zip" # zip | tar.bz2
+nextcloud_repository: "https://download.nextcloud.com/server"
+nextcloud_download_url: "{{nextcloud_repository}}/{{nextcloud_version_channel}}/nextcloud-{{[nextcloud_version, nextcloud_archive_format]|join('.')}}"
+
+# NEXTCLOUD
+nextcloud_admin_user: "admin"
+nextcloud_admin_pass: "changeme"
+nextcloud_hosts: ["{{ inventory_hostname }}"] # To be used in case of cluster
+
+# WEB SERVER
+nextcloud_vhost_name: "nextcloud"
+nextcloud_vhost_aliases: []
+nextcloud_trusted_extra_domains:
+  - "{{ ansible_fqdn }}"
+  - "{{ ansible_default_ipv4.address }}"
+nextcloud_webroot_dir: "/var/www"
+nextcloud_root_dir: "{{ nextcloud_webroot_dir }}/{{ nextcloud_vhost_name }}"
+nextcloud_protocol: http
+
+# PHP
+nextcloud_php_version: "7.3"
+nextcloud_max_upload_size: 1G
+nextcloud_max_upload_time: 1000
+
+# SECURITY ENFORCING
+nextcloud_encryption_enable: True
+nextcloud_pwd_non_common: True
+nextcloud_pwd_num_characters: True
+nextcloud_pwd_spec_characters: True
+nextcloud_pwd_upperlower_case: True
+nextcloud_config_app: {}
+nextcloud_config_system: {}
+
+# DATABASE
+nextcloud_db_host: "127.0.0.1"
+nextcloud_db_remote_host: "{{ inventory_hostname }}"
+nextcloud_db_backend: "mariadb" # "mysql"/"mariadb" | "galera" | "pgsql"
+nextcloud_db_name: "nextcloud"
+nextcloud_db_user: "nextcloud"
+nextcloud_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-nextcloud_db_pass chars=ascii_letters,digits') }}"
+
+# REDIS
+nextcloud_use_redis: False
+nextcloud_redis_host: 127.0.0.1
+nextcloud_redis_port: 6379
+nextcloud_redis_db: 0
+nextcloud_redis_password: "{{ redis_password }}"
+
+# S3 - Ceph Object Storage
+nextcloud_use_s3: False
+nextcloud_s3_host: 127.0.0.1
+nextcloud_s3_port: 7480
+nextcloud_s3_key: ""
+nextcloud_s3_secret: ""
+nextcloud_s3_bucket: "nextcloud"
+nextcloud_s3_ssl: "false"

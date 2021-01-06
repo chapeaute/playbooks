@@ -1,0 +1,22 @@
+---
+- name: tcp_wrappers | Install TCP Wrappers
+  package:
+    name:  tcp_wrappers
+    state: installed
+  when: security_level >= 3
+
+- name: tcp_wrappers | Set hosts.allow
+  template:
+    src:  etc/hosts.allow.j2
+    dest: /etc/hosts.allow
+  when:
+    - security_tcp_wrappers
+    - security_level >= 3
+
+- name: tcp_wrappers | Set hosts.deny
+  template:
+    src:  etc/hosts.deny.j2
+    dest: /etc/hosts.deny
+  when:
+    - security_tcp_wrappers
+    - security_level >= 3

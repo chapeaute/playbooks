@@ -1,0 +1,6 @@
+<ifModule proxy_module>
+SSLProxyEngine on
+ProxyPass / ${PROXYLOCATION}
+ProxyPassReverse / ${PROXYLOCATION}
+Header always set X-ModSecurity %{env_msecblk}e env=env_msecblk
+</ifModule>

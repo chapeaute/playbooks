@@ -1,0 +1,176 @@
+#!/bin/bash
+
+# Global parameters
+CLAPI_CONF={{ centreon_clapi_conf }}
+CLAPI_BIN={{ centreon_clapi_bin }}
+POLLER_SCRIPT=`dirname $0`/centreon-poller-get
+DISCO_DISK_SCRIPT=`dirname $0`/centreon-disco-disk
+DISCO_TRAFFIC_SCRIPT=`dirname $0`/centreon-disco-traffic
+EXCLUDE_TRAFFIC="{{ centreon_traffic_exclude }}"
+EXCLUDE_DISK="{{ centreon_disk_exclude }}"
+CONF_EXPORT_FILE=`mktemp -p /dev/shm/`
+
+# Load CLAPI configuration file
+if [ -r $CLAPI_CONF ]; then
+    source $CLAPI_CONF
+else
+    echo "Can't load CLAPI configuration file: $CLAPI_CONF"
+    exit 1
+fi
+
+CLAPI_OPT="-u $CLAPI_USER -p $CLAPI_PASS"
+CLAPI_CMD="$CLAPI_BIN $CLAPI_OPT"
+
+# Display command syntax and exit with error code
+syntax()
+{
+    echo "Syntax: $0 hostname ipaddr [snmpcom] [snmpver] [templates] [hostgroup] [pollername]"
+    echo "Syntax: $0 filename.csv"
+    exit 1
+}
+
+# Add host list from a csv file
+add_host()
+{
+    # Get host informations
+    local hostname=`echo $1`
+    local ipaddr=`echo $2`
+    local snmpcom=`echo $3`
+    local snmpver=`echo $4`
+    local templates=`echo $5`
+    local hostgroup=`echo $6`
+    local pollername=`echo $7`
+    local host_macros=`echo $8`
+    [[ -z "$templates" ]] && local templates=generic-host
+    local pollername=`$POLLER_SCRIPT "$pollername" | sort -t ';' -nk 2 | awk -F';' '{print $1}' | head -1`
+
+    # Create hostgroup
+    echo $hostgroup | tr "|" "\n" | while read hg; do
+        [[ -n "$hg" ]] && $CLAPI_CMD -o HG -a add -v "$hg;$hg"
+    done
+
+    # Create host and set parameter
+    echo "adding host: $hostname"
+    $CLAPI_CMD -o HOST -a ADD -v "$hostname;$hostname;$ipaddr;$templates;$pollername;$hostgroup"
+
+    # Add host template to host
+    echo $templates | tr "|" "\n" | while read htpl; do
+        [[ -n "$htpl" ]] && $CLAPI_CMD -o HOST -a addtemplate -v "$hostname;$htpl"
+    done
+
+    # Add host to hostgroup
+    echo $hostgroup | tr "|" "\n" | while read hg; do
+        [[ $hg ]] && $CLAPI_CMD -o HOST -a addhostgroup -v "$hostname;$hg"
+    done
+
+    if [ ! -z "$snmpcom" ]; then
+        $CLAPI_CMD -o HOST -a setparam -v "$hostname;host_snmp_community;$snmpcom"
+        snmp_opt="$snmp_opt -c $snmpcom"
+    fi
+
+    if [ ! -z "$snmpver" ]; then
+        $CLAPI_CMD -o HOST -a setparam -v "$hostname;host_snmp_version;$snmpver"
+        snmp_opt="$snmp_opt -c $snmpver"
+    fi
+
+    # Create service on host associated to template
+    echo "Apply template service"
+    $CLAPI_CMD -o HOST -a applytpl -v "$hostname"
+
+    # Auto discovery Disk
+    $DISCO_DISK_SCRIPT -b centreon@$pollername -H $hostname -i $ipaddr $snmp_opt -e "$EXCLUDE_DISK"
+
+    # Auto discovery Traffic
+    $DISCO_TRAFFIC_SCRIPT -b centreon@$pollername -H $hostname -i $ipaddr $snmp_opt -e "$EXCLUDE_TRAFFIC"
+
+    # Apply host macro
+    echo $host_macros | tr "|" "\n" | while read mcr; do
+        if [[ $mcr ]]; then
+            mcr_name=`echo $mcr | awk -F':' '{print $1}'`
+            mcr_value=`echo $mcr | awk -F':' '{print $2}'`
+            echo "Set host macro $mcr_name to $hostname"
+            $CLAPI_CMD -o HOST -a setmacro -v "$hostname;$mcr_name;$mcr_value;0;"
+        fi
+    done
+}
+
+
+set_svc_macro()
+{
+    local hostname=`echo $1`
+    local svc_macros=`echo $2`
+
+    if [ ! -s $CONF_EXPORT_FILE ]; then
+        echo "Export configuration to $CONF_EXPORT_FILE"
+        $CLAPI_CMD -e > $CONF_EXPORT_FILE
+    fi
+
+    # Apply service macro
+    echo $svc_macros | tr "|" "\n" | while read mcr; do
+        if [[ $mcr ]]; then
+            mcr_svc_tpl=`echo $mcr | awk -F':' '{print $1}'`
+            mcr_name=`echo $mcr | awk -F':' '{print $2}'`
+            mcr_value=`echo $mcr | awk -F':' '{print $3}'`
+            mcr_svc_name=$(grep "SERVICE;ADD;$hostname;.*;$mcr_svc_tpl$" $CONF_EXPORT_FILE | awk -F';' '{print $4}')
+            if [ $mcr_svc_name ]; then
+                echo "Set service macro $mcr_name to $hostname - $mcr_svc_name"
+                $CLAPI_CMD -o SERVICE -a setmacro -v "$hostname;$mcr_svc_name;$mcr_name;$mcr_value;0;"
+            else
+                echo "Failed to set macro $mcr_name on host $hostname. No service using service template $mcr_svc_tpl found for host ${hostname}."
+            fi
+       fi
+    done
+}
+
+# Add host list from a csv file
+add_host_list()
+{
+    filename=$1
+
+    # Check if filename exist
+    if [ ! -f $filename ]; then
+        echo "Error: $filename No such file or directory";
+        exit 1
+    fi
+
+    import_host=`mktemp -p /dev/shm/`
+    cp $filename $import_host
+
+    # Parse file and host
+    cat $import_host | while read line
+    do
+        local hostname=`echo $line | cut -d';' -f1`
+        local ipaddr=`echo $line | cut -d';' -f2`
+        local snmpcom=`echo $line | cut -d';' -f3`
+        local snmpver=`echo $line | cut -d';' -f4`
+        local templates=`echo $line | cut -d';' -f5`
+        local hostgroup=`echo $line | cut -d';' -f6`
+        local pollername=`echo $line | cut -d';' -f7`
+        local host_macros=`echo $line | cut -d';' -f8`
+        add_host "$hostname" "$ipaddr" "$snmpcom" "$snmpver" "$templates" "$hostgroup" "$pollername" "$host_macros"
+    done
+
+    # Set service macro
+    cat $import_host | while read line
+    do
+        local hostname=`echo $line | cut -d';' -f1`
+        local svc_macros=`echo $line | cut -d';' -f9`
+        if [ $svc_macros ]; then
+            set_svc_macro $hostname $svc_macros
+        fi
+    done
+
+    rm -f $import_host $CONF_EXPORT_FILE
+}
+
+# Check command syntax
+case $# in
+    1) add_host_list "$@"
+    ;;
+    7) add_host "$@"
+    ;;
+    *) syntax
+    ;;
+esac
+
+exit 0

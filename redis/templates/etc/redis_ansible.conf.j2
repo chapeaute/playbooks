@@ -1,0 +1,39 @@
+# Address redis will listen (0.0.0.0 for all interfaces)
+bind {% if redis_bind_interface %}{% for interface in redis_bind_interface %}{{ hostvars[inventory_hostname]['ansible_'+interface]['ipv4']['address'] }} {% endfor %}{% else %}{{ redis_bind_address }}{% endif %}
+
+# Accept connections on the specified port, default is 6379.
+port {{ redis_setting_port }}
+
+{% if redis_enable_password %}
+# password
+requirepass {{ redis_password }}
+masterauth {{ redis_password }}
+{% endif %}
+
+# Number of databases available
+databases {{ redis_setting_databases }}
+
+# Working directory where DB will be written
+dir {{ redis_default_data_dir }}
+
+# Durability tunning
+{% for save_config in redis_setting_save %}
+save {{ save_config }}
+{% endfor %}
+
+{% if redis_setting_appendonly == 'yes' %}
+appendonly yes
+appendfsync {{ redis_setting_appendfsync }}
+no-appendfsync-on-rewrite {{ redis_setting_no_append_fsync_on_rewrite }}
+auto-aof-rewrite-percentage {{ redis_setting_auto_aof_rewrite_percentage }}
+auto-aof-rewrite-min-size {{ redis_setting_auto_aof_rewrite_min_size }}
+{% endif %}
+
+# Memory settings
+maxmemory {{ redis_setting_maxmemory }}
+maxmemory-policy {{ redis_setting_maxmemory_policy }}
+maxmemory-samples {{ redis_setting_maxmemory_samples }}
+
+{% for cmd in redis_cmd_disabled %}
+rename-command {{ cmd }} ""
+{% endfor %}

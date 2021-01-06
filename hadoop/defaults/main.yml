@@ -1,0 +1,47 @@
+---
+# defaults file for hadoop
+hadoop_service_name: hadoop
+hadoop_user: "hadoop"
+hadoop_group: "hadoop"
+hadoop_version: 2.9.1
+hadoop:
+  source_url: http://www-eu.apache.org/dist/hadoop/common/hadoop-{{ hadoop_version }}/hadoop-{{ hadoop_version }}.tar.gz
+  #source_checksum: sha256:0cc25730f18c53e914352e559f97f122069e0933851ccc6a49f6eff1f830a5a9
+  subpath: hadoop-{{ hadoop_version }}
+  system_username: "{{ hadoop_user }}"
+  system_groupname: "{{ hadoop_group }}"
+hadoop_java_version: 8
+hadoop_java_impl: openjdk
+hadoop_hdfs_memory_size: "1000"
+hadoop_root_dir: "{{ hadoop_default_root_dir }}"
+hadoop_install_dir: "{{ hadoop_root_dir }}/hadoop-{{ hadoop_version }}"
+hadoop_mapreduce_framework_name: yarn
+
+## HDFS
+# hadoop_master: "{{ inventory_hostname }}"
+hadoop_slaves: "{{ play_hosts }}"
+hadoop_hdfs_replication: "{{ hadoop_slaves | length }}"
+hadoop_hdfs_ports:
+  - 9000
+  - 50090
+  - 50070
+  - 50010
+  - 50075
+  - 50020
+
+## YARN
+hadoop_enable_yarn: true
+hadoop_yarn_memory_size_prct: 0.6
+hadoop_yarn_minimum_mb: "2048"
+hadoop_yarn_maximum_mb: "{{hadoop_memory_size}}"
+hadoop_yarn_acl_enable: 0
+hadoop_yarn_ports:
+  - 8040
+  - 8042
+  - 8088
+  - 13562
+  - 8030
+  - 8031
+  - 8032
+  - 8033
+  - 46530

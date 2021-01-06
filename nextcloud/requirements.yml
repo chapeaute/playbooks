@@ -1,0 +1,75 @@
+- src: git@git.smile.ci:adminsys/ansible/role/ansistrano.git
+  scm: git
+  version: v1.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/apache.git
+  scm: git
+  version: v1.6.6
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-firewalld.git
+  scm: git
+  version: v1.0.7
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-server.git
+  scm: git
+  version: v1.2.7
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-user.git
+  scm: git
+  version: v1.1.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/csync2-lsyncd.git
+  scm: git
+  version: v1.1.5
+
+- src: git@git.smile.ci:adminsys/ansible/role/generic-webapp.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/ldap-user.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/mariadb-server.git
+  scm: git
+  version: v1.3.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/mysql-provider.git
+  scm: git
+  version: v1.3.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/nextcloud.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/ntp.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/php.git
+  scm: git
+  version: v2.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/postfix.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/redis.git
+  scm: git
+  version: v3.4.8
+
+- src: git@git.smile.ci:adminsys/ansible/role/security.git
+  scm: git
+  version: v1.3.16
+
+- src: git@git.smile.ci:adminsys/ansible/role/security-apache.git
+  scm: git
+  version: v1.3.8
+
+- src: git@git.smile.ci:adminsys/ansible/role/security-mariadb.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/security-php.git
+  scm: git
+  version: v1.1.0

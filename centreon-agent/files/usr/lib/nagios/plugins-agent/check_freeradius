@@ -1,0 +1,91 @@
+#!/bin/bash
+
+RAD_CLIENT="/usr/bin/radclient"
+FREERAD_PORT=1812
+FREERAD_AUTHTYPE='pap'
+
+usage()
+{
+    exec >&2
+
+    [[ ! -z "$1" ]] && echo "$1 missing"
+
+    echo "usage: $0 [options]"
+    echo '  -H, --hostname   freeradius server hostname'
+    echo '  -P, --port       freeradius server port'
+    echo '  -u, --user       user'
+    echo '  -p, --password   user password'
+    echo '  -s, --secret     secret'
+    echo '  -t, --auth-type  Authentifcation type : pap, chap (default: pap)'
+    echo '  -c, --circuitID  ADSL agent circuit ID'
+    echo '  -a, --avp        AVP list separeted by comma'
+
+    exit 1
+}
+
+ARGUMENTS="$(getopt \
+    --longoptions 'hostname:,port:,user:,password:,secret:,circuitID:,avp:,auth-type:' \
+    --options 'H:P:u:p:s:c:a:t:' \
+    --shell bash \
+    --name "$0" \
+    -- "$@"
+)" || usage
+
+eval set -- "${ARGUMENTS[@]}"
+
+until [ "$#" -eq 0 ]
+do
+    ARGUMENT="$1"
+    shift
+
+    case "$ARGUMENT" in
+        '--hostname' | '-H') FREERAD_HOST="$1"; shift ;;
+        '--port' | '-P') FREERAD_PORT="$1"; shift ;;
+        '--user' | '-u') FREERAD_USER="$1"; shift ;;
+        '--password' | '-p') FREERAD_PWD="$1"; shift ;;
+        '--auth-type' | '-t') FREERAD_AUTHTYPE="$1"; shift ;;
+        '--secret' | '-s') FREERAD_SECRET="$1"; shift ;;
+        '--circuitID' | '-c') FREERAD_CIRCUITID="$1"; shift ;;
+        '--avp' | '-a') FREERAD_AVP="$1"; shift ;;
+    esac
+done
+
+[ "$#" -eq 0 ] || usage
+
+[[ -z $FREERAD_HOST ]] && usage "Freeradius server name missing"
+[[ -z $FREERAD_USER ]] && usage "Freeradius user name missing"
+[[ -z $FREERAD_PWD ]] && usage "Freeradius user password missing"
+[[ -z $FREERAD_SECRET ]] && usage "Freeradius secret missing"
+
+case "$FREERAD_AUTHTYPE" in
+    pap)  PASSWD_ATTR="User-Password" ;;
+    chap) PASSWD_ATTR="CHAP-Password" ;;
+    *) echo "Invalid Auth-Type $FREERAD_AUTHTYPE" && usage
+esac
+
+if [ -n "$FREERAD_AVP" ]; then
+    output=$(echo "User-Name = '$FREERAD_USER', $PASSWD_ATTR = '$FREERAD_PWD', $FREERAD_AVP" | radclient $FREERAD_HOST:$FREERAD_PORT auth $FREERAD_SECRET 2>&1)
+    rc=$?
+elif [ -n "$FREERAD_CIRCUITID" ]; then
+    output_md5=`echo -n $FREERAD_CIRCUITID | md5sum | awk '{ print $1}'`
+    output=$(echo "User-Name = '$FREERAD_USER', $PASSWD_ATTR = '$FREERAD_PWD', ADSL-Agent-Circuit-Id = '$FREERAD_CIRCUITID'" | radclient $FREERAD_HOST:$FREERAD_PORT auth $FREERAD_SECRET 2>&1)
+    output_tmp=$(echo $output_tmp| grep Alc-Subsc-ID-Str | cut -d "\"" -f 2)
+
+    if [ "$output_tmp" == "$output_md5" ]; then
+        rc=0
+    else
+        rc=2
+    fi
+else
+    output=$(echo "User-Name = '$FREERAD_USER', $PASSWD_ATTR = '$FREERAD_PWD'" | radclient -c 1 $FREERAD_HOST:$FREERAD_PORT auth $FREERAD_SECRET 2>&1)
+    rc=$?
+fi
+
+if [ $rc -eq 0 ]; then
+    echo "OK - ${output:-Authentication successfull}"
+else
+    echo "CRITICAL - $output"
+    rc=2
+fi
+
+exit $rc

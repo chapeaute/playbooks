@@ -1,0 +1,14 @@
+#
+# TLS
+#
+tls:
+  options:
+    default:
+      sniStrict: {{ traefik_sni_strict }}
+      minVersion: VersionTLS12
+{% if traefik_cipher_list | length > 0 %}
+      cipherSuites:
+{% for cipher in traefik_cipher_list %}
+        - "{{ cipher }}"
+{% endfor %}
+{% endif %}

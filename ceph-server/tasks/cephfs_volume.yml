@@ -1,0 +1,5 @@
+---
+- name: cephfs_volume | Create volume for CephFS
+  command: "ceph fs volume create {{ ceph_fs_volume }}"
+  when:
+    - inventory_hostname == ceph_osd_hosts[0]

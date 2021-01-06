@@ -1,0 +1,7 @@
+---
+# handlers file for smokeping
+
+- name: Restart smokeping
+  service:
+    name: smokeping
+    state: restarted

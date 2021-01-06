@@ -1,0 +1,6 @@
+---
+centreon_extra_packages:
+  - perl-LWP-Protocol-https
+  - perl-Net-SNMP
+  - perl-Config-IniFiles
+  - openssl-libs

@@ -1,0 +1,131 @@
+galaxy_info:
+  author: your name
+  description: your description
+  company: your company (optional)
+
+  # If the issue tracker for your role is not on github, uncomment the
+  # next line and provide a value
+  # issue_tracker_url: http://example.com/issue/tracker
+
+  # Some suggested licenses:
+  # - BSD (default)
+  # - MIT
+  # - GPLv2
+  # - GPLv3
+  # - Apache
+  # - CC-BY
+  license: license (GPLv2, CC-BY, etc)
+
+  min_ansible_version: 1.2
+
+  # If this a Container Enabled role, provide the minimum Ansible Container version.
+  # min_ansible_container_version:
+
+  # Optionally specify the branch Galaxy will use when accessing the GitHub
+  # repo for this role. During role install, if no tags are available,
+  # Galaxy will use this branch. During import Galaxy will access files on
+  # this branch. If Travis integration is configured, only notifications for this
+  # branch will be accepted. Otherwise, in all cases, the repo's default branch
+  # (usually master) will be used.
+  #github_branch:
+
+  #
+  # platforms is a list of platforms, and each platform has a name and a list of versions.
+  #
+  # platforms:
+  # - name: Fedora
+  #   versions:
+  #   - all
+  #   - 25
+  # - name: SomePlatform
+  #   versions:
+  #   - all
+  #   - 1.0
+  #   - 7
+  #   - 99.99
+
+  galaxy_tags: []
+    # List tags for your role here, one per line. A tag is a keyword that describes
+    # and categorizes the role. Users find roles by searching for tags. Be sure to
+    # remove the '[]' above, if you add tags to this list.
+    #
+    # NOTE: A tag is limited to a single word comprised of alphanumeric characters.
+    #       Maximum 20 tags per role.
+
+dependencies:
+  - role: wso2-generic
+    wso2_generic_service_name: wso2sp
+    wso2_generic_version: "{{ wso2sp_version }}"
+    wso2_generic_ports: "{{ wso2sp_ports }}"
+    wso2_generic_start_command:
+    wso2_generic_stop_command:
+    wso2_generic_java_version: "{{ wso2sp_java_version }}"
+    wso2_generic_java_impl: "{{ wso2sp_java_impl }}"
+    wso2_generic_memory_size_prct: "{{ wso2sp_memory_size_prct }}"
+    wso2_generic_memory_size: "{{wso2sp_memory_size}}"
+    wso2_generic_root_dir: "{{ wso2sp_root_dir }}"
+    wso2_generic_create_service: False
+    wso2_generic_dropins_dir: dropins
+    wso2_generic_libs_dir: lib
+    wso2_generic_log_glob: wso2/*/*log
+  - role: mysql-provider
+    when: wso2sp_db_host is defined
+    tags:
+      - config
+      - config_mysql
+    run_once: true
+    delegate_to: "{{ wso2sp_db_host }}"
+    mysql_host: "{{ wso2sp_db_host }}"
+    mysql_databases:
+      WSO2_UM:
+        db_name: WSO2_UM
+        encoding: latin1
+        collation: latin1_swedish_ci
+        sync_source:
+          src: dbscripts/wso2um.sql
+          file: wso2um.sql
+      WSO2_MGW_ANALYTICS:
+        db_name: WSO2_MGW_ANALYTICS
+        encoding: latin1
+        collation: latin1_swedish_ci
+      WSO2_APIM_ANALYTICS:
+        db_name: WSO2_APIM_ANALYTICS
+        encoding: latin1
+        collation: latin1_swedish_ci
+        sync_source:
+          src: dbscripts/WSO2_APIM_ANALYTICS.sql
+          file: WSO2_APIM_ANALYTICS.sql
+      WSO2_EI_ANALYTICS:
+        db_name: WSO2_EI_ANALYTICS
+        encoding: latin1
+        collation: latin1_swedish_ci
+        sync_source:
+          src: dbscripts/WSO2_EI_ANALYTICS.sql
+          file: WSO2_EI_ANALYTICS.sql
+      WSO2_HTTP_ANALYTICS:
+        db_name: WSO2_HTTP_ANALYTICS
+        encoding: latin1
+        collation: latin1_swedish_ci
+        sync_source:
+          src: dbscripts/WSO2_HTTP_ANALYTICS.sql
+          file: WSO2_HTTP_ANALYTICS.sql
+      WSO2_STATUS_DASHBOARD:
+        db_name: WSO2_STATUS_DASHBOARD
+        encoding: latin1
+        collation: latin1_swedish_ci
+        sync_source:
+          src: dbscripts/WSO2_DASHBOARD.sql
+          file: WSO2_DASHBOARD.sql
+      WSO2_BUSINESS_RULES:
+        db_name: WSO2_BUSINESS_RULES
+        encoding: latin1
+        collation: latin1_swedish_ci
+        sync_source:
+          src: dbscripts/WSO2_BUSINESS_RULES.sql
+          file: WSO2_BUSINESS_RULES.sql
+    mysql_users:
+      - user: "{{ wso2sp_db_user }}"
+        password: "{{ wso2sp_db_pass }}"
+        priv: "WSO2_MGW_ANALYTICS.*:ALL/WSO2_APIM_ANALYTICS.*:ALL/WSO2_EI_ANALYTICS.*:ALL/WSO2_HTTP_ANALYTICS.*:ALL/WSO2_DASHBOARD.*:ALL/WSO2_STATUS_DASHBOARD.*:ALL/WSO2_BUSINESS_RULES.*:ALL/WSO2_UM.*:ALL"
+        host: "%"
+        state: present

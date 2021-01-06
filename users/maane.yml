@@ -1,0 +1,10 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: maane
+          groups: exploit
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDktyqcv6Y19abxy2w9n/f4IRZrNShNgCC5Zig3G1Mn0HzKB/Z3VGtEXnteh6hNpOO7KvqVSCzh8VkhjJ/fiquBV3kjJ+B8dF9OpeBp1rpu5FFzqXwDq/Lpevzmm2qke1XWwGnaPa9LHhvHAjDJX24YIINlIDUxwt/8qAw1ZRNh38HSf+8/G3eXlMAyJDgyLhYwAIPfO4ZUX9R8jYAi8qXTo2Ht7phWggnlMGz+ViwySG3dubh4xxdlILEkh3qCHTYrWd8dlYIUQMSXzq7ctnoEHVRo3fugk44dQDr4tBj9jJ3TYaow84iHrZaz5YINmPXSYg/xIXymrbeEDihpL9dx maurice.aney@smile.ci
+

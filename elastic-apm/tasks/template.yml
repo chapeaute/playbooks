@@ -1,0 +1,29 @@
+---
+- name: template | Export template
+  command: "{{ beat }} export template"
+  register: tpl_content_json
+  changed_when: false
+
+- name: template | Convert json to ansible dict
+  set_fact:
+    tpl_content: "{{ tpl_content_json.stdout | from_json  }}"
+
+- name: template | Check if template was updated
+  copy:
+    content: "{{ tpl_content | to_json }}"
+    dest: "/var/tmp/{{ tpl_content.mappings._meta.beat }}-{{ tpl_content.mappings._meta.version }}.template.json"
+  delegate_to: "{{ es_host }}"
+  register: tpl
+
+- name: template | Import template to elasticsearch
+  uri:
+    url:              "http://127.0.0.1:{{ es_port }}/_template/{{ tpl_content.mappings._meta.beat }}-{{ tpl_content.mappings._meta.version }}"
+    user:             "{{ es_user|default(omit) }}"
+    password:         "{{ es_pass|default(omit) }}"
+    force_basic_auth: true
+    method:           PUT
+    body_format:      json
+    body:             "{{ tpl_content_json.stdout }}"
+  delegate_to: "{{ es_host }}"
+  when:
+    - tpl.changed

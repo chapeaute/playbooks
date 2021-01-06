@@ -1,0 +1,62 @@
+---
+# Global
+use_satellite_repo: False
+
+# Global variables
+manage_firewalld: true
+galera_enable_firewalld: "{{ manage_firewalld }}"
+
+# Galera variables
+galera_cluster_name: 'galera-cluster'                      # defines cluster name
+galera_cluster_bind_address: 0.0.0.0                       # defines bind address for galera cluster
+galera_cluster_nodes_group: 'galera-cluster-nodes'         # defines groups nodes
+galera_nodes: "{{ groups[galera_cluster_nodes_group] }}"   # defines nodes list
+galera_master_node: "{{ galera_nodes[0] }}"
+# defines if the cluster should be reconfigured (possible values: true, false, force)
+# With true value galera_master_node refuse to be master if he doesn't have most recent data.
+# Use force to remove grastate.dat on galera_master_node and force recreating cluster.
+galera_reconfigure: false
+
+# Mariadb variables
+mariadb_version: 10.5
+mariadb_data_dir: "{{ mariadb_default_data_dir }}"
+mariadb_backup_dir: "{{ mariadb_default_backup_dir }}"
+mysql_data_dir: "{{ mariadb_data_dir }}"
+mysql_backup_dir: "{{ mariadb_backup_dir }}"
+mariadb_innodb_buffer_pool_size_prct: 0.7
+mariadb_innodb_buffer_pool_size: "{{ (ansible_memtotal_mb*(mariadb_innodb_buffer_pool_size_prct|float))|int }}M"
+mariabd_max_connections: 250
+mariadb_force_remove_backup_dir: False
+
+# Binary log settings
+mariadb_config_use_binlog: True
+mariadb_config_log_bin: "{{ mariadb_data_dir }}/mysql-bin.log"
+mariadb_config_binlog_format: ROW
+mariadb_config_expire_logs_days: 4
+
+
+# Database users
+mariadb_root_password:  "{{ lookup('password', 'credential/{{ galera_cluster_name }}-mysql_root_password chars=ascii_letters,digit') }}"      # define MySQL user root password
+mariadb_root_allow_from_any: false    # defines if root logins should be allowed from any host
+mariadb_wsrep_sst_method: rsync       # SST Method to be used
+mariadb_wsrep_sst_user: wsrepuser     # defines xtrabackup user
+mariadb_wsrep_sst_password: "{{ lookup('password', 'credential/{{ galera_cluster_name }}-mariadb_wsrep_sst_password chars=ascii_letters,digit') }}"  # defines xtrabackup password
+mariabd_systemd_timeoutsec: 6h
+
+# Monitoring cluster
+# defines if cluster node monitoring should be enabled for mariadb
+# Usefull for load balancer to determine cluster nodes state
+monitoring_galera_enable: true
+monitoring_galera_script_name: galera-check
+monitoring_galera_script_path: /usr/local/sbin
+
+# Monitoring nagios
+monitoring_nagios_enable: false      # defines if nagios monitoring should be enabled for mariadb
+monitoring_nagios_server_fqdn: '%'   # defines the remote monitoring serveur
+monitoring_nagios_db_user: nagios    # defines the user for monitoring db monitoring
+monitoring_nagios_db_pass: changeme  # defines the password for monitoring db monitoring
+
+# Monitoring PMM
+monitoring_pmm_enable: false
+monitoring_pmm_db_user: pmm
+monitoring_pmm_db_pass: changeme

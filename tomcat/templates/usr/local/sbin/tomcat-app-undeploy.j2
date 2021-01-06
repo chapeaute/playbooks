@@ -1,0 +1,67 @@
+#!/bin/bash
+
+APP_DIR="{{ tomcat_root_dir }}/webapps"
+APP_NAME=""
+
+function syntax() {
+    cat <<EOF
+Script to undeploy exising Tomcat application
+
+Usage: ${0##*/} [-h|-f <app_name>]
+    -h                Display this message
+    -n <app_name>     Application name
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Abording..."
+    exit 1
+fi
+
+while getopts "hn:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        n)
+            APP_NAME="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+
+if [[ -z $APP_NAME ]]; then
+    syntax
+    exit 1
+fi
+
+if [ ! -d "$APP_DIR" ]; then
+    echo "Application directory $APP_DIR not found."
+    exit 1
+fi
+
+if [ ! -r "$APP_DIR/$APP_NAME" ]; then
+    echo "$APP_NAME: No such file or directory"
+    exit 1
+fi
+
+echo -n "Waiting while removing application"
+rm -f $APP_DIR/${APP_NAME}.war
+
+while [ -d "$APP_DIR/$APP_NAME" ]
+do
+    echo -n "."
+    sleep 1
+done
+
+echo done
+
+echo $APP_NAME on $APP_DIR successfully undeployed.
+

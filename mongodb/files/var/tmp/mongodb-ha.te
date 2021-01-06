@@ -1,0 +1,13 @@
+module mongodb-ha 1.0;
+
+require {
+	type mongod_t;
+	type mongod_var_lib_t;
+	type proc_net_t;
+	class lnk_file { read };
+	class file { open read };
+}
+
+#============= mongod_t ==============
+allow mongod_t mongod_var_lib_t:lnk_file read;
+allow mongod_t proc_net_t:file { open read };

@@ -1,0 +1,41 @@
+---
+
+- name: RedHat | Install selinux package
+  package:
+    name: "{{ tomcat_selinux_packages }}"
+
+- name: RedHat | Declare SELinux context on tomcat log directory
+  tags: selinux
+  sefcontext:
+    target: "{{ tomcat_install_dir }}/{{ tomcat_archive_basename }}-(.*)/logs(/.*)?"
+    setype: tomcat_log_t
+    state: present
+  when:
+    - ansible_selinux.status == "enabled"
+
+- name: RedHat | Add firewalld service file
+  template:
+    src:   firewalld/tomcat.xml
+    dest:  /usr/lib/firewalld/services/tomcat.xml
+    owner: root
+    group: root
+  register: firewallsvc
+  when:
+    - manage_firewalld
+
+- name: RedHat | Restart Firewalld if service file changed
+  service:
+    name:  firewalld
+    state: restarted
+  when:
+    - manage_firewalld
+    - firewallsvc.changed
+
+- name: RedHat | Setting firewall rules
+  firewalld:
+    service:   tomcat
+    permanent: true
+    state:     enabled
+    immediate: yes
+  when:
+    - manage_firewalld

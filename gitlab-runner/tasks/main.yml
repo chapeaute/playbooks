@@ -1,0 +1,152 @@
+---
+# tasks file for gitlab-runner
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family }}.yml"
+
+- name: main | Install GitLab Runner
+  package:
+    name: "{{ gitlab_runner_package }}"
+
+- name: main | Create {{ gitlab_user_deploy }} user
+  user:
+    name: "{{ gitlab_user_deploy }}"
+  when: gitlab_user_deploy is defined
+
+- name: main | Create {{ gitlab_user_deploy }} ~/.ssh directory
+  file:
+    path:  "~{{ gitlab_user_deploy }}/.ssh"
+    owner: "{{ gitlab_user_deploy }}"
+    group: "{{ gitlab_user_deploy }}"
+    state: directory
+    mode:  0700
+  when: gitlab_user_deploy is defined
+
+- name: main | Fetch deploy user SSH public key file on gitlab server
+  command: "cat ~{{ gitlab_user_deploy }}/.ssh/id_rsa.pub"
+  register: pub_key_file
+  delegate_to: "{{ gitlab_server_host }}"
+  changed_when: false
+  check_mode: no
+  when: gitlab_user_deploy is defined
+
+- name: main | Deploy user public key
+  copy:
+    content: "{{ pub_key_file.stdout }}"
+    dest:    "~{{ gitlab_user_deploy }}/.ssh/id_rsa.pub"
+    owner:   "{{ gitlab_user_deploy }}"
+    group:   "{{ gitlab_user_deploy }}"
+    mode:    0600
+  when: gitlab_user_deploy is defined
+
+- name: main | Fetch deploy user private key file on gitlab server
+  command: "cat ~{{ gitlab_user_deploy }}/.ssh/id_rsa"
+  register: priv_key_file
+  delegate_to: "{{ gitlab_server_host }}"
+  changed_when: false
+  check_mode: no
+  when: gitlab_user_deploy is defined
+
+- name: main | Deploy user private key
+  copy:
+    content: "{{ priv_key_file.stdout }}"
+    dest:    "~{{ gitlab_user_deploy }}/.ssh/id_rsa"
+    owner:   "{{ gitlab_user_deploy }}"
+    group:   "{{ gitlab_user_deploy }}"
+    mode:    0600
+  when: gitlab_user_deploy is defined
+
+- name: main | Deploy deploy user SSH configuration file
+  copy:
+    src:   home/deploy/ssh/ssh.config
+    dest:  "~{{ gitlab_user_deploy }}/.ssh/config"
+    owner: root
+    group: "{{ gitlab_user_deploy }}"
+    mode:  0640
+  when: gitlab_user_deploy is defined
+
+- name: main | Retrieve runner token form GitLab server
+  shell: gitlab-rails runner -e production "puts Gitlab::CurrentSettings.current_application_settings.runners_registration_token"
+  register: register_gitlab_server_token
+  changed_when: false
+  when: gitlab_server_token == ""
+  # become: true
+  # become_user: gitlab-psql
+  delegate_to: "{{ gitlab_server_host }}"
+  check_mode: no
+
+- set_fact:
+    gitlab_server_token: "{{ register_gitlab_server_token.stdout }}"
+  when: gitlab_server_token == ""
+
+- name: main | Initialize runner configuration - concurrent
+  lineinfile:
+    dest:   "{{ gitlab_runner_conf_file }}"
+    regexp: "^concurrent.*=.*"
+    line:   "concurrent = {{ gitlab_runner_concurrent }}"
+  notify: Restart GitLab Runner
+
+- name: main | Initialize runner configuration - checkinterval
+  lineinfile:
+    dest:   "{{ gitlab_runner_conf_file }}"
+    regexp: "^check_interval.*=.*"
+    line:   "check_interval = {{ gitlab_runner_check_interval }}"
+  notify: Restart GitLab Runner
+
+- name: main | Set Docker proxy environment variables
+  lineinfile:
+    dest:   "{{ gitlab_runner_conf_file }}"
+    regexp: "^\\s+environment\\s*=\\s*"
+    line:   '  environment = [{% for key, value in gitlab_runner_env_vars.iteritems() -%}"{{ key }}={{ value }}"{%- if not loop.last -%}, {% endif -%}{%- endfor %}]'
+    insertafter: "\\s+token\\s*="
+  when: gitlab_runner_env_vars
+  notify: Restart GitLab Runner
+  tags:
+    - environment_vars
+
+- name: main | Set Docker allowed images
+  lineinfile:
+    dest:   "{{ gitlab_runner_conf_file }}"
+    regexp: "^(.*allowed_images.*=).*"
+    line:   '\1 [{% for img in gitlab_runner_docker_image -%}"{{ img }}"{%- if not loop.last -%}, {% endif -%}{%- endfor %}]'
+    backrefs: yes
+  notify: Restart GitLab Runner
+  tags:
+    - image
+
+- name: main | Declare Runner
+  shell: >
+    gitlab-runner register -n
+    --url "{{ gitlab_server_url  }}"
+    --registration-token "{{ gitlab_server_token }}"
+    --description "{{ gitlab_runner_executor }}_{{ ansible_hostname }}"
+    --executor "{{ gitlab_runner_executor }}"
+    --docker-image "{{ gitlab_runner_docker_image[0] }}"
+    --docker-allowed-images "{{ gitlab_runner_docker_image|join(',') }}"
+    {% if gitlab_user_deploy is defined %}--docker-volumes "/home/{{ gitlab_user_deploy }}/.ssh:/root/.ssh"{% endif %}
+  args:
+    creates: /etc/gitlab_runner_registered
+  when: gitlab_server_token|default("") != ""
+  notify: Restart GitLab Runner
+
+- name: main | Set runner to register
+  file:
+    path:  /etc/gitlab_runner_registered
+    state: touch
+  changed_when: false
+
+- name: main | Start and enable GitLab Runner service
+  service:
+    name:    "{{ gitlab_runner_service }}"
+    state:   started
+    enabled: yes

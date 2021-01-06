@@ -1,0 +1,28 @@
+{
+  "box" : "{{ vagrant_box_image }}",
+  "kvm" : {
+    "host": "{{ vagrant_libvirt_hostname }}",
+    "port": "{{ vagrant_libvirt_ssh_port }}",
+    "pool": "{{ vagrant_libvirt_dft_pool }}",
+    "net":  "{{ vagrant_libvirt_dft_net }}"
+  },
+  "net" : {
+    "gateway": "{{ hostvars[inventory_hostname]['ansible_'+vagrant_libvirt_dft_net].ipv4.address }}"
+  },
+  "ssh" : {
+    "user": "root",
+    "pass": "sigipsr"
+  },
+  "dns" : {
+    "server": "{% if vagrant_manage_dns %}{{ vagrant_dns_server }}{% endif %}",
+    "domain": "{% if vagrant_manage_dns %}{{ vagrant_dns_domain }}{% endif %}",
+    "key": "{% if vagrant_manage_dns %}{{ vagrant_dns_ddnskey }}{% endif %}"
+  },
+  "ansible": {
+     "autoprov": "{{ vagrant_ansible_autodeploy }}",
+     "inventory_path": "inventory",
+     "roles_file": "requirements.yml",
+     "roles_path": "roles",
+     "playbooks": "playbooks/main.yml"
+  }
+}

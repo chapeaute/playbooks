@@ -1,0 +1,78 @@
+---
+- name: scripts | Deploy admin scripts on manager
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - etcd-client-list
+    - etcd-cluster-status
+    - etcd-ctl
+    - swarm-deploy
+    - swarm-exec
+    - swarm-logs
+    - swarm-version
+    - swarm-update-remaining
+  when: inventory_hostname in ogo_node_manager
+  tags:
+    - script
+
+- name: scripts | Deploy admin scripts on manager and worker
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - swarm-exec
+  tags:
+    - script
+
+- name: scripts | Deploy admin scripts on manager and worker with special delimiter
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+    variable_start_string: '[%'
+    variable_end_string: '%]'
+  with_items:
+    - swarm-images-purge
+  tags:
+    - script
+
+- name: scripts | Deploy modsecurity update rules script
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - modsecurity-rules-update
+  when: modsecurity_enable
+  tags:
+    - script
+
+- name: scripts | Remove uneeded admin scripts
+  file:
+    path:  "/usr/local/sbin/{{ item }}"
+    state: absent
+  with_items:
+    - etcd-backend-add
+    - etcd-frontend-add
+    - etcd-certif-add
+    - etcd-certif-list
+    - etcd-watch
+    - swarm-proxy-deploy
+    - swarm-proxy-logs
+    - swarm-proxy-version
+    - swarm-proxy-exec
+  when: inventory_hostname in ogo_node_manager
+  tags:
+    - script
+

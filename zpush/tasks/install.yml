@@ -1,0 +1,25 @@
+---
+# tasks file for ansible-zpush
+
+- name: Install | Config zpush
+  lineinfile:
+    path: /usr/share/z-push/config.php
+    line: "{{ item }}"
+    owner: apache
+    group: apache
+    mode: 0755
+    insertbefore: '\?>'
+  with_items:
+    - "define('BACKEND_PROVIDER', 'BackendZimbra');"
+    - "define('ZIMBRA_URL', '{{zpush_backend_url}}');"
+
+- name: Install | Deploy zpush apache config file
+  template:
+    src: etc/httpd/conf.d/zpush.conf.j2
+    dest: "{{apache2_confd_dir}}/{{zpush_httpd_conf}}"
+  notify: "Restart Apache"
+
+- name: Install | Deploy logrotate z-push
+  template:
+     src: etc/logrotate.d/z-push.j2
+     dest: /etc/logrotate.d/z-push

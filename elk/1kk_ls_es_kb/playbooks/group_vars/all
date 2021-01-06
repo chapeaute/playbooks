@@ -1,0 +1,28 @@
+_elk_version: "7.8"
+
+# Logstash options
+_logstash_hosts: "{{ groups['logstash'] }}"
+
+# Elasticsearch options
+_elasticsearch_hosts: "{{ groups['elasticsearch'] }}"
+_elasticsearch_cluster_name: "estack"
+_elasticsearch_path_data: "/var/lib/elasticsearch"             # /srv/elasticsearch/data
+_elasticsearch_path_logs: "/var/log/elasticsearch"             # /srv/elasticsearch/logs
+_elasticsearch_path_repo: "/var/backup/elasticsearch-snapshot" # /srv/elasticsearch/repo
+_elasticsearch_ilm:
+  filebeat:
+    hot_age: 7d
+    hot_size: 50gb
+    cold_age: 3d
+    delete_age: 90d
+_elasticsearch_xpack_monitoring_enabled: true		# Enable elasticsearch to collect metrics from elk stack components
+_elasticsearch_xpack_monitoring_history_duration: 7d	# Monitoring stack components metrics retention
+
+# Kibana options
+_kibana_hosts: "{{ groups['kibana'] }}"
+
+# Kafka options
+_kafka_hosts: "{{ groups['kafka'] }}"
+_kafka_topic: "filebeat"
+_kafka_data_dir: "/var/lib/kafka" # /srv/kafka/data
+_kafka_log_dir:  "/var/log/kafka" # /srv/kafka/logs

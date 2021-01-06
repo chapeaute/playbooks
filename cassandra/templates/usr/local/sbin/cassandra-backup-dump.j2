@@ -1,0 +1,64 @@
+#!/bin/bash
+
+# Append custom script to path
+PATH=$PATH:/usr/local/sbin:/usr/bin:/usr/sbin
+
+# Cassandra data dir
+DATA_DIR={{ cassandra_path_data }}
+# Cassandra backup dir
+BACKUP_DIR={{ cassandra_path_backup }}
+# Get current date
+CUR_DATE=`date +%Y-%m-%d`
+#snapshot name with date
+SNAPSHOT_NAME="backupdb"
+ARCHIVE_NAME="backupdb-$CUR_DATE.tar.gz"
+LOG_FILE=$BACKUP_DIR/backupdb-$CUR_DATE.log
+
+# Logging
+log() {
+  echo `date "+%Y-%d-%m %H:%M:%S"`": $1" >> $LOG_FILE
+  echo `date "+%Y-%d-%m %H:%M:%S"`": $1"
+}
+
+check_if_is_first_server() {
+
+ host_id=$(cqlsh -e 'SELECT host_id FROM system.local;' | grep "-" | tail -n1 | cut -d ' ' -f 2)
+ nodetool status | grep UN | head -n1 | grep -q $host_id
+ if [ $? -eq 0 ]
+ then
+    log "This server is first in the list returned by nodetool status, backing up"
+  else
+    log "This server is not first in the list returned by nodetool status, skipping backup"
+ fi
+
+}
+
+check_if_is_first_server
+
+log "Launching snapshot of all keyspaces"
+#give the exact correct path to the NODETOOL and it'll process to take snapshot
+nodetool -h 127.0.0.1 snapshot -t $SNAPSHOT_NAME
+
+log "Move snapshots to ${BACKUP_DIR}/${SNAPSHOT_NAME}"
+
+SNAPSHOT_FILES=`ls -1 -d ${DATA_DIR}/*/*/snapshots/$SNAPSHOT_NAME`
+for f in $SNAPSHOT_FILES
+do
+        TABLE=`echo $f | awk -F/ '{print $(NF-2)}'`
+        KEYSPACE=`echo $f | awk -F/ '{print $(NF-3)}'`
+
+        #makes Directory in the backup Folder and replace the files and folders from the Cassandra path
+        mkdir -p  $BACKUP_DIR/$SNAPSHOT_NAME/$KEYSPACE/$TABLE
+        find $f -maxdepth 1 -type f -exec cp -t $BACKUP_DIR/$SNAPSHOT_NAME/$NAME/$KEYSPACE/$TABLE/ {} +
+
+done
+
+log "Compressing backup"
+cd $BACKUP_DIR
+tar -acf $ARCHIVE_NAME $SNAPSHOT_NAME
+rm -rf $SNAPSHOT_NAME
+
+log "Delete snapshot from $DATA_DIR"
+nodetool clearsnapshot -t $SNAPSHOT_NAME
+
+exit $?

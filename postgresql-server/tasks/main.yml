@@ -1,0 +1,198 @@
+---
+# tasks file for postgresql
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  tags: always
+
+- include: "config.yml"
+  tags: config
+
+- include: "sysctl.yml"
+  tags: config
+
+- include: "{{ansible_os_family}}.yml"
+
+- stat:
+    path:   "{{ postgresql_data_dir }}"
+  register: data_dir
+
+- name: main | Set permissions on postgresql data dir
+  file:
+    path:  "{{ postgresql_data_dir }}"
+    state: directory
+    owner: "{{ postgresql_admin_user }}"
+    group: "{{ postgresql_admin_group }}"
+    mode:  0700
+  when: not data_dir.stat.exists
+
+- name: main | Set permissions on postgresql config dir
+  tags: config
+  file:
+    path:  "{{ item }}"
+    state: directory
+    owner: "{{ postgresql_admin_user }}"
+    group: root
+    mode:  0750
+  with_items:
+    - "{{ postgresql_etc_dir }}"
+    - "{{ postgresql_etc_dir }}/conf.d"
+
+- name: main | Deploy postgresql pg_hba configuration files
+  tags: config
+  template:
+    src:   "etc/postgresql/{{ item }}.conf.j2"
+    dest:  "{{ postgresql_etc_dir }}/{{ item }}.conf"
+    owner: "{{ postgresql_admin_user }}"
+    group: root
+    mode:  0640
+    backup: yes
+  with_items:
+    - pg_hba
+  notify: restart postgresql
+
+- name: main | Deploy postgresql default configuration files
+  tags: config
+  template:
+    src:   "etc/postgresql/conf.d/{{ item }}.conf.j2"
+    dest:  "{{ postgresql_etc_dir }}/conf.d/{{ item }}.conf"
+    owner: "{{ postgresql_admin_user }}"
+    group: root
+    mode:  0640
+  with_items:
+    - 01-default
+  notify: restart postgresql
+
+- name: main | Deploy empty custom configuration file if it does not exist
+  tags: config
+  copy:
+    content: ""
+    dest:    "{{ postgresql_etc_dir }}/conf.d/02-custom.conf"
+    owner:   "{{ postgresql_admin_user }}"
+    group:   root
+    mode:    0640
+    force:   no
+
+- name: main | Symlink postgresql configuration files
+  tags: config
+  file:
+    state: link
+    src:   "{{ postgresql_etc_dir }}/{{ item }}.conf"
+    dest:  "{{ postgresql_data_dir }}/{{ item }}.conf"
+    owner: "{{ postgresql_admin_user }}"
+    force: yes
+  with_items:
+    - pg_hba
+    - postgresql
+  notify: restart postgresql
+
+- name: main | Symlink postgresql configuration files
+  tags: config
+  file:
+    state: link
+    src:   "{{ postgresql_etc_dir }}/{{ item }}.conf"
+    dest:  "{{ postgresql_data_dir }}/{{ item }}.conf"
+    owner: "{{ postgresql_admin_user }}"
+    force: yes
+  with_items:
+    - pg_hba
+    - postgresql
+  notify: restart postgresql
+
+- name: main | Include conf.d directory in main configuration file
+  tags: config
+  lineinfile:
+    dest:   "{{ postgresql_etc_dir }}/postgresql.conf"
+    regexp: "^include '{{ postgresql_etc_dir }}/conf.d/01-default.conf'"
+    line:   "include '{{ postgresql_etc_dir }}/conf.d/01-default.conf'"
+  notify: restart postgresql
+
+- name: main | Enable and start postgresql
+  service:
+    name:    "{{ postgresql_service_name }}"
+    enabled: yes
+    state:   started
+
+- include: databases.yml
+
+- name: main | Deploy postgresql backup scripts
+  tags: script
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0755
+  with_items:
+    - postgresql-backup-clean
+    - postgresql-backup-dump
+    - postgresql-backup-restore
+    - postgresql-db-create
+    - postgresql-db-import
+
+- name: main | Create cron job for backups
+  tags: script
+  cron:
+    name:   "Postgresql create backup"
+    hour:   0
+    minute: 5
+    user:   "{{ postgresql_admin_user }}"
+    job:    "{{ postgresql_script_dir }}/postgresql-backup-dump"
+    cron_file: "postgresql-backup"
+  when: postgresql_enable_cron_backup
+
+- name: main | Create cron job to purge old backups
+  tags: script
+  cron:
+    name:   "Postgresql purge dump file"
+    hour:   0
+    minute: 4
+    user:   "{{ postgresql_admin_user }}"
+    job:    "{{ postgresql_script_dir }}/postgresql-backup-clean -o {{ postgresql_backup_age }}"
+    cron_file: "postgresql-backup"
+  when: postgresql_enable_cron_backup
+
+- name: main | Create backup directory
+  file:
+    state:   directory
+    path:    "{{ postgresql_backup_dir }}"
+    owner:   "{{ postgresql_admin_user }}"
+    group:   "{{ postgresql_admin_group }}"
+    recurse: yes
+  when: not backup_dir.stat.exists
+
+- name: main | Create default backup directory
+  file:
+    state:   directory
+    path:    "{{ postgresql_default_backup_dir | dirname }}"
+    recurse: yes
+
+- name: main | Remove backup directory
+  file:
+    state: absent
+    path:  "{{ postgresql_default_backup_dir }}"
+  when: postgresql_backup_dir != postgresql_default_backup_dir and postgresql_force_remove_backup_dir
+
+- name: main | Create symlink from {{ postgresql_default_backup_dir }} to backup directory
+  file:
+    state: link
+    src:   "{{ postgresql_backup_dir }}"
+    dest:  "{{ postgresql_default_backup_dir }}"
+  when: postgresql_backup_dir != postgresql_default_backup_dir
+
+#- name: main | Flush handler before creating monitoring user
+#  meta: flush_handlers
+#  when: postgresql_monitoring_enable == True
+#
+- include: monitoring.yml
+  when: postgresql_monitoring_enable == True
+

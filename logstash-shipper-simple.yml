@@ -1,0 +1,11 @@
+---
+- hosts: all
+  environment:
+    http_proxy: http://segir:2Kn6c9jZ@10.1.1.14:8080
+    https_proxy: http://segir:2Kn6c9jZ@10.1.1.14:8080
+  vars:
+    ls_version: "7.6"
+    # Input
+    ls_input_beats: true
+  roles:
+    - role: logstash

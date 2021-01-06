@@ -1,0 +1,16 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: genieacs-gui
+      image: centos/systemd
+      image_version: latest
+      capabilities: ['SYS_ADMIN']
+      privileged: true
+      ansible_groups:
+        - genieacs-gui
+verifier:
+  name: testinfra

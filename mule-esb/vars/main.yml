@@ -1,0 +1,3 @@
+---
+# vars file for mule-esb
+mule_esb_default_root_dir: /var/lib

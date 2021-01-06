@@ -1,0 +1,14 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users_groups:
+        - name: exploit
+      users:
+        - login: zeugeo
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC7Re07V5MUUvwyS+An2pphLo2t4qQI8Jy0gsvOP7sJK0TkVD0RvDVF1I+MCJhhJFN6Jp34PVk8QonnGcRTYcozdOVvLOaykW4AR6Y9dB/v7hAjPMisVf8hkJrBVkk+jzEZYIoPEQHAi5rZerrq3O59EqiKF6Z9NjriMZElBYfrWEsjatLBs1CGI2PwM0SZj8VRZJY0Fj33t9Iw71JCS/s7G4228b0sMF4McIRSRd5cLxU5vzBkE5c7vHDWPcWeW9DX2jcoyB4kfMtwCDF0qoDDMynwJuHck2plxgkCByg/hrLssHHsFMqEoK1I9SYwwJR0mBVP8S7J8A8ZSChCK1hSAru726GJufGI7IC9LmY9KzwelrpZugGowmeMr2XFuL7oHvnz2LcY11/zhqYlxCmA5s4xZyfcSgLGzyz8XrshAVHqnB7tW7fh6d2cMuUGz8AGLXkQqm/Dw7ClAcUpevaiSlsMVPXOCIRPju53m44ws7enKNlkOANE8MpJgbwVNgwU4lVBOYbHhNO6+a1D26x/c/4tVtaTsO34p12vbvTap4F6otz3Ntfluz2EvQN647nkP+xLfPYNAOiIMEyGLpB0Uf8UhVIRwP4sQMirGsFh35NnOfSMhtmj0tRZgjzhElijUkvDWml1Ms/FooBYF8ykzqtoI4zZ0Isxm4Xar6Gy4w== eugene.kone@orange.com
+
+

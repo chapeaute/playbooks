@@ -1,0 +1,47 @@
+# {{ ansible_managed }}
+
+server-name={{ coturn_server_name }}
+realm={{ coturn_realm_name }}
+listening-ip={{ coturn_listening_ip }}
+external-ip={{ coturn_external_ip }}
+listening-port={{ coturn_listening_port }}
+min-port={{ coturn_min_port }}
+max-port={{ coturn_max_port }}
+
+{% if coturn_use_certs | bool %}
+tls-listening-port={{ coturn_tls_listening_port }}
+cert={{ coturn_cert_path }}
+pkey={{ coturn_key_path }}
+no-sslv3
+no-tlsv1
+no-tlsv1_1
+{% endif %}
+
+{% if coturn_syslog_enable | bool %}
+syslog
+{% endif %}
+log-file={{ coturn_log_file }}
+simple-log
+
+{% if coturn_use_auth_secret | bool %}
+static-auth-secret={{ coturn_static_auth_secret }}
+use-auth-secret
+{% endif %}
+
+{% if coturn_use_user | bool %}
+user={{ coturn_ummser_name }}:{{ coturn_user_password }}
+lt-cred-mech
+{% endif %}
+
+# Database
+{% if coturn_db_type == 'redis'%}
+redis-userdb "ip={{ coturn_db_host }} dbname={{ coturn_db_name }} password={{ coturn_db_pass }}
+{% endif %}
+
+{% if coturn_db_type == 'mongo' %}
+mongo-userdb "mongodb://{{ coturn_db_user }}:{{ coturn_db_pass }}@{{ coturn_db_host }}:{{ coturn_db_port|default(5347) }}/{{ coturn_db_name }}?{{ coturn_db_options }}"
+{% endif %}
+
+{% if coturn_db_type == 'mysql' %}
+mysql-userdb "ip={{ coturn_db_host }} user={{ coturn_db_user }} dbname={{ coturn_db_name }} password={{ coturn_db_pass }}
+{% endif %}

@@ -1,0 +1,7 @@
+---
+# handlers file for etherpad
+
+- name: Restart etherpad
+  service:
+    name: etherpad
+    state: restarted

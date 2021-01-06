@@ -1,0 +1,15 @@
+---
+- hosts: centreon-agent
+  vars:
+    centreon_bind_interface: "{{ _server_main_interface }}"
+    centreon_server: "{{ _monitoring_server_host }}"
+    centreon_poller: "{{ _monitoring_poller_hosts }}"
+    centreon_clapi_user: "{{ _monitoring_admin_user }}"
+    centreon_clapi_pass: "{{ _monitoring_admin_pass }}"
+  roles:
+    - role: snmp
+      snmp_allow_clients: "{{ groups['centreon-poller'] }}"
+    - role: centreon-agent
+      centagt_ssh_enable: true
+      centagt_nrpe_enable: false
+    - role: centreon-prov

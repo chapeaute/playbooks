@@ -1,0 +1,8 @@
+---
+
+- hosts: genieacs
+  roles:
+    - role: mongodb 
+    - role: redis
+    - role: genieacs     # Serveur genieacs
+    - role: genieacs-gui # interface web de genieacs

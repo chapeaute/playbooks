@@ -1,0 +1,25 @@
+---
+
+- hosts: all
+  roles:
+    - role: basic-user
+      sudoers:
+        deploy:
+          lines:
+            - "%deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/apache-app-deploy"
+            - "%deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/apache-app-deploy-before"
+            - "%deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/apache-app-deploy-after"
+            - "%deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/odoo-app-deploy"
+            - "%deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/tomcat-app-deploy"
+            - "%deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/nodejs-app-create"
+            - "%deploy ALL=(ALL) NOPASSWD: /usr/local/sbin/nodejs-app-deploy"
+            - "%deploy ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart httpd"
+            - "%deploy ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart odoo"
+            - "%deploy ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart tomcat"
+            - "%deploy ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart nodejs.service"
+      users:
+        - login: deploy
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCtZm4P6QDmOg9TQbRYP6eMTb7vYo+2essNNqZlVBDeSK7P5gPBv2vX0ou26IO4dK0+oB+XNbCjB4QlBEZbaQvIPL9HEO6DhSF2YonHWf9IfxwpYJK3Rz3B7Lomc5aleDAJH6XbJUgFe9SRshZhd3qik3XZCHL1lKvVuFs56/p2IogqQk4JQxciI3xRI5tHqtgyHqfV1bOO96V61xFSPcXM+dZ0nSftLdn88QRo+euw3fWDLFzu9cjK73DPmT5ellXuPCMYuiQ25kvXUVTz407+M68CUO2hBz6P16n7VUIH5U2fTNMad2GjpTjf6i2Sm3X5G/oQulrkwrJN9wiNRIt/K60S69hvYRKlLhHqx178LeAlzgiBelX8F8p5/XVcckJ1B15auOtpVtuS8+zmUS5X9pBALuk6uTJJaO3LAvul2br7LL7xH5lXAMsEKOUpQK7tkZ1Pa0Z+gMGsEuTSne3bttHoa8yZHAs04m7Df6KKZTjqtIZH3iIRdPVYZRRG4s3ra7fZaWQPyHWDhjoi6jX1+FnU5MvUFQhFxPeEn3/JcuOWfbeYMkYtQsPGIenhKKSWgkAE8cc4EEGrpFC76IJ73x8oFB8qc93J4Swu+FGXtkD7yLiWn5Kb4vykDRSGxUCeiyK1I3bRRsjA/7LMtxNjE4LL6EGf6ZC4UZutMU2gsQ== deploy@git.ovh.smile.lan
+

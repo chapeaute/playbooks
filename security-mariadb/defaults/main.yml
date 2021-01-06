@@ -1,0 +1,28 @@
+---
+# defaults file for security-mariadb
+
+# Cluster config
+manage_by_cluster: false
+
+security_level: 1
+
+security_mariadb_history: true
+security_mariadb_files_permissions: true
+security_mariadb_config: true
+
+mysql_data_dir: /var/lib/mysql
+mysql_conf_cis: /etc/my.cnf.d/99-cis.cnf
+
+# Password security
+security_mariadb_password_check: false
+security_mariadb_password_minimal_digits: 4
+security_mariadb_password_minimal_special_chars: 4
+security_mariadb_password_minimal_same_case: 4
+security_mariadb_password_minimal_length: 32
+security_mariadb_password_strict: OFF
+
+# SSL
+security_mariadb_ssl: false
+security_mariadb_ssl_require: false
+security_mariadb_ssl_cert_path:
+security_mariadb_ssl_key_path:

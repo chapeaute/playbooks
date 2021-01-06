@@ -1,0 +1,14 @@
+enabled = true;
+timeout = 25s;
+
+train {
+  max_train = 1k; # Number ham/spam samples needed to start train
+  max_usages = 20; # Number of learn iterations while ANN data is valid
+  spam_score = 8; # Score to learn spam
+  ham_score = -2; # Score to learn ham
+  learning_rate = 0.01; # Rate of learning
+  max_iterations = 25; # Maximum iterations of learning (better
+  preciseness but also lower speed of learning)
+}
+
+ann_expire = 2d;

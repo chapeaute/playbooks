@@ -1,0 +1,8 @@
+---
+
+tomcat_default_full_version: 8.5.53
+tomcat_default_libraries:
+  - name: catalina-jmx-remote.jar
+    dir: lib
+  # - name: tomcat-juli-adapters.jar
+  #   dir: lib

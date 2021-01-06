@@ -1,0 +1,17 @@
+concurrent = {{ gitlab_runner_concurrent }}
+check_interval = 0
+
+{% for image in gitlab_runner_docker_image %}
+[[runners]]
+  name = "docker-{{ ansible_fqdn}}"
+  url = "http://{{ gitlab_server }}/"
+  token = "09baecd3711419e41f6389cc2f46b5"
+  executor = "docker"
+  [runners.docker]
+    tls_verify = false
+    image = "{{ image }}"
+    privileged = false
+    disable_cache = false
+    volumes = ["/cache","/home/deploy/.ssh:/root/.ssh"]
+  [runners.cache]
+{% endfor %}

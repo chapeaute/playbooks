@@ -1,0 +1,140 @@
+#!/bin/bash
+#
+# Create MySQL user with read/write access on specify database
+#
+# Syntax : mysql-user-create -u username -d database [-r|-w] [-p]
+#
+
+USER_FILE=/root/.my.cnf
+MYSQL_CMD="mysql --defaults-extra-file=$USER_FILE -NB -e"
+RES_COL="60"
+RES_COL_INFO="30"
+MOVE_TO_COL="\\033[${RES_COL}G"
+MOVE_TO_COL_INFO="\\033[${RES_COL_INFO}G"
+SETCOLOR_INFO="\\033[1;38m"
+SETCOLOR_SUCCESS="\\033[1;32m"
+SETCOLOR_FAILURE="\\033[1;31m"
+SETCOLOR_NORMAL="\\033[0;39m"
+
+all_access=0
+rw_access=1
+set_passwd=0
+force=0
+
+syntax ()
+{
+    cat << EOF
+Usage: ${0##*/} -u username -d [database1,database2,...] [-r|-w|-a] [-p] [-h] [-f]
+
+Create MySQL user with read/write access on specify database
+Options :
+    -u username   name of user to create (required)
+    -d database   name of database to give access (required)
+    -r            give read only access to user (default)
+    -w            give write access to user
+    -a            give all access to user
+    -p            set password for user
+    -f            force updating password and reinitialize user permissions
+    -h            display this help
+EOF
+}
+
+# Check arguments
+if [ $# -eq 0 ]; then
+    syntax
+    exit 1
+fi
+
+while getopts ":u:d:p:rwafh" opt; do
+    case $opt in
+        u)
+            username=$OPTARG
+            ;;
+        d)
+            database=$OPTARG
+            ;;
+        a)
+            rw_access=2
+            access="ALL"
+            ;;
+        r)
+            rw_access=0
+            access="RO"
+            ;;
+        w)
+            rw_access=1
+            access="RW"
+            ;;
+        p)
+            passwd=$OPTARG
+            set_passwd=1
+            ;;
+        f)
+            force=1
+            ;;
+        h)
+            syntax && exit 0
+            ;;
+        :)
+            echo "option $opt requires an argument"
+            syntax && exit 1
+            ;;
+        \?)
+            echo "unkwown arg: $opt $OPTARG"
+            syntax && exit 1
+            ;;
+    esac
+done
+
+# Check if user exist
+exist_user=$($MYSQL_CMD "SELECT COUNT(User) FROM mysql.user WHERE User='$username'")
+
+# Check command
+if [[ ! `command -v pwgen` ]] && [[ "$set_passwd" -eq 0 ]] && [[ "$exist_user" -eq 0 ]]; then
+    echo "Command \"pwgen\" not found. Try to install it with :
+    \"apt-get install pwgen\" on Debian
+    \"yum install pwgen\" on CentOS (on EPEL repository)"
+    exit 1
+fi
+
+if [[ ! `command -v mysql` ]]; then
+    echo "Client \"mysql\" not found. Try to install it with :
+    \"apt-get install mysql-client\" on Debian system
+    \"yum install MariaDB-client\" on CentOS"
+    exit 1
+fi
+
+# Generate secure password
+port=$($MYSQL_CMD "select @@port")
+
+if [ "$exist_user" -eq 0 ]; then
+    passwd=${passwd:-$(pwgen -s -1)}
+    $MYSQL_CMD "CREATE USER '$username'@'%' IDENTIFIED BY '$passwd'"
+    echo -e "Username:${MOVE_TO_COL_INFO}${SETCOLOR_INFO}$username${SETCOLOR_NORMAL}"
+    echo -e "Password:${MOVE_TO_COL_INFO}${SETCOLOR_INFO}$passwd${SETCOLOR_NORMAL}"
+else
+    echo "User $username already exist"
+    if [ $set_passwd -eq 1 ]; then
+        echo -e "Updating $username password"
+        $MYSQL_CMD "SET PASSWORD FOR '$username'@'%'=PASSWORD('$passwd')"
+    fi
+fi
+
+# Grant privileges on databases
+for db in ${database//,/ }
+do
+    # Remove existing privileges on database
+    if [ $force -eq 1 ]; then
+        $MYSQL_CMD "REVOKE ALL PRIVILEGES ON \`$db\`.* FROM \`$username\`@'%'" > /dev/null 2>&1
+    fi
+
+    if [ $rw_access -eq 0 ]; then
+        $MYSQL_CMD "GRANT SELECT ON \`$db\`.* TO \`$username\`@'%'"
+    elif [ $rw_access -eq 2 ]; then
+        $MYSQL_CMD "GRANT ALL ON \`$db\`.* TO \`$username\`@'%'"
+    else
+        $MYSQL_CMD "GRANT SELECT,INSERT,UPDATE,DELETE ON \`$db\`.* TO \`$username\`@'%'"
+    fi
+
+    echo -e "Database:${MOVE_TO_COL_INFO}${SETCOLOR_INFO}$db ($access)${SETCOLOR_NORMAL}"
+done

@@ -1,0 +1,15 @@
+---
+# handlers file for tomcat
+- name: Restart tomcat
+  service:
+    name:  tomcat
+    state: restarted
+
+- name: Systemctl daemon-reload
+  systemd:
+    daemon_reload: yes
+
+- name: Remove old java application
+  file:
+    path: "{{ tomcat_webapp_path }}/{{ java_app.name }}"
+    state: absent

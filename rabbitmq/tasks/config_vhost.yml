@@ -1,0 +1,5 @@
+---
+- name: config_vhost | Ensure the vhosts is present
+  rabbitmq_vhost:
+    name: "{{ item }}"
+  with_items: "{{ rabbitmq_vhosts }}"

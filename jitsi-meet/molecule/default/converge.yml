@@ -1,0 +1,16 @@
+---
+
+- name: Converge
+  hosts: all
+  vars:
+    jitsi_ssl_cert_path: "/etc/ssl/{{ ansible_fqdn }}/{{ ansible_fqdn }}.pem"
+    jitsi_ssl_key_path: "/etc/ssl/{{ ansible_fqdn }}/{{ ansible_fqdn }}.key"
+  roles:
+    # - role: basic-firewalld
+    # - role: ssl-certs
+    # - role: prosody
+    # - role: jitsi-jicofo
+    #   jicofo_memory_size_prct: 0.1
+    - role: jitsi-videobridge
+      jvb_memory_size_prct: 0.1
+    # - role: jitsi-meet

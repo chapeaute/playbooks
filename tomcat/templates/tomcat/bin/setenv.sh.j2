@@ -1,0 +1,38 @@
+# disable default logging api
+LOGGING_CONFIG=-Dnop
+
+# logging
+JAVA_OPTS="$JAVA_OPTS -Djuli-logback.configurationFile=file://$CATALINA_HOME/conf/logback.xml"
+{% if tomcat_env_vars %}
+# Custom settings
+JAVA_OPTS="$JAVA_OPTS {{tomcat_env_vars}}"
+{% endif %}
+# memory settings
+JAVA_OPTS="$JAVA_OPTS -Xms{{tomcat_min_heap_size}} -Xmx{{tomcat_max_heap_size}}"
+#JAVA_OPTS="$JAVA_OPTS -XX:MetaspaceSize={{tomcat_min_metaspace_size}} -XX:MaxMetaspaceSize={{tomcat_max_metaspace_size}}"
+# dump settings
+JAVA_OPTS="$JAVA_OPTS -XX:+HeapDumpOnOutOfMemoryError -XX:HeapDumpPath={{tomcat_heap_dump_dir}}"
+# gc settings
+JAVA_OPTS="$JAVA_OPTS -XX:+UseConcMarkSweepGC -XX:+CMSClassUnloadingEnabled"
+JAVA_OPTS="$JAVA_OPTS -XX:+PrintGCDetails -XX:+PrintGCDateStamps -verbose:gc -Xloggc:{{tomcat_gc_log_file}}"
+JAVA_OPTS="$JAVA_OPTS -XX:+UseGCLogFileRotation -XX:NumberOfGCLogFiles=7 -XX:GCLogFileSize=10M"
+{% if ipv6_disable %}
+# ipv6 disabled
+JAVA_OPTS="$JAVA_OPTS -Djava.net.preferIPv4Stack=true"
+{% endif %}
+
+{% if tomcat_major_version is version_compare('9', '<') %}
+# JMX settings
+export CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote=true"
+export CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote.ssl=false"
+export CATALINA_OPTS="$CATALINA_OPTS -Dcom.sun.management.jmxremote.authenticate=false"
+{% endif %}
+
+{% if tomcat_apm_enable %}
+# APM Settings
+export CATALINA_OPTS="$CATALINA_OPTS -javaagent:{{ tomcat_default_root_dir }}/lib/apm-agent.jar"
+export CATALINA_OPTS="$CATALINA_OPTS -Delastic.apm.service_name={{ tomcat_apm_service }}"
+export CATALINA_OPTS="$CATALINA_OPTS -Delastic.apm.application_packages={{ tomcat_apm_packages }}"
+export CATALINA_OPTS="$CATALINA_OPTS -Delastic.apm.server_urls={{ tomcat_apm_server }}"
+export CATALINA_OPTS="$CATALINA_OPTS -Delastic.apm.server_urls={{ tomcat_apm_server }}"
+{% endif %}

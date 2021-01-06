@@ -1,0 +1,3 @@
+---
+# vars file for hadoop
+hadoop_default_root_dir: /var/lib

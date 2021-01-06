@@ -1,0 +1,17 @@
+---
+- hosts: all
+  roles:
+    - role: elasticsearch
+      es_cluster_name: elk
+      es_install_curator: true
+      es_install_admin_scripts: true
+      es_shard_count: 6
+      es_heap_size_prct: 0.45
+      es_path_data: "/srv/elasticsearch/data"
+      es_path_logs: "/srv/elasticsearch/logs"
+      es_path_repo: "/srv/elasticsearch/repo"
+    - role: logstash
+      ls_input_beat: true
+      ls_output_elasticsearch: true
+      ls_heap_size_prct: 0.35
+    - role: kibana

@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+{%
+    for key, value in hbase_combined_site_properties.items()
+%}
+    <property>
+        <name>{{ key }}</name>
+        <value>{{ value }}</value>
+    </property>
+{% endfor %}
+
+</configuration>
+

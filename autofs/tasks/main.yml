@@ -1,0 +1,44 @@
+---
+# tasks file for autofs
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | install package
+  package:
+    name: "{{ autofs_packages }}"
+    state: present
+
+- name: main | Create master dir.d
+  tags: config
+  file:
+    path: "{{ autofs_masters_dir }}"
+    state: directory
+    recurse: true
+
+- name: main | Create maps dir.d
+  tags: config
+  file:
+    path: "{{ autofs_maps_dir }}"
+    state: directory
+    recurse: true
+
+- include: autofs_mount.yml map="{{ item.value.map|default(item.key) }}" params="{{ item.value }}"
+  with_dict: "{{ autofs_mounts }}"
+  tags: config
+  when: autofs_mounts|length > 0
+
+- name: main | Start and enable autofs service
+  service:
+    name: autofs
+    state: started
+    enabled: yes

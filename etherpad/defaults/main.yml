@@ -1,0 +1,46 @@
+---
+
+# Installation configuration (system user and install dir)
+etherpad_service_name: etherpad
+etherpad_root_dir: "{{ etherpad_default_root_dir }}"
+etherpad_install_dir: "{{ etherpad_root_dir }}/{{ etherpad_service_name }}"
+etherpad_log_dir: "{{ etherpad_install_dir }}/logs"
+
+# Link to etherpad releases: https://github.com/ether/etherpad-lite/releases/
+etherpad_version: 1.8.5
+etherpad_archive_url: "https://github.com/ether/etherpad-lite/archive/{{ etherpad_version }}.tar.gz"
+etherpad_nodejs_version: 12.18.3
+etherpad:
+  source_url: "{{ etherpad_archive_url }}"
+  subpath: "etherpad-lite-{{ etherpad_version }}"
+
+# IP configuration
+etherpad_listen_address: "0.0.0.0"
+etherpad_port: 9001
+
+# SSL configuration
+etherpad_enable_ssl: false
+# etherpad_key_path:
+# etherpad_cert_path:
+# etherpad_ca_path: []
+
+# Database configuration
+etherpad_db_user: "{{ etherpad_service_name }}"
+# etherpad_db_host:
+etherpad_db_port: 3306
+etherpad_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-etherpad_db_pass chars=ascii_letters,digits') }}"
+etherpad_db_name: "{{ etherpad_service_name }}"
+
+# Admin user configuration
+etherpad_admin: admin
+etherpad_admin_password: changeme
+
+# Logging configuration
+etherpad_logging_level: INFO # valid values are DEBUG, INFO, ERROR and WARN
+etherpad_logging_console: false
+etherpad_logging_file: true
+etherpad_logging_file_path: "{{ etherpad_log_dir }}/etherpad.log"
+
+# Node environment configuration
+etherpad_node_env: PRODUCTION
+etherpad_limit_openfiles: 65535

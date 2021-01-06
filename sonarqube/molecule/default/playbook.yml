@@ -1,0 +1,10 @@
+---
+
+- name: Converge
+  hosts: all
+  roles:
+    - role: basic-firewalld
+      firewalld_interfaces: []
+    - role: postgresql
+    - role: sonarqube
+      sonarqube_total_memory_size_mb: 2048

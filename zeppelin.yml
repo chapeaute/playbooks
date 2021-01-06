@@ -1,0 +1,10 @@
+---
+
+- hosts: zeppelin
+  vars:
+    zeppelin_server_port: 9090
+    zeppelin_root_dir: /srv
+    zeppelin_version: 0.8.2
+  roles:
+    - role: zeppelin
+

@@ -1,0 +1,8 @@
+---
+- hosts: centreon-central
+  vars:
+    centreon_clapi_user: "{{ _monitoring_admin_user }}"
+    centreon_clapi_pass: "{{ _monitoring_admin_pass }}"
+    centreon_db_host:    "{{ _monitoring_database_host }}"
+  roles:
+    - role: centreon-server

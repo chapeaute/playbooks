@@ -1,0 +1,18 @@
+---
+- name: selinux | Check SELinux module
+  shell: "semodule -l | grep -q ^http_ping && echo found || echo notfound"
+  changed_when: false
+  register: http_ping_semod
+
+- name: selinux | Copy SELinux module
+  copy:
+    src:   http_ping.pp
+    dest:  /var/tmp/http_ping.pp
+    owner: root
+    group: root
+    mode:  0644
+  register: http_ping_module
+
+- name: selinux | Apply SELinux module
+  command: "/sbin/semodule -i /var/tmp/http_ping.pp"
+  when: "'notfound' in http_ping_semod.stdout or http_ping_module.changed"

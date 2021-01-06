@@ -1,0 +1,22 @@
+---
+- name: config_user | Ensure users are present
+  rabbitmq_user:
+    user:           "{{ item.user }}"
+    password:       "{{ item.password }}"
+    state:          "{{ item.state| default('present') }}"
+    configure_priv: "{{ item.configure_priv|default('.*') }}"
+    read_priv:      "{{ item.read_priv|default('.*') }}"
+    write_priv:     "{{ item.write_priv|default('.*') }}"
+    vhost:          "{{ item.vhost|default('/') }}"
+    tags:           "{{ item.tags|default('') }}"
+  with_items:
+    - "{{ rabbitmq_admin_user + rabbitmq_users}}"
+
+- name: config_user | Ensure users are removed
+  rabbitmq_user:
+    user: "{{ item }}"
+    state: absent
+  with_items:
+    - guest
+    - "{{ rabbitmq_users_remove }}"
+

@@ -1,0 +1,33 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+lint:
+  name: yamllint
+platforms:
+  - name: cassandra-1
+    image: centos/systemd
+    privileged: true
+    volume_mounts:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    command: "/usr/sbin/init"
+    dns_servers: ['8.8.8.8', '1.1.1.1']
+    networks: [{name: cassandra}]
+  - name: cassandra-2
+    image: centos/systemd
+    privileged: true
+    dns_servers: ['8.8.8.8', '1.1.1.1']
+    networks: [{name: cassandra}]
+    volume_mounts:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    command: "/usr/sbin/init"
+provisioner:
+  name: ansible
+  log: true
+  lint:
+    name: ansible-lint
+verifier:
+  name: testinfra
+  lint:
+    name: flake8

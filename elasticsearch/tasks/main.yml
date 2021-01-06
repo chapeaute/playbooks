@@ -1,0 +1,66 @@
+---
+
+# tasks file for elasticsearch
+# Include per-environment variables
+- name:  Include vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+# Configure backup dir
+- include: configure_backup_dir.yml
+  tags: config
+
+# Configure firewall
+- include: firewall.yml
+  when: firewall_setup
+
+# install elasticsearch
+- include: install.yml
+  tags:
+    - setup
+    - install
+
+- name: Force flush handlers
+  meta: flush_handlers
+
+# Add admin script
+- include: script.yml
+  when: es_install_admin_scripts
+  tags:
+    - script
+
+# Add prompt script
+- include: prompt.yml
+  when: es_install_prompt_scripts
+  tags:
+    - script
+    - prompt_scripts
+
+- include: plugins.yml
+  when: es_plugins is defined
+  tags: config
+
+- name: main | Deploy ILM configuration
+  include: "ilm.yml indice={{ d.key }} ilm={{ d.value }}"
+  with_dict: "{{ es_ilm | default({}) }}"
+  loop_control:
+    loop_var: d
+  when: es_ilm.keys()|length > 0
+  tags:
+    - config
+    - config_ilm
+
+- include: indice.yml
+  when: es_indice_purge|length > 0
+  tags:
+    - config_cron
+    - config

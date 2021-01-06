@@ -1,0 +1,25 @@
+---
+- name: centreon_repo | Copy Centreon GPG key file
+  copy:
+    src:   etc/pki/rpm-gpg/RPM-GPG-KEY-CES
+    dest:  /etc/pki/rpm-gpg/RPM-GPG-KEY-CES
+    owner: root
+    group: root
+    mode:  0644
+  when: use_satellite_repo == false
+
+- name: centreon_repo | Import Centreon GPG key file
+  rpm_key:
+    state: present
+    key:   /etc/pki/rpm-gpg/RPM-GPG-KEY-CES
+  when: use_satellite_repo == false
+
+- name: centreon_repo | Import repo
+  template:
+    src:  etc/yum.repos.d/centreon.repo.j2
+    dest: /etc/yum.repos.d/centreon.repo
+    owner: root
+    group: root
+    mode: 0644
+  when: use_satellite_repo == false
+

@@ -1,0 +1,54 @@
+---
+
+- name: config | Install {{ ambari_db_type }} required packages
+  package:
+    name: "{{ lookup('vars', 'ambari_' + ambari_db_type + '_packages') }}"
+    update_cache: yes
+    state: present
+
+- include: "{{ ambari_db_type }}.yml"
+  tags:
+    - setup
+    - database
+
+- name: config | Configure the Ambari JDBC driver
+  shell: /usr/sbin/ambari-server setup --jdbc-db={{ ambari_db_type }} --jdbc-driver={{ lookup('vars', 'ambari_' + ambari_db_type + '_jdbc_driver') }}
+  notify: Restart ambari-server
+
+- name: Set the Ambari Server database setup options
+  set_fact:
+    ambari_database_options: "--database={{ ambari_db_type }} \
+                              --databasehost={{ ambari_db_host }} \
+                              --databaseport={{ lookup('vars', 'ambari_' + ambari_db_type + '_port') }} \
+                              --databasename={{ ambari_db_name }} \
+                              --databaseusername={{ ambari_db_user }}
+                              --databasepassword={{ ambari_db_pass }}"
+
+- name: config | Run Ambari Server setup
+  shell: /usr/sbin/ambari-server setup -s {{ ambari_java_options|default("") }} {{ ambari_database_options|default("") }}
+  notify: Restart ambari-server
+
+- name: config | Update ambari-server log dir
+  lineinfile:
+    dest: /etc/ambari-server/conf/log4j.properties
+    regexp: '^ambari.log.dir='
+    line: 'ambari.log.dir=/var/log/ambari-server'
+  notify: Restart ambari-server
+
+- name: config | Increase the Ambari Server startup timeout
+  lineinfile:
+    path: /etc/ambari-server/conf/ambari.properties
+    state: present
+    line: 'server.startup.web.timeout=120'
+  notify: Restart ambari-server
+
+- name: config | Set the GPL Licensed setting in Ambari
+  lineinfile:
+    path: /etc/ambari-server/conf/ambari.properties
+    backup: no
+    state: present
+    regexp: "^gpl.license.accepted.*"
+    line: "gpl.license.accepted={{ (accept_gpl|default(omit)|bool == true) | ternary('true', 'false') }}"
+  notify: Restart ambari-server
+
+- meta: flush_handlers

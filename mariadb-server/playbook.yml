@@ -1,0 +1,10 @@
+---
+- hosts: all
+  pre_tasks:
+    - package:
+        name: firewalld
+    - service:
+        name: firewalld
+        state: started
+  roles:
+    - role: mariadb-server

@@ -1,0 +1,21 @@
+---
+- name: mysql | Create database {{ alfresco_db_name }}
+  mysql_db:
+    login_user:     "{{ alfresco_db_admin_user }}"
+    login_password: "{{ alfresco_db_admin_pass }}"
+    name:           "{{ alfresco_db_name }}"
+    state:          present
+  run_once: true
+  delegate_to: "{{ alfresco_db_remote_host }}"
+
+- name: mysql | Create {{ alfresco_db_user}} user and set privileges on {{ alfresco_db_name }} database
+  mysql_user:
+    login_user:     "{{ alfresco_db_admin_user }}"
+    login_password: "{{ alfresco_db_admin_pass }}"
+    name:           "{{ alfresco_db_user }}"
+    password:       "{{ alfresco_db_pass }}"
+    host:           "%"
+    priv:           "{{ alfresco_db_name }}.*:ALL"
+    state:          present
+  run_once: true
+  delegate_to: "{{ alfresco_db_remote_host }}"

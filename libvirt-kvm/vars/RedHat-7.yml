@@ -1,0 +1,21 @@
+---
+kvm_default_version: "3.5"
+
+libvirt_packages:
+  - libvirt-daemon
+  - libvirt-client
+  - virt-install
+  - virt-top
+  - python-lxml
+
+libvirt_service: libvirtd
+
+kvm_package_repo: "https://resources.ovirt.org/pub/yum-repo/ovirt-release{{ kvm_version | regex_replace('\\.') }}.rpm"
+
+kvm_packages:
+  - qemu-kvm
+  - qemu-img
+
+kvm_packages_tools:
+  - libguestfs-tools
+  - libguestfs-bash-completion

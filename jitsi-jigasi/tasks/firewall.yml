@@ -1,0 +1,9 @@
+---
+
+- name: Firewall | Open jolokia port
+  firewalld:
+    port: "{{ jolokia_port }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  tags: firewall

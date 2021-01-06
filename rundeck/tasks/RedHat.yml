@@ -1,0 +1,15 @@
+---
+- name: RedHat | Deploy Rundeck repository
+  package:
+    name:  "{{ item }}"
+    state: present
+  with_items: "{{ rundeck_package_repo }}"
+  when: not use_satellite_repo
+
+- name: RedHat | Set firewall rules
+  firewalld:
+    port:      "{{ item }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items: "{{ rundeck_firewall_port }}"

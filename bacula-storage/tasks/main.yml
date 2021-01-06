@@ -1,0 +1,97 @@
+---
+# include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: '{{ ansible_os_family }}.yml'
+
+- name: main | Install storage daemon
+  package:
+    name: "{{ bacula_sd_package }}"
+    state: present
+
+- name: main | Create storage pool directory
+  file:
+    path:  "{{ bacula_sd_archive_device }}"
+    state: directory
+    owner: bacula
+    group: bacula
+    mode:  0770
+    recurse: yes
+
+# Bug in ansible version <= 2.2.0. Decomment when new version 2.2.1 will be available
+- name: main | Restore context on storage pool directory
+  sefcontext:
+    target: "{{ bacula_sd_archive_device }}(/.*)?"
+    setype: bacula_store_t
+  when: ansible_os_family == "RedHat" and ansible_selinux is defined and ansible_selinux.status|default('') == "enabled"
+
+- name: main | Deploy storage daemon configuration
+  tags: deploy_config
+  template:
+    src: "etc/bacula/bacula-sd.conf.j2"
+    dest: "{{ bacula_conf_dir }}/bacula-sd.conf"
+  notify: Restart bacula sd service
+
+- name: main | Enable services on boot
+  service:
+    name:    "{{ bacula_sd_service }}"
+    state:   started
+    enabled: yes
+
+# - name: main | configure to director
+- name: main | Create bacula storage.d directory on director
+  tags: main
+  file:
+    path:  /etc/bacula/storages.d
+    state: directory
+    owner: bacula
+    group: bacula
+    mode:  0750
+  delegate_to: "{{ bacula_dir_host }}"
+  when: ansible_fqdn != bacula_dir_host
+
+# - name: main | configure to director
+- name: main | Create bacula storage.d directory on director
+  tags: main
+  file:
+    path:  /etc/bacula/storages.d
+    state: directory
+    owner: bacula
+    group: bacula
+    mode:  0750
+  when: ansible_fqdn == bacula_dir_host
+
+# - name: main | configure to director
+- name: main | Create bacula storage config on director
+  tags: deploy_config
+  template:
+    src:   etc/bacula/storages.d/storage.conf.j2
+    dest:  "{{ bacula_conf_dir }}/storages.d/{{ bacula_sd_name }}.conf"
+    owner: bacula
+    group: bacula
+    mode:  0640
+  notify: Restart bacula-dir
+  delegate_to: "{{ bacula_dir_host }}"
+  when: ansible_fqdn != bacula_dir_host
+
+# - name: main | configure to director
+- name: main | Create bacula storage config on director
+  tags: deploy_config
+  template:
+    src:   etc/bacula/storages.d/storage.conf.j2
+    dest:  "{{ bacula_conf_dir }}/storages.d/{{ bacula_sd_name }}.conf"
+    owner: bacula
+    group: bacula
+    mode:  0640
+  notify: Restart bacula-dir
+  when: ansible_fqdn == bacula_dir_host

@@ -1,0 +1,16 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: phpipam
+      image: centos/systemd
+      privileged: true
+      image_version: latest
+      capabilities: ['SYS_ADMIN']
+      ansible_groups:
+        - phpipam
+verifier:
+  name: testinfra

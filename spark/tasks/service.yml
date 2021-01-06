@@ -1,0 +1,25 @@
+---
+
+- name: main | start spark worker
+  tags: config_service
+  service:
+    name: spark-worker
+    state: started
+    enabled: yes
+
+- name: main | start spark master
+  tags:
+    - config
+  service:
+    name: spark-master
+    state: started
+    enabled: yes
+  when: ansible_fqdn in spark_masters
+
+- name: main | start spark worker
+  tags:
+    - config
+  service:
+    name: spark-worker
+    state: started
+    enabled: yes

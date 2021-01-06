@@ -1,0 +1,47 @@
+---
+- name: RedHat | Set fact to Oracle java version 7
+  set_fact:
+    oracle_java_url: http://download.oracle.com/otn-pub/java/jdk/7u79-b15/jdk-7u79-linux-x64.rpm
+    oracle_java_package: jdk-1.7.0_79
+    java_home: /usr/java/jdk1.8.0_131
+  check_mode: no
+  when: oracle_java_version == 7
+
+- name: RedHat | Set fact to Oracle java version 8
+  set_fact:
+    oracle_java_url: http://download.oracle.com/otn-pub/java/jdk/8u131-b11/d54c1d3a095b4ff2b6607d096fa80163/jdk-8u131-linux-x64.rpm
+    oracle_java_package: jdk1.8.0_131
+  check_mode: no
+  when: oracle_java_version == 8
+
+- name: RedHat | Set java_home fact
+  set_fact:
+    java_home: "/usr/java/{{ oracle_java_package }}"
+
+- name: RedHat | Check if oracle jdk {{ oracle_java_version }} already installed
+  shell: "yum list -q {{ oracle_java_package }} > /dev/null 2>&1 || echo notinstall"
+  register: rpm_check
+  changed_when: false
+  check_mode: no
+  ignore_errors: yes
+
+- name: RedHat | Download oracle jdk {{ oracle_java_version }} rpm
+  get_url:
+    url:  "{{ oracle_java_url }}"
+    dest: "/tmp/{{ oracle_java_package }}.rpm"
+    headers: 'Cookie:oraclelicense=accept-securebackup-cookie'
+    validate_certs: no
+  when: rpm_check.stdout == 'notinstall'
+
+- name: RedHat | Install oracle jdk {{ oracle_java_version }} rpm
+  yum:
+      name: "/tmp/{{ oracle_java_package }}.rpm"
+      state: present
+  when: rpm_check.stdout == 'notinstall'
+
+- name: RedHat | Install EPEL for haveged
+  yum:
+    name: "{{ item }}"
+    update_cache: yes
+  with_items:
+    - epel-release

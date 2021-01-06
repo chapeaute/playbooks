@@ -1,0 +1,43 @@
+---
+# Include per-environment variables
+- name: Include vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include_tasks: "{{ ansible_os_family }}.yml"
+
+- name: "main | Install asterisk-{{ asterisk_version }}"
+  package:
+    name: "asterisk-{{ asterisk_version }}*"
+
+- name: "main | Install asterisk modules"
+  package:
+    name: "asterisk-{{ item }}*"
+  with_items:
+    - "{{ asterisk_default_modules }}"
+    - "{{ asterisk_modules }}"
+
+- name: "main | Install asterisk sounds file"
+  package:
+    name: "asterisk-sounds-core-{{ item.0 }}-{{ item.1 }}*"
+  with_nested:
+    - "{{ asterisk_default_sounds }}"
+    - "{{ aterisks_codecs }}"
+
+- import_tasks: config.yml
+  tags: config
+
+- name: "main | start and enable asterisk"
+  service:
+    name: asterisk
+    state: started
+    enabled: yes

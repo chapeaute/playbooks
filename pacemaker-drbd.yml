@@ -1,0 +1,14 @@
+---
+- hosts: all
+  roles:
+    - role: pacemaker
+      pcmk_hosts: "{{ groups['apache'] }}"
+      pcmk_cluster_name: 'webcluster'
+      pcmk_hacluster_passwd: 'passer'
+      pcmk_vip_rsc:
+        - interface: eth0
+          address: 192.168.121.50
+          netmask: 24
+      pcmk_svc_rsc:
+        - httpd
+

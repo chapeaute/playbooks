@@ -1,0 +1,67 @@
+---
+- name: sql-instance | Waiting for database to become available
+  wait_for:
+    port: 3306
+    host: "{{ sql.remote_host|default(freerad_db_remote_host) }}"
+
+- name: sql-instance | Init freeradius database on {{ sql.remote_host|default(freerad_db_remote_host) }}
+  copy:
+    src:  schema.sql
+    dest: "/tmp/schema-{{ sql.database|default(freerad_db_name) }}.sql"
+  run_once: true
+  delegate_to: "{{ sql.remote_host|default(freerad_db_remote_host) }}"
+  register: import_schema
+
+- name: sql-instance | Create database {{ sql.database|default(freerad_db_name) }}
+  mysql_db:
+#    login_user:     "{{ freerad_db_admin_user }}"
+#    login_password: "{{ freerad_db_admin_pass }}"
+    login_host:     127.0.0.1
+    name:           "{{ sql.database|default(freerad_db_name) }}"
+    state:          present
+  run_once: true
+  delegate_to: "{{ sql.remote_host|default(freerad_db_remote_host) }}"
+
+- name: sql-instance | Import freeradius database schema
+  mysql_db:
+#    login_user:     "{{ freerad_db_admin_user }}"
+#    login_password: "{{ freerad_db_admin_pass }}"
+    login_host:     127.0.0.1
+    name:           "{{ sql.database|default(freerad_db_name) }}"
+    state:          import
+    target:         "/tmp/schema-{{ sql.database|default(freerad_db_name) }}.sql"
+  run_once: true
+  delegate_to: "{{ sql.remote_host|default(freerad_db_remote_host) }}"
+  when: import_schema.changed
+
+- name: sql-instance | Create {{ sql.user|default(freerad_db_user) }} user and set privileges on {{ sql.database|default(freerad_db_name) }} database
+  mysql_user:
+#    login_user:     "{{ freerad_db_admin_user }}"
+#    login_password: "{{ freerad_db_admin_pass }}"
+    login_host:     127.0.0.1
+    name:           "{{ sql.user|default(freerad_db_user) }}"
+    password:       "{{ sql.pass|default(freerad_db_pass) }}"
+    host:           "%"
+    priv:           "{{ sql.database|default(freerad_db_name) }}.radpostauth:ALL/{{ sql.database|default(freerad_db_name) }}.radacct:ALL/{{ sql.database|default(freerad_db_name) }}.*:SELECT"
+    state:          present
+  run_once: true
+  delegate_to: "{{ sql.remote_host|default(freerad_db_remote_host) }}"
+
+- name: sql-instance | Configure sql module instance {{ sql.name }}
+  template:
+    src:    etc/freeradius/mods-available/sql.conf.j2
+    dest:   "{{ freerad_confdir}}/mods-available/{{ sql.name|default('sql') }}"
+    owner:  root
+    group:  "{{ freerad_group }}"
+  notify:   restart freeradius
+
+# tasks file for redhat freeradius-mysql
+- name: sql-instance | Enable sql module instance {{ sql.name }}
+  file:
+    src:    ../mods-available/{{ sql.name|default('sql') }}
+    dest:   "{{ freerad_confdir }}/mods-enabled/{{ sql.name|default('sql') }}"
+    owner:  root
+    group:  "{{ freerad_group }}"
+    state:  link
+    force:  yes
+  notify:   restart freeradius

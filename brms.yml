@@ -1,0 +1,9 @@
+---
+
+- hosts: brms
+  vars:
+  roles:
+    - role: brms
+      genericservice_root: /srv
+      brms_user: brms
+      brms_password: 8e0kY-hJmo   # Need at least letter, number and 1 special characters

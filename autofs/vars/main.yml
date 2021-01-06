@@ -1,0 +1,7 @@
+---
+# vars file for autofs
+autofs_masters_dir: /etc/auto.master.d
+autofs_maps_dir: /etc/auto.maps.d
+autofs_default_master_options: --ghost
+autofs_packages:
+  - autofs

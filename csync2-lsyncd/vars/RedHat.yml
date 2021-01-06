@@ -1,0 +1,9 @@
+---
+
+csync2_service: xinetd
+csync2_conf_dir: /etc/csync2
+csync2_extra_packages:
+  - epel-release
+  - sqlite-devel
+  - xinetd
+  - openssl

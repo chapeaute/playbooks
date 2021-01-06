@@ -1,0 +1,25 @@
+---
+
+- name: Redhat | Install selinux packages
+  package:
+    name: "{{ prosody_selinux_packages }}"
+
+- name: RedHat | Install epel-release
+  package:
+    name: epel-release
+  when: use_satellite_repo == False
+
+- name: Allow prosody to query LDAP servers
+  seboolean:
+    name: authlogin_nsswitch_use_ldap
+    state: yes
+    persistent: yes
+  when: ansible_selinux.status == 'enabled'
+  tags: prosody
+
+- name: RedHat | Install lua-filesystem on RedHat-8
+  yum:
+    name: lua-filesystem
+    enablerepo: PowerTools
+  when:
+    - ansible_distribution_major_version >= '8'

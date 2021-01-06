@@ -1,0 +1,45 @@
+module bacula-client 1.3;
+
+require {
+        type cluster_tmpfs_t;
+        type hostname_exec_t;
+        type bacula_t;
+        type bacula_spool_t;
+        type security_t;
+        type su_exec_t;
+        type system_dbusd_t;
+        type chkpwd_exec_t;
+        type faillog_t;
+        type sysctl_net_t;
+        class lnk_file { create };
+        class file { execute execute_no_trans write getattr read open };
+        class dir { search dir };
+        class security { compute_av };
+        class capability { audit_write ipc_lock };
+        class capability2 { block_suspend };
+        class netlink_audit_socket { create nlmsg_relay };
+        class netlink_selinux_socket { bind create };
+        class passwd { passwd };
+        class process { setsched execmem };
+        class dbus { send_msg };
+        class unix_stream_socket { connectto };
+}
+
+#============= bacula_t ==============
+allow bacula_t cluster_tmpfs_t:file write;
+allow bacula_t hostname_exec_t:file { execute execute_no_trans };
+allow bacula_t bacula_spool_t:lnk_file create;
+allow bacula_t su_exec_t:file { execute execute_no_trans };
+allow bacula_t security_t:security compute_av;
+allow bacula_t self:capability { audit_write ipc_lock };
+allow bacula_t self:netlink_audit_socket { create nlmsg_relay };
+allow bacula_t self:netlink_selinux_socket { bind create };
+allow bacula_t self:passwd passwd;
+allow bacula_t self:process { setsched execmem };
+allow bacula_t system_dbusd_t:dbus send_msg;
+allow bacula_t system_dbusd_t:unix_stream_socket connectto;
+allow bacula_t chkpwd_exec_t:file { execute execute_no_trans };
+allow bacula_t faillog_t:file write;
+allow bacula_t sysctl_net_t:dir search;
+allow bacula_t sysctl_net_t:file { read getattr open };
+allow bacula_t self:capability2 block_suspend;

@@ -1,0 +1,8 @@
+---
+
+- hosts: elastic-apm
+  roles:
+    - role: elastic-apm
+      apm_version: "7.0"
+      #apm_kafka_hosts: "{{ groups['kafka'] }}"
+      #apm_es_hosts: "{{ groups['elasticsearch'] }}"

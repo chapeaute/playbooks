@@ -1,0 +1,764 @@
+# docker-compose file to build Ogo Proxy infrastructure
+version: "3.7"
+
+networks:
+{% for net in network_common_list + ((ogo_node_manager + ogo_node_worker) | map('regex_replace','([^.]+).*', '\\1') | list) %}
+  {{ net }}:
+    driver: overlay
+    attachable: true
+
+{% endfor %}
+
+
+configs:
+  prometheus.yml-{{ prometheus_conf_version }}:
+    external: True
+{% if traefikv1_enable %}
+  traefik.toml-mgr-{{ traefikmgr_conf_version }}:
+    external: True
+  traefik.toml-wrk-{{ traefikwrk_conf_version }}:
+    external: True
+{% endif %}
+{% if traefikv2_enable %}
+  traefikv2.yml-mgr-{{ traefikv2mgr_conf_version }}:
+    external: True
+  traefikv2.yml-wrk-{{ traefikv2wrk_conf_version }}:
+    external: True
+  traefikv2-svc.yml-mgr-{{ traefikv2svcmgr_conf_version }}:
+    external: True
+  traefikv2-tls.yml-mgr-{{ traefikv2tlsmgr_conf_version }}:
+    external: True
+  traefikv2-tls.yml-wrk-{{ traefikv2tlswrk_conf_version }}:
+    external: True
+  traefikv2-cert-file-{{ traefikv2certfile_conf_version }}:
+    external: True
+  traefikv2-key-file-{{ traefikv2keyfile_conf_version }}:
+    external: True
+{% endif %}
+{% for cert in ogo_cli_crt_files %}
+  traefik-cli-cert{{ loop.index - 1 }}-{{ vars["traefikclicert" + (loop.index - 1)|string + "_conf_version"] }}:
+    external: True
+{% endfor %}
+  grafana.ini-{{ grafana_conf_version }}:
+    external: True
+  setenv.sh-mgr-{{ ogoproxymgr_conf_version }}:
+    external: True
+  setenv.sh-wrk-{{ ogoproxywrk_conf_version }}:
+    external: True
+{% if ogo_cmem_enable %}
+  proxy_ogo.prop-mgr-{{ ogoproxypropmgr_conf_version }}:
+    external: True
+  proxy_ogo.prop-wrk-{{ ogoproxypropwrk_conf_version }}:
+    external: True
+{% endif %}
+{% if logstash_crt_content != "" and logstash_key_content != "" %}
+  logstash.crt-{{ logstash_crt_conf_version }}:
+    external: True
+  logstash.key-{{ logstash_key_conf_version }}:
+    external: True
+{% endif %}
+{% if redis_enable %}
+  redis.conf-{{ redis_conf_version }}:
+    external: True
+{% endif %}
+{% if rabbitmq_enable %}
+  rabbitmq.enabledplugins-{{ rabbitmqplugins_conf_version }}:
+    external: True
+{% endif %}
+{% if modsecurity_enable %}
+  httpd-proxy.conf-{{ modsec_conf_version }}:
+    external: True
+{% endif %}
+
+
+services:
+  #
+  # Etcd services
+  #
+{% for node in (ogo_node_manager + ogo_node_worker) | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ etcd_opts.dns }}-{{ node }}:
+    image: {{ etcd_opts.image }}
+    environment:
+      ETCD_NAME: etcd-{{ node }}
+      ETCD_DATA_DIR: /var/lib/etcd/default.etcd
+      ETCD_LISTEN_PEER_URLS: http://0.0.0.0:2380
+      ETCD_LISTEN_CLIENT_URLS: http://0.0.0.0:2379
+      ETCD_INITIAL_ADVERTISE_PEER_URLS: http://etcd-{{ node }}:2380
+      ETCD_ADVERTISE_CLIENT_URLS: http://etcd-{{ node }}:2379
+      ETCD_INITIAL_CLUSTER: "{% for n in ((ogo_node_manager + ogo_node_worker) | map('regex_replace','([^.]+).*', '\\1')) %}etcd-{{ n }}=http://etcd-{{ n }}:2380,{% endfor %}"
+      ETCD_INITIAL_CLUSTER_TOKEN: ogo
+      ETCD_INITIAL_CLUSTER_STATE: new
+      ETCD_SNAPSHOT_COUNT: {{ etcd_snapshot_count }}
+      ETCD_ELECTION_TIMEOUT: {{ etcd_election_timeout }}
+      ETCD_HEARTBEAT_INTERVAL: {{ etcd_heartbeat_interval }}
+      ETCD_AUTO_COMPACTION_RETENTION: {{ etcd_auto_compaction_retention }}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ node }}]
+      update_config:
+        parallelism: {{ docker_deploy.parallelism }}
+        delay: {{ docker_deploy.delay }}
+{% if etcd_opts.ports_mgr|length > 0 and node in (ogo_node_manager | map('regex_replace','([^.]+).*', '\\1')) %}    ports:
+{% for port in etcd_opts.ports_mgr %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% endif %}
+    volumes:
+{% for vol in etcd_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+    networks:
+      monitor:
+        aliases:
+          - {{ etcd_opts.dns }}-monit
+{% for net in etcd_opts.networks + [ node ] %}
+      {{ net }}:
+        aliases:
+          - {{ etcd_opts.dns }}
+{% endfor %}
+
+{% endfor %}
+
+{% if traefikv1_enable %}
+  #
+  # Traefik services Manager
+  #
+{% for node in ogo_node_manager | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ traefik_opts.dns }}-{{ node }}:
+    image: {{ traefik_opts.image }}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ node }}]
+      update_config:
+        parallelism: {{ docker_deploy.parallelism }}
+        delay: {{ docker_deploy.delay }}
+    command: --logLevel={{ traefik_opts.loglevel }} --accesslog.filepath=""
+    configs:
+      - source: traefik.toml-mgr-{{ traefikmgr_conf_version }}
+        target: /etc/traefik/traefik.toml
+{% for cert in ogo_cli_crt_files %}
+      - source: traefik-cli-cert{{ loop.index - 1 }}-{{ vars["traefikclicert" + (loop.index - 1)|string + "_conf_version"] }}
+        target: /etc/traefik/{{ cert | basename }}
+{% endfor %}
+{% if (traefik_opts.ports + traefik_opts.ports_mgr)|length > 0 %}    ports:
+{% for port in traefik_opts.ports %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% if node in ogo_node_manager %}
+{% for port in traefik_opts.ports_mgr %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% endif %}
+{% endif %}
+    depends_on:
+      - {{ etcd_opts.dns }}-{{ node }}
+    networks:
+      monitor:
+        aliases:
+          - {{ traefik_opts.dns }}-monit
+{% for net in traefik_opts.networks + [ node ] %}
+      {{ net }}:
+        aliases:
+          - {{ traefik_opts.dns }}
+{% endfor %}
+
+{% endfor %}
+
+  #
+  # Traefik services Worker
+  #
+{% for node in ogo_node_worker | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ traefik_opts.dns }}-{{ node }}:
+    image: {{ traefik_opts.image }}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ node }}]
+      update_config:
+        parallelism: {{ docker_deploy.parallelism }}
+        delay: {{ docker_deploy.delay }}
+    command: --logLevel={{ traefik_opts.loglevel }} --accesslog.filepath=""
+    configs:
+      - source: traefik.toml-wrk-{{ traefikwrk_conf_version }}
+        target: /etc/traefik/traefik.toml
+{% if (traefik_opts.ports + traefik_opts.ports_mgr)|length > 0 %}    ports:
+{% for port in traefik_opts.ports %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% if node in ogo_node_manager %}
+{% for port in traefik_opts.ports_mgr %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% endif %}
+{% endif %}
+    depends_on:
+      - {{ etcd_opts.dns }}-{{ node }}
+    networks:
+      monitor:
+        aliases:
+          - {{ traefik_opts.dns }}-monit
+{% for net in traefik_opts.networks + [ node ] %}
+      {{ net }}:
+        aliases:
+          - {{ traefik_opts.dns }}
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+
+{% if traefikv2_enable %}
+  #
+  # Traefikv2 services Manager
+  #
+{% for node in ogo_node_manager | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ traefikv2_opts.dns }}-{{ node }}:
+    image: {{ traefikv2_opts.image }}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ node }}]
+      update_config:
+        parallelism: {{ docker_deploy.parallelism }}
+        delay: {{ docker_deploy.delay }}
+    command: --logLevel={{ traefikv2_opts.loglevel }} --accesslog.filepath=""
+    configs:
+      - source: traefikv2.yml-mgr-{{ traefikv2mgr_conf_version }}
+        target: /etc/traefik/traefik.yml
+      - source: traefikv2-svc.yml-mgr-{{ traefikv2svcmgr_conf_version }}
+        target: /etc/traefik/traefik.d/svc.yml
+      - source: traefikv2-tls.yml-mgr-{{ traefikv2tlsmgr_conf_version }}
+        target: /etc/traefik/traefik.d/tls.yml
+      - source: traefikv2-cert-file-{{ traefikv2certfile_conf_version }}
+        target: /etc/traefik/domain.crt
+      - source: traefikv2-key-file-{{ traefikv2keyfile_conf_version }}
+        target: /etc/traefik/domain.key
+{% for cert in ogo_cli_crt_files %}
+      - source: traefik-cli-cert{{ loop.index - 1 }}-{{ vars["traefikclicert" + (loop.index - 1)|string + "_conf_version"] }}
+        target: /etc/traefik/{{ cert | basename }}
+{% endfor %}
+{% if traefikv2_opts.volumes|length > 0 %}    volumes:
+{% for vol in traefikv2_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+{% endif %}
+{% if (traefikv2_opts.ports + traefikv2_opts.ports_mgr)|length > 0 %}    ports:
+{% for port in traefikv2_opts.ports %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% if node in ogo_node_manager %}
+{% for port in traefikv2_opts.ports_mgr %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% endif %}
+{% endif %}
+    depends_on:
+      - {{ etcd_opts.dns }}-{{ node }}
+    networks:
+      monitor:
+        aliases:
+          - {{ traefikv2_opts.dns }}-monit
+{% for net in traefikv2_opts.networks + [ node ] %}
+      {{ net }}:
+        aliases:
+          - {{ traefikv2_opts.dns }}
+{% endfor %}
+
+{% endfor %}
+
+  #
+  # Traefikv2 services Worker
+  #
+{% for node in ogo_node_worker | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ traefikv2_opts.dns }}-{{ node }}:
+    image: {{ traefikv2_opts.image }}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ node }}]
+      update_config:
+        parallelism: {{ docker_deploy.parallelism }}
+        delay: {{ docker_deploy.delay }}
+    command: --logLevel={{ traefikv2_opts.loglevel }} --accesslog.filepath=""
+    configs:
+      - source: traefikv2.yml-wrk-{{ traefikv2wrk_conf_version }}
+        target: /etc/traefik/traefik.yml
+      - source: traefikv2-tls.yml-wrk-{{ traefikv2tlswrk_conf_version }}
+        target: /etc/traefik/traefik.d/tls.yml
+{% if traefikv2_opts.volumes|length > 0 %}    volumes:
+{% for vol in traefikv2_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+{% endif %}
+{% if (traefikv2_opts.ports + traefikv2_opts.ports_mgr)|length > 0 %}    ports:
+{% for port in traefikv2_opts.ports %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% if node in ogo_node_manager %}
+{% for port in traefikv2_opts.ports_mgr %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% endif %}
+{% endif %}
+    depends_on:
+      - {{ etcd_opts.dns }}-{{ node }}
+    networks:
+      monitor:
+        aliases:
+          - {{ traefikv2_opts.dns }}-monit
+{% for net in traefikv2_opts.networks + [ node ] %}
+      {{ net }}:
+        aliases:
+          - {{ traefikv2_opts.dns }}
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+
+{% if modsecurity_enable %}
+  #
+  # Modsecurity services Manager
+  #
+{% for node in ogo_node_manager | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ modsecurity_opts.dns }}-{{ node }}:
+    image: {{ modsecurity_opts.image }}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ node }}]
+      update_config:
+        parallelism: {{ docker_deploy.parallelism }}
+        delay: {{ docker_deploy.delay }}
+    environment:
+      PARANOIA: {{ modsecurity_paranoia_level }}
+      PROXY: 1
+      PROXYLOCATION: http://{{ proxy_wrk_opts.dns }}:8080/
+      MODSEC_RULE_ENGINE: DetectionOnly
+    configs:
+      - source: httpd-proxy.conf-{{ modsec_conf_version }}
+        target: /usr/local/apache2/conf/extra/httpd-proxy.conf
+    volumes:
+{% for vol in modsecurity_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+    networks:
+      monitor:
+        aliases:
+          - {{ modsecurity_opts.dns }}-monit
+{% for net in modsecurity_opts.networks + [ node ] %}
+      {{ net }}:
+        aliases:
+          - {{ modsecurity_opts.dns }}
+{% endfor %}
+
+{% endfor %}
+
+  #
+  # Modsecurity services Worker
+  #
+{% for node in ogo_node_worker | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ modsecurity_opts.dns }}-{{ node }}:
+    image: {{ modsecurity_opts.image }}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ node }}]
+      update_config:
+        parallelism: {{ docker_deploy.parallelism }}
+        delay: {{ docker_deploy.delay }}
+    environment:
+      PARANOIA: {{ modsecurity_paranoia_level }}
+      PROXY: 1
+      PROXYLOCATION: http://{{ proxy_wrk_opts.dns }}:8080/
+      MODSEC_RULE_ENGINE: DetectionOnly
+    configs:
+      - source: httpd-proxy.conf-{{ modsec_conf_version }}
+        target: /usr/local/apache2/conf/extra/httpd-proxy.conf
+    volumes:
+{% for vol in modsecurity_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+    networks:
+      monitor:
+        aliases:
+          - {{ modsecurity_opts.dns }}-monit
+{% for net in modsecurity_opts.networks + [ node ] %}
+      {{ net }}:
+        aliases:
+          - {{ modsecurity_opts.dns }}
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+
+
+{% if rabbitmq_enable %}
+  #
+  # RabbitMQ services Manager
+  #
+  {{ rabbitmq_opts.dns }}:
+    image: {{ rabbitmq_opts.image }}
+    environment:
+      RABBITMQ_NODE_PORT: {{ rabbitmq_port }}
+      RABBITMQ_VM_MEMORY_HIGH_WATERMARK: {{ rabbitmq_memory_high_watermark }}
+      RABBITMQ_HIPE_COMPILE: {{ rabbitmq_hipe_compile }}
+      RABBITMQ_DEFAULT_USER: {{ rabbitmq_admin_user }}
+      RABBITMQ_DEFAULT_PASS: {{ rabbitmq_admin_pass }}
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+      mode: replicated
+      replicas: 1
+    healthcheck:
+      test: ["CMD-SHELL", "rabbitmq-diagnostics -q ping" ]
+      start_period: 3m
+      interval: 30s
+      timeout: 15s
+      retries: 3
+    configs:
+      - source: rabbitmq.enabledplugins-{{ rabbitmqplugins_conf_version }}
+        target: /etc/rabbitmq/enabled_plugins
+{% if (rabbitmq_opts.ports + rabbitmq_opts.ports_mgr)|length > 0 %}    ports:
+{% for port in (rabbitmq_opts.ports + rabbitmq_opts.ports_mgr) %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% endif %}
+    networks:
+      monitor:
+        aliases:
+          - {{ rabbitmq_opts.dns }}-monit
+{% for net in rabbitmq_opts.networks %}
+      {{ net }}:
+        aliases:
+          - {{ rabbitmq_opts.dns }}
+{% endfor %}
+
+{% endif %}
+
+
+{% if redis_enable %}
+  #
+  # Redis services Manager
+  #
+  {{ redis_opts.dns }}-rw:
+    image: {{ redis_opts.image }}
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+      mode: replicated
+      replicas: 1
+    command: /usr/local/sbin/redis_wrapper /etc/redis/redis.conf
+    configs:
+      - source: redis.conf-{{ redis_conf_version }}
+        target: /etc/redis/redis.conf
+    volumes:
+{% for vol in redis_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+    networks:
+      monitor:
+        aliases:
+          - {{ redis_opts.dns }}-monit
+{% for net in redis_opts.networks %}
+      {{ net }}:
+        aliases:
+          - {{ redis_opts.dns }}-rw
+{% endfor %}
+
+  #
+  # Redis services Worker
+  #
+{% for node in ogo_node_worker | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ redis_opts.dns }}-{{ node }}:
+    image: {{ redis_opts.image }}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ node }}]
+      update_config:
+        parallelism: {{ docker_deploy.parallelism }}
+        delay: {{ docker_deploy.delay }}
+    command: /usr/local/sbin/redis_wrapper /etc/redis/redis.conf slave-priority 0 --slaveof {{ redis_opts.dns }}-rw 6379
+    configs:
+      - source: redis.conf-{{ redis_conf_version }}
+        target: /etc/redis/redis.conf
+    volumes:
+{% for vol in redis_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+    depends_on:
+      - {{ redis_opts.dns }}-rw
+    networks:
+      monitor:
+        aliases:
+          - {{ redis_opts.dns }}-monit
+{% for net in redis_opts.networks + [ node ] %}
+      {{ net }}:
+        aliases:
+          - {{ redis_opts.dns }}
+{% endfor %}
+
+{% endfor %}
+{% endif %}
+
+  #
+  # Proxy services Manager
+  #
+{% for mgr in ogo_node_manager | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ proxy_mgr_opts.dns }}-{{ mgr }}:
+    image: {{ proxy_mgr_opts.image }}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ mgr }}]
+      resources:
+        limits:
+          cpus: "{{ proxy_mgr_opts.cpu }}"
+          memory: {{ proxy_mgr_opts.memory }}
+      restart_policy:
+        condition: on-failure
+    environment:
+      NODE_NAME: {{ mgr }}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:7007/version || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: {{ ogo_proxy_start_period }}
+    configs:
+      - source: setenv.sh-mgr-{{ ogoproxymgr_conf_version }}
+        target: /usr/local/tomcat/bin/setenv.sh
+{% if ogo_cmem_enable %}
+      - source: proxy_ogo.prop-mgr-{{ ogoproxypropmgr_conf_version }}
+        target: /usr/local/tomcat/webapps/proxy_ogo.properties
+{% endif %}
+{% if logstash_crt_content != "" and logstash_key_content != "" %}
+      - source: logstash.crt-{{ logstash_crt_conf_version }}
+        target: {{ logstash_crt_path }}
+      - source: logstash.key-{{ logstash_key_conf_version }}
+        target: {{ logstash_key_path }}
+{% endif %}
+{% if proxy_mgr_opts.volumes|length > 0 %}    volumes:
+{% for vol in proxy_mgr_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+{% endif %}
+{% if proxy_mgr_opts.ports|length > 0 %}    ports:
+{% for port in proxy_mgr_opts.ports %}
+      - published: {{ (port|string).split(':')[0]|default(port) }}
+        target: {{ (port|string).split(':')[1]|default(port) }}
+        mode: host
+{% endfor %}
+{% endif %}
+    depends_on:
+      - {{ etcd_opts.dns }}-{{ mgr }}
+    networks:
+      monitor:
+        aliases:
+          - {{ proxy_mgr_opts.dns }}-monit
+{% for net in proxy_mgr_opts.networks + [ mgr ] %}
+      {{ net }}:
+        aliases:
+          - {{ proxy_mgr_opts.dns }}
+{% endfor %}
+
+{% endfor %}
+
+
+  #
+  # Proxy services Worker
+  #
+{% for wrk in ogo_node_worker | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ proxy_wrk_opts.dns }}-{{ wrk }}:
+    image: {{ proxy_wrk_opts.image }}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ wrk }}]
+      replicas: {{ ((hostvars[ogo_node_worker[loop.index-1]]['ansible_memtotal_mb'] * ogo_proxy_memory_prct) / (ogo_proxy_memory_min * 1.1)) | int }}
+      resources:
+        limits:
+          cpus: "{{ proxy_wrk_opts.cpu }}"
+          memory: {{ proxy_wrk_opts.memory }}
+      update_config:
+        parallelism: {{ docker_deploy.parallelism }}
+        delay: {{ docker_deploy.delay }}
+      restart_policy:
+        condition: on-failure
+    environment:
+      NODE_NAME: {{ wrk }}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/test_all || exit 1"]
+      interval: 10s
+      timeout: 10s
+      retries: 3
+      start_period: {{ ogo_proxy_start_period }}
+    configs:
+      - source: setenv.sh-wrk-{{ ogoproxywrk_conf_version }}
+        target: /usr/local/tomcat/bin/setenv.sh
+{% if ogo_cmem_enable %}
+      - source: proxy_ogo.prop-wrk-{{ ogoproxypropwrk_conf_version }}
+        target: /usr/local/tomcat/webapps/proxy_ogo.properties
+{% endif %}
+{% if logstash_crt_content != "" and logstash_key_content != "" %}
+      - source: logstash.crt-{{ logstash_crt_conf_version }}
+        target: {{ logstash_crt_path }}
+      - source: logstash.key-{{ logstash_key_conf_version }}
+        target: {{ logstash_key_path }}
+{% endif %}
+{% if proxy_wrk_opts.volumes|length > 0 %}    volumes:
+{% for vol in proxy_wrk_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+{% endif %}
+{% if proxy_wrk_opts.ports|length > 0 %}    ports:
+{% for port in proxy_wrk_opts.ports %}
+      - published: {{ (port|string).split(':')[0]|default(port) }}
+        target: {{ (port|string).split(':')[1]|default(port) }}
+        mode: host
+{% endfor %}
+{% endif %}
+    depends_on:
+      - {{ etcd_opts.dns }}-{{ wrk }}
+    networks:
+      monitor:
+        aliases:
+          - {{ proxy_wrk_opts.dns }}-monit
+{% for net in proxy_wrk_opts.networks + [ wrk ] %}
+      {{ net }}:
+        aliases:
+          - {{ proxy_wrk_opts.dns }}
+{% endfor %}
+
+{% endfor %}
+
+
+  #
+  # Prometheus
+  #
+{% for mgr in ogo_node_manager | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ prometheus_opts.dns }}-{{ mgr }}:
+    image: {{ prometheus_opts.image }}
+    command:
+      - "--storage.tsdb.retention.time={{ prometheus_storage_retention }}"
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--web.external-url=http://{{ ogo_manager_hostname }}/prometheus"
+    configs:
+      - source: prometheus.yml-{{ prometheus_conf_version }}
+        target: /etc/prometheus/prometheus.yml
+    volumes:
+{% for vol in prometheus_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+{% if prometheus_opts.ports|length > 0 %}    ports:
+{% for port in prometheus_opts.ports %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% endif %}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ mgr }}]
+    networks:
+      monitor:
+        aliases:
+          - {{ prometheus_opts.dns }}-monit
+      {{ mgr }}:
+        aliases:
+          - {{ prometheus_opts.dns }}
+
+{% endfor %}
+
+  #
+  # Grafana
+  #
+{% for mgr in ogo_node_manager | map('regex_replace','([^.]+).*', '\\1') %}
+  {{ grafana_opts.dns }}-{{ mgr }}:
+    image: {{ grafana_opts.image }}
+    configs:
+      - source: grafana.ini-{{ grafana_conf_version }}
+        target: /etc/grafana/grafana.ini
+    environment:
+      GF_INSTALL_PLUGINS: "{{ grafana_opts.plugins | join(',') }}"
+    volumes:
+{% for vol in grafana_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+{% if grafana_opts.ports|length > 0 %}    ports:
+{% for port in grafana_opts.ports %}
+      - published: {{ port.split(':')[0] }}
+        target: {{ port.split(':')[1] }}
+        mode: host
+{% endfor %}
+{% endif %}
+    depends_on:
+      - prometheus-{{ mgr }}
+    deploy:
+      placement:
+        constraints: [node.hostname == {{ mgr }}]
+    networks:
+      monitor:
+        aliases:
+          - {{ grafana_opts.dns }}-monit
+      {{ mgr }}:
+        aliases:
+          - {{ grafana_opts.dns }}
+
+{% endfor %}
+
+  #
+  # Node Exporter
+  #
+  {{ nodeexporter_opts.dns }}:
+    image: {{ nodeexporter_opts.image }}
+    volumes:
+{% for vol in nodeexporter_opts.volumes %}
+      - "{{ vol }}"
+{% endfor %}
+    environment:
+      HOST_HOSTNAME: /etc/hostname
+    deploy:
+      mode: global
+      resources:
+        limits:
+          cpus: '0.10'
+          memory: 32M
+    networks:
+      monitor:
+        aliases:
+          - {{ nodeexporter_opts.dns }}-monit
+
+  #
+  # Docker Exporter
+  #
+  {{ dockerexporter_opts.dns }}:
+    image: {{ dockerexporter_opts.image }}
+    deploy:
+      mode: global
+      resources:
+        limits:
+          cpus: '0.05'
+          memory: 6M
+        reservations:
+          cpus: '0.05'
+          memory: 4M
+    environment:
+      IN: "172.18.0.1:9323"
+      OUT: "9323"
+    networks:
+      monitor:
+        aliases:
+          - {{ dockerexporter_opts.dns }}-monit
+

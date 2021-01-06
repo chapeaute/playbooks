@@ -1,0 +1,30 @@
+---
+- name: proxy | Install pwgen utility
+  package:
+    name: "{{ item }}"
+  with_items:
+    - epel-release
+    - pwgen
+
+- name: proxy | Create htpasswd directory
+  file:
+    path:  "{{ apache2_htpasswd_dir }}"
+    owner: root
+    group: "{{ apache2_group }}"
+    mode:  0750
+    state: directory
+
+- name: proxy | Copy apache-reverse-add
+  template:
+    src:  "usr/local/sbin/apache-reverse-add"
+    dest: "/usr/local/sbin/apache-reverse-add"
+    owner: root
+    group: root
+    mode:  0750
+
+- name: proxy | Allow SElinux to relay apache network connection to non standard port
+  seboolean:
+    name: httpd_can_network_connect
+    state: yes
+    persistent: yes
+  when: ansible_os_family == "RedHat" and ansible_selinux.status == "enabled"

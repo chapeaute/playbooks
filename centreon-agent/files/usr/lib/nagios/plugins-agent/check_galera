@@ -1,0 +1,100 @@
+#!/bin/bash
+
+PROGRAMME=`basename $0`
+SIZE_CRIT_VALUE=3
+SIZE_WARN_VALUE=7
+EXIT_OK=0
+EXIT_WARN=1
+EXIT_CRIT=2
+
+OPTS=$( getopt -o h,i,i:,e,u,c -l size,size:,state,status,help,state-uuid -- "$@" )
+
+function print_help() {
+    echo -e "\nUsage:"
+    echo -e "$PROGRAMME"
+    echo -e "-h|--help\t\t\tprint this message"
+    echo -e "-i|--size [critical_value]\tcheck cluster_size if <= critical_value (default: 3)"
+    echo -e "-e|--state\t\t\tcheck local_state if equal to 4 (Synced)"
+    echo -e "-u|--status\t\t\tcheck if status is equal to Primary"
+    echo -e "-c|--state-uuid\t\t\tcheck if all cluster_state_uuid is equal\n"
+}
+
+if [ $# -eq 0 ]
+then
+    print_help
+fi
+
+function check_cluster_size() {
+    RET=$( mysql --defaults-file=/etc/mysql/auth.d/nagios.cnf -ss -e "show status like 'wsrep_cluster_size'" | awk '{print $2}' )
+
+    if [[ $RET -le $SIZE_CRIT_VALUE ]]
+    then
+      echo "CRITICAL - cluster size is less or equal than $SIZE_CRIT_VALUE : $RET|cluster_size=$RET"
+      exit $EXIT_CRIT
+    elif [[ $RET -le $SIZE_WARN_VALUE ]] 
+    then
+      echo "WARNING - cluster size is less or equal than $SIZE_WARN_VALUE : $RET|cluster_size=$RET"
+      exit $EXIT_WARN
+    else
+        echo "OK - cluster size is greater than $SIZE_CRIT_VALUE : $RET|cluster_size=$RET"
+    fi
+}
+
+function check_local_state() {
+    RET=$( mysql --defaults-file=/etc/mysql/auth.d/nagios.cnf -ss -e "show status like 'wsrep_local_state'" | awk '{print $2}' )
+    RET_COMMENT=$( mysql --defaults-file=/etc/mysql/auth.d/nagios.cnf -ss -e "show status like 'wsrep_local_state_comment'" | awk '{print $2}' )
+
+    if [[ $RET -eq 4 ]]
+    then
+	echo "OK - this node is synced"
+    elif [[ $RET -eq 2 ]]
+    then
+        echo "WARNING - this node is : $RET_COMMENT ($RET)"
+        exit $EXIT_WARN
+    else
+        echo "CRITICAL - this node is : $RET_COMMENT ($RET)"
+	exit $EXIT_CRIT
+    fi
+}
+
+function check_cluster_status() {
+    RET=$( mysql --defaults-file=/etc/mysql/auth.d/nagios.cnf -ss -e "show status like 'wsrep_cluster_status'" | awk '{print $2}' )
+
+    if [[ $RET == "Primary" ]]
+    then
+	echo "OK - cluster_status is $RET"
+    else
+        echo "CRITICAL - cluster_status is : $RET"
+	exit $EXIT_CRIT
+    fi
+}
+
+function check_cluster_state_uuid() {
+    echo "check cluster state uuid";
+}
+
+case "$1" in
+    -h|--help) print_help;
+	;;
+    -i|--size)
+        if [[ -n "$2" ]]
+        then
+            SIZE_CRIT_VALUE="$3"
+        fi
+        if [[ -n "$3" ]]
+        then
+            SIZE_WARN_VALUE="$2"
+        fi
+        check_cluster_size;
+        ;;
+    -e|--state)
+        check_local_state;
+        ;;
+    -u|--status)
+        check_cluster_status;
+        ;;
+    -c|--state-uuid)
+        check_cluster_state_uuid;
+        ;;
+esac
+exit 0;

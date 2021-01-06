@@ -1,0 +1,15 @@
+---
+# vars file for ceph-server
+ceph_server_extra_packages:
+  - epel-release
+  - jq
+
+ceph_deploy_packages:
+  - ceph-deploy
+  - python2-pip
+
+sudoers:
+  cephadm:
+    - cephadm ALL = (root) NOPASSWD:ALL
+
+ceph_fs_volume: common

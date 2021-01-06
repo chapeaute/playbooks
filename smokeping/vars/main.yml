@@ -1,0 +1,6 @@
+---
+# vars file for smokeping
+
+smokeping_dependencies:
+  - rsync
+  - smokeping

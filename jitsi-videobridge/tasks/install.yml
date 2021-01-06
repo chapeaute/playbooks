@@ -1,0 +1,58 @@
+---
+
+
+- name: Create jitsi jvb user account
+  user:
+    name: "{{ jvb_user }}"
+    home: "{{ jvb_install_dir }}"
+    system: True
+
+- name: Install | Create install dir
+  file:
+    name: "{{ item }}"
+    state: directory
+    owner: "{{ jvb_user }}"
+    group: "{{ jvb_group }}"
+  with_items:
+    - "{{ jvb_install_tmp_dir }}"
+    - "{{ jvb_etc_dir }}"
+    - "{{ jvb_log_dir }}"
+
+- name: Install | stats vb deb archive
+  stat:
+    path: "{{ jvb_install_tmp_dir }}/{{ jvb_deb_url | basename }}"
+  register: jvb_deb
+
+- name: Download jitsi-videobridge archive
+  get_url:
+    url: "{{ jvb_deb_url }}"
+    dest: "{{ jvb_install_tmp_dir }}"
+  when: not jvb_deb.stat.exists
+
+- name: Decompress jitsi-videobridge archive to temporary directory
+  shell: ar x {{ jvb_install_tmp_dir }}/jitsi-videobridge*.deb
+  args:
+    creates: data.tar.xz
+    chdir: "{{ jvb_install_tmp_dir }}"
+
+- name: Extract data archive for jitsi-videobridge
+  unarchive:
+    src: "{{ jvb_install_tmp_dir }}/data.tar.xz"
+    dest: "{{ jvb_install_tmp_dir }}/"
+    owner: "{{ jvb_user }}"
+    group: "{{ jvb_group }}"
+    remote_src: yes
+
+- name: Sychronize build with install dir
+  copy:
+    src: "{{ jvb_install_tmp_dir }}/usr/share/jitsi-videobridge/"
+    dest: "{{ jvb_install_dir }}/"
+    owner: "{{ jvb_user }}"
+    group: "{{ jvb_group }}"
+    remote_src: yes
+    directory_mode: true
+
+- name: Install | Set jigasi.sh to executable
+  file:
+    name: "{{ jvb_install_dir }}/jvb.sh"
+    mode: 0750

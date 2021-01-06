@@ -1,0 +1,30 @@
+---
+
+- name: Config | Copy static configure smokeping
+  tags: config_dir
+  synchronize:
+    src: etc/smokeping
+    dest: /etc/
+    # mode: 0644
+    # directory_mode: yes
+    # force: no
+
+- name: Config | Configure templates
+  template:
+    src: "etc/smokeping/config.d/{{ item }}.j2"
+    dest: "/etc/smokeping/config.d/{{ item }}"
+    mode: 0644
+  notify:
+    - "Restart smokeping"
+    # - "Restart Apache"
+  with_items:
+    - General
+    - Alerts
+    - Targets
+
+- name: Config | Copy apache smokeping configuration
+  tags: config_apache
+  template:
+    src: etc/httpd/conf.d/smokeping.conf.j2
+    dest: /etc/httpd/conf.d/smokeping.conf
+#   notify: "Restart Apache"

@@ -1,0 +1,65 @@
+---
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  
+- name: install wekan dependencies
+  package:
+    name: "{{ wekan_dependencies }}"
+
+- name: link {{ wekan_root_dir }} to {{ wekan_default_root_dir }}
+  file:
+    src: "{{ wekan_root_dir }}/wekan"
+    dest: "{{ wekan_default_root_dir }}/wekan"
+    state: link 
+  when: wekan_root_dir != wekan_default_root_dir
+
+- name : Check if wekan-{{ wekan_version }} data directory exists
+  stat : 
+    path: "{{ wekan_root_dir }}/bundle"
+  register: data_dir
+
+- name: "Move bundle to Wekan-{{ wekan_version }}"
+  shell: "mv {{ wekan_root_dir }}/bundle {{ wekan_full_dir }}"  
+  when:  data_dir.stat.isdir == True
+
+- name: Create a symbolic link to not break generic-service
+  file:
+    src: "{{ wekan_full_dir }}"
+    dest:  "{{ wekan_root_dir }}/bundle"
+    state: link
+    force: true
+
+- name: Delete odd file
+  file:
+    path: "{{ item }}"
+    state: absent
+  when:  data_dir.stat.isdir == True
+  with_items:
+    - "{{ wekan_npm_root_dir }}/node_modules"
+    - "{{ wekan_npm_root_dir }}/npm/node_modules/.bin/node-pre-gyp"
+
+- name: install node_modules
+  become_user: "{{ wekan_service_name }}"
+  command: "/usr/local/bin/npm install"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  args:
+    chdir: "{{ wekan_npm_root_dir }}"
+    creates: "{{ wekan_npm_root_dir }}/node_modules"
+  notify: "Restart wekan"
+
+- name : start wekan service
+  service:
+    name: wekan
+    state: started
+    enabled: yes

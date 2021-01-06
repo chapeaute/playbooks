@@ -1,0 +1,68 @@
+---
+
+- name: configure_user_db | Updating root passwords
+  mysql_user:
+    name: root
+    host: "{{ item }}"
+    password: "{{ mariadb_root_password }}"
+  run_once: true
+  with_items:
+    - '127.0.0.1'
+    - '::1'
+    - localhost
+  when: inventory_hostname == galera_master_node
+
+- name: configure_user_db | Configuring root my.cnf
+  template:
+    src:   root/my.cnf.j2
+    dest:  /root/.my.cnf
+    owner: root
+    group: root
+    mode:  0600
+  when: ansible_os_family == "RedHat"
+
+- name: configure_user_db | Updating root passwords (allow from anywhere)
+  mysql_user:
+    name: root
+    host: "{{ item }}"
+    password: "{{ mariadb_root_password }}"
+    priv: "*.*:ALL,GRANT"
+  with_items:
+    - '%'
+  when: mariadb_root_allow_from_any
+
+- name: configure_user_db | Drop test database
+  mysql_db:
+    name:  test
+    state: absent
+  run_once: true
+
+- name: configure_user_db | Drop empty MySQL users
+  mysql_user:
+    name:  ''
+    host:  "{{ item }}"
+    state: absent
+  with_items:
+    - localhost
+    - "{{ ansible_hostname }}"
+  run_once: true
+
+- name: configure_user_db | Drop empty MySQL root users
+  mysql_user:
+    name:  'root'
+    state: absent
+    host:  "{{ ansible_hostname }}"
+    password: ''
+  run_once: true
+
+- name: configure_user_db | Create auth.d dir
+  file:
+    path: /etc/mysql/auth.d/
+    state: directory
+    mode: 0755
+
+- name: configure_user_db | Configure status
+  file:
+    src: /root/.my.cnf
+    dest: /etc/mysql/auth.d/status.cnf
+    state: link

@@ -1,0 +1,12 @@
+---
+- hosts: logstash-indexer
+  vars:
+    ls_version: "7.6"
+    # Input
+    ls_input_kafka: true
+    ls_kafka_hosts: "{{ groups['kafka'] }}"
+    # Output
+    ls_output_elasticsearch: true
+    ls_elasticsearch_hosts: ['127.0.0.1']
+  roles:
+    - role: logstash

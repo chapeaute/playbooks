@@ -1,0 +1,26 @@
+[Unit]
+Description=Jitsi Gateway to SIP
+After=network.target
+
+[Service]
+Type=simple
+SuccessExitStatus=143
+EnvironmentFile={{ jigasi_etc_dir }}/jigasi.conf
+User={{ jigasi_user }}
+Group={{ jigasi_group }}
+PrivateTmp=true
+PrivateDevices=true
+Restart=on-failure
+StartLimitInterval=10
+RestartSec=30
+ExecStart={{ jigasi_install_dir }}/jigasi.sh \
+            --configdir={{ jigasi_etc_dir | dirname }} \
+            --configdirname={{ jigasi_etc_dir | basename }} \
+            --nocomponent=true \
+            --min-port={{ jigasi_min_port }} \
+            --max-port={{ jigasi_max_port }}
+
+            ${JIGASI_OPTS}
+
+[Install]
+WantedBy=multi-user.target

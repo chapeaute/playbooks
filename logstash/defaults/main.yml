@@ -1,0 +1,83 @@
+---
+use_satellite_repo: False
+
+# Logstash version
+ls_version: "7.8"
+ls_major_version: "{{ ls_version.split('.')[0] }}"
+
+# Standard settings
+ls_worker: "{{ ansible_processor_vcpus }}"
+ls_batch_size: 1000
+ls_heap_size_prct: 0.85
+ls_heap_size: "{{ (ansible_memtotal_mb*ls_heap_size_prct)|int }}"
+ls_heap_size_xms: "{{ ((ls_heap_size|int)*0.65)|int }}m"
+ls_heap_size_xmx: "{{ ls_heap_size }}m"
+ls_nice: 19
+ls_deploy_script: true
+ls_deploy_prefilter: true
+ls_deploy_sample: False
+ls_uadb_update: False
+
+# Defaults file for logstash
+ls_path_data: /var/lib/logstash
+ls_path_logs: /var/log/logstash
+ls_path_bin: /usr/share/logstash/bin
+
+# Plugin management
+ls_plugins : []
+
+# Ports logstash is listening (update firewalld config)
+ls_binding_ports: [5043,5044]
+
+# Kafka configuration
+ls_conf_override: true
+ls_input_kafka: false
+ls_input_kafka_codec: plain
+ls_output_kafka: false
+ls_output_kafka_codec: plain
+ls_kafka_topic: logstash
+ls_kafka_hosts: ['localhost']
+ls_kafka_port: 9092
+ls_kafka_zk_port: 2181
+ls_kafka_max_poll_records: 1000
+
+# Elasticsearch configuration
+ls_output_elasticsearch: false
+ls_elasticsearch_hosts: ['localhost']
+ls_es_hosts: "{{ ls_elasticsearch_hosts }}"
+ls_es_port: 9200
+ls_es_protocol: http
+ls_es_username:
+ls_es_password:
+
+# Firewall default setings
+firewall_setup: True
+firewall_type: firewalld
+
+# Filebeat configuration
+ls_input_beat: false
+ls_input_beat_tags: ["beat"]
+
+# HTTP configuration
+ls_input_http: false
+ls_input_http_port: 8080
+ls_input_http_tags: ["http"]
+
+# Syslog configuration
+ls_input_syslog: false
+
+# Logs Rotations
+ls_logs_max_backup_index: 7
+# ls_logrotate_days: daily
+# ls_logrotate_rotate: 7
+# ls_logrotate_size: 512M
+
+# xpack
+ls_monitoring_es_hosts: "{{ ls_es_hosts }}"
+ls_monitoring_enabled: "{% if ls_monitoring_es_hosts|length > 0 %}true{% else %}false{% endif %}"
+ls_monitoring_es_port: "{{ ls_es_port }}"
+ls_monitoring_es_protocol: "{{ ls_es_protocol }}"
+ls_monitoring_es_username: "{{ ls_es_username }}"
+ls_monitoring_es_password: "{{ ls_es_password }}"
+ls_monitoring_poll_interval: 10s
+ls_monitoring_collection_interval: 5s

@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+
+
+kafka-consumer-groups --list --zookeeper localhost:2181
+

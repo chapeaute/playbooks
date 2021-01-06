@@ -1,0 +1,48 @@
+---
+- name: script | Install backup scripts with curator
+  copy:
+    src: "usr/local/sbin/{{ item }}"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: elasticsearch
+    mode: 0750
+  with_items:
+    - es-indice-list
+    - es-indice-list-detail
+    - es-snapshot-indices
+    - es-snapshot-list
+    - es-snapshot-purge
+    - es-snapshot-restore
+    - es-reallocation-disable
+    - es-reallocation-enable
+  tags: script
+
+- name: script | Install dump/restore scripts with elasticdump
+  template:
+    src: "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: elasticsearch
+    mode: 0750
+  with_items:
+    - es-indice-restore
+    - es-indice-dump
+    - es-indice-clean
+    - es-indice-purge
+  tags: script
+
+- name: script | Install curator for elastic >= 5
+  package:
+    name: elasticsearch-curator
+  when: es_install_curator and es_major_version|int >= 5
+  tags:
+    - script
+    - curator
+
+- name: script | Install curator for elastic < 5
+  package:
+    name: python-elasticsearch-curator
+  when: es_install_curator and es_major_version|int < 5
+  tags:
+    - script
+    - curator

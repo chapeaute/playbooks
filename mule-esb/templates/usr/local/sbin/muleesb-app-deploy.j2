@@ -1,0 +1,88 @@
+#!/bin/bash
+
+USER="{{ mule_esb_user }}"
+GROUP="{{ mule_esb_group }}"
+APP_DIR="{{ mule_esb_default_root_dir }}/{{ mule_esb_service_name }}/apps"
+
+APP_NAME=""
+APP_PORT=""
+APP_FILE=""
+
+function syntax() {
+    cat <<EOF
+Script to deploy new Mule ESB applications
+
+Usage: ${0##*/} [-h|-n <app_name> -p <app_port> -f <archive_file>]
+    -h                Display this message
+    -n <app_name>     Application name
+    -p <app_port>     Application port
+    -f <archive_file> Archive file in .zip format
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Abording..."
+    exit 1
+fi
+
+while getopts "hn:p:f:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        n)
+            APP_NAME="${OPTARG}"
+            ;;
+        p)
+            APP_PORT="${OPTARG}"
+            ;;
+        f)
+            APP_FILE="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+
+if [[ -z $APP_NAME ]] || [[ -z $APP_PORT ]] || [[ -z $APP_FILE ]]; then
+    syntax
+    exit 1
+fi
+
+if [ ! -r "$APP_FILE" ]; then
+    echo "$APP_FILE: No such file or directory"
+    exit 1
+fi
+
+if [ ! -d "${APP_DIR}" ]; then
+    echo "Application directory ${APP_DIR} not found."
+    exit 1
+fi
+
+if [ ! -f ${APP_DIR}/${APP_NAME}-anchor.txt ]; then
+  rm -rf ${APP_DIR}/${APP_NAME}
+else
+  rm -f ${APP_DIR}/${APP_NAME}-anchor.txt
+fi
+
+echo -n "Waiting while removing application"
+
+while [ -d ${APP_DIR}/${APP_NAME} ]
+do
+    echo -n "."
+    sleep 1
+done
+
+echo done
+
+echo "Deploy application ${APP_NAME} on ${APP_DIR}"
+cp ${APP_FILE} ${APP_DIR}
+chown ${USER}:${GROUP} ${APP_DIR}/`basename ${APP_FILE}`
+firewall-cmd -q --add-port=${APP_PORT}/tcp --permanent
+firewall-cmd -q --reload

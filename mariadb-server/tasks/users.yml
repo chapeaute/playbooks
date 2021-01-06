@@ -1,0 +1,10 @@
+---
+
+# Creates database user
+- name: users | Create mysql user "{{ item.user }}"
+  mysql_user:
+    name: "{{ item.user }}"
+    password: "{{ item.password }}"
+    priv: "{{ item.priv }}"
+    state: "{{ item.state }}"
+  with_items: "{{ mysql_users }}"

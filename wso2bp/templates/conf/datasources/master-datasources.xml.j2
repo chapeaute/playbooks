@@ -1,0 +1,75 @@
+<datasources-configuration xmlns:svns="http://org.wso2.securevault/configuration">
+    <providers>
+        <provider>org.wso2.carbon.ndatasource.rdbms.RDBMSDataSourceReader</provider>
+    </providers>
+
+   <datasources>
+
+     <datasource>
+         <name>WSO2_CARBON_DB</name>
+         <description>The datasource used for registry and user manager</description>
+         <jndiConfig>
+             <name>jdbc/WSO2CarbonDB</name>
+         </jndiConfig>
+         <definition type="RDBMS">
+             <configuration>
+                 <url>jdbc:mysql://{{ wso2bp_db_host }}:3306/WSO2_BP?autoReconnect=true&amp;useSSL=false</url>
+                 <username>{{ wso2bp_db_user }}</username>
+                 <password>{{ wso2bp_db_pass }}</password>
+                 <driverClassName>com.mysql.jdbc.Driver</driverClassName>
+                 <maxActive>80</maxActive>
+                 <maxWait>60000</maxWait>
+                 <minIdle>5</minIdle>
+                 <testOnBorrow>true</testOnBorrow>
+                 <validationQuery>SELECT 1</validationQuery>
+                 <validationInterval>30000</validationInterval>
+                 <defaultAutoCommit>false</defaultAutoCommit>
+             </configuration>
+         </definition>
+     </datasource>
+
+    <datasource>
+        <name>WSO2_USER_DB</name>
+        <description>The datasource used for user manager</description>
+        <jndiConfig>
+            <name>jdbc/WSO2UMDB</name>
+        </jndiConfig>
+        <definition type="RDBMS">
+            <configuration>
+                <url>jdbc:mysql://{{ wso2bp_db_host }}:3306/WSO2_UM?autoReconnect=true&amp;useSSL=false</url>
+                <username>{{ wso2bp_db_user }}</username>
+                <password>{{ wso2bp_db_pass }}</password>
+                <driverClassName>com.mysql.jdbc.Driver</driverClassName>
+                <maxActive>50</maxActive>
+                <maxWait>60000</maxWait>
+                <testOnBorrow>true</testOnBorrow>
+                <validationQuery>SELECT 1</validationQuery>
+                <validationInterval>30000</validationInterval>
+                <defaultAutoCommit>true</defaultAutoCommit>
+            </configuration>
+        </definition>
+    </datasource>
+
+     <datasource>
+         <name>WSO2REG_DB</name>
+         <description>The datasource used by the registry</description>
+         <jndiConfig>
+             <name>jdbc/WSO2REG_DB</name>
+         </jndiConfig>
+         <definition type="RDBMS">
+             <configuration>
+             <url>jdbc:mysql://{{ wso2bp_db_host }}:3306/WSO2_REG?autoReconnect=true</url>
+             <username>{{ wso2bp_db_user }}</username>
+             <password>{{ wso2bp_db_pass }}</password>
+             <driverClassName>com.mysql.jdbc.Driver</driverClassName>
+             <maxActive>50</maxActive>
+             <maxWait>60000</maxWait>
+             <testOnBorrow>true</testOnBorrow>
+             <validationQuery>SELECT 1</validationQuery>
+             <validationInterval>30000</validationInterval>
+           </configuration>
+         </definition>
+     </datasource>
+  </datasources>
+
+</datasources-configuration>

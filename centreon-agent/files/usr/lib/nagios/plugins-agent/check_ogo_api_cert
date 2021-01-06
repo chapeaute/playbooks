@@ -1,0 +1,15 @@
+#!/bin/bash
+
+OGO_API_HOST=${1:-127.0.0.1}
+OGO_API_PROTO=${2:-https}
+OGO_API_URL="${OGO_API_PROTO}://${OGO_API_HOST}"
+
+output=$(curl -sS -k $OGO_API_URL/version 2>&1)
+
+if [[ $output =~ "alert bad certificate" ]] || [[ $output =~ "client certificate not found" ]]; then
+    echo "OK - Client certificat required ($output)"
+    exit 0
+else
+    echo "WARNING - No client certificat asked ! Please verify OGO API is available and client certificat is correctly configured ($output)"
+    exit 1
+fi

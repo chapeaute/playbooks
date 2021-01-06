@@ -1,0 +1,7 @@
+---
+- hosts: all
+  roles:
+    - role: activemq
+      zk_hosts: "{{ groups['activemq'] }}"
+      activemq_memory_size_prct: 0.1
+      firewall_setup: false

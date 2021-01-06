@@ -1,0 +1,7 @@
+---
+# handlers file for logstash
+- name: "Reload systemd"
+  command: systemctl daemon-reload
+
+- name: "Restart Zookeeper"
+  service: name="zookeeper" state=restarted

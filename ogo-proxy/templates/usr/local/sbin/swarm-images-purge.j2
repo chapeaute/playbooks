@@ -1,0 +1,15 @@
+#!/bin/bash
+
+COUNT=${1:-[% ogo_proxy_image_ret %]}
+LAST_VER_TO_PRESERVE=$(docker images [% ogo_proxy_image %] --format "table {{.Tag}}" | sed 1d | head -n$((COUNT)) | tail -1)
+
+# Remove image older than this version
+echo "Remove image older than $LAST_VER_TO_PRESERVE"
+IMG_LIST=$(docker images [% ogo_proxy_image %] --filter "before=[% ogo_proxy_image %]:$LAST_VER_TO_PRESERVE" -q)
+
+if [ -n "$IMG_LIST" ]; then
+    docker rmi $IMG_LIST -f
+    exit $?
+else
+    echo "No image to remove..."
+fi

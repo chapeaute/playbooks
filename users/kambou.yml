@@ -1,0 +1,10 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: olkam
+          groups: ['tomcat']
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCqbA5qGdHk9yhbqXz4pDBsVDKf30LY/oFeClGUG9ZTfTFTVGrLYy72xjuRamXCbmOCQQZgZZ3PcVzZp6q/ZyLkkBzSd+2BYe6nCQuFt+leZvSMatj+uGi6MsAAIYC27HhEwe3koSOlaz/sywkMRF1VwIX4q0ZnOtbA71MH2IMs6AHMdf+yTEZA8WMdjyu0Zi8uBGgvjD91WvaVCZeYjbqa7n20J8vvQJJcMsU4Q2cot5kx4XzR7GJg6zO0vkwXVQTXInS+Z14+Cw/0Vp1Sf1qmIqUwr+rSveXJoze9cDxqyLpP8FpzATxJfxIdrpGuLqt5Icb8Tay/0VXOZw36/a+J ollo.kambou@smile.ci
+

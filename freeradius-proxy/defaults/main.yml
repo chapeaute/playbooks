@@ -1,0 +1,16 @@
+---
+# defaults file for freeradius-proxy
+freerad_prx_dft_lb_type: load-balance
+freerad_prx_dft_rq_type: auth+acct
+freerad_prx_dft_secret: testing123
+freerad_prx_dft_port: 1812
+freerad_prx_dft_home_server: ['localhost']
+#freerad_vhost:
+#  - name: adsl
+#    servers: [ 'radius-adsl-1', 'radius-adsl-2' ]
+#    secret: changeme
+#    lb_type: load-balance
+#    rq_type: auth+acct
+#    port: 1812
+#  - name: wifi
+#    servers: [ 'radius-wifi-1', 'radius-wifi-2' ]

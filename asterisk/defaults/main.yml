@@ -1,0 +1,44 @@
+---
+
+# Global
+use_satellite_repo: false
+
+
+# defaults file for asterisk
+asterisk_version: 16
+asterisk_default_modules:
+  - pjsip
+  - sip
+
+asterisk_default_sounds:
+  - en
+  - fr
+
+#  udp,tcp,tls,ws,wss
+asterisk_default_transports:
+  - tcp
+  - udp
+
+asterisk_transports: []
+
+asterisk_modules: []
+asterisk_sounds: []
+
+
+asterisk_pjsip: []
+  # - id: 101
+  #   type: aor
+  #   configs:
+  #     - max_contacts=1
+  # - id: auth101
+  #   type: auth
+  #   configs:
+  #     - auth_type=userpass
+  #     - username=101
+  #     - password=101
+
+# asterisk_db_host:
+asterisk_db_type: mysql
+asterisk_db_user: asterisk
+asterisk_db_name: asterisk
+asterisk_db_password: "{{ lookup('password', 'credential/asterisk_db_password chars=ascii_letters,digits') }}"

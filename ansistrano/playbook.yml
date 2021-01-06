@@ -1,0 +1,23 @@
+---
+- hosts: all
+  vars:
+    site_dir:  "/var/www"
+    docs_dir:  "{{ site_dir }}/{{ site_name }}/htdocs/web"
+  roles:
+    - role: ansistrano
+      ansistrano_git_refspec: "{{ ansible_env.CI_COMMIT_SHA }}"
+      ansistrano_deploy_via: git
+      ansistrano_current_dir: htdocs
+      ansistrano_deploy_to: "{{ site_dir }}/{{ site_name }}"
+      ansistrano_git_repo: "{{ ansible_env.CI_REPOSITORY_URL }}"
+    - role: apache
+      apache2_vhosts:
+        cie-api.smile.ci:
+          document_root: "{{docs_dir}}"
+    - role: php
+    - role: composer
+      php_extensions:
+        - mysql
+        - xml
+      composer_site_dir: "{{ site_dir }}/{{ site_name }}/htdocs"
+

@@ -1,0 +1,26 @@
+---
+# Global
+use_satellite_repo: false
+
+php_timezone: 'Africa/Abidjan'
+
+# Version
+php_use_default_package: False
+php_default_version: "7.2"
+php_version: "{{ php_default_version }}"
+php_version_installed: "{{ php_use_default_package|ternary('',php_version.replace('.',''))}}"
+
+# Package management
+php_use_scl: False
+php_extension_packages: []
+php_default_packages: []
+php_packages: []
+php_extra_packages: []
+
+# Php extensions
+php_extensions: []
+php_extra_extensions: []
+
+php_settings_all: []
+php_settings_cli: []
+php_settings_apache2: []

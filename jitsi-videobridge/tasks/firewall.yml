@@ -1,0 +1,15 @@
+---
+
+- name: Firewall | Open ports
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop:
+    - "{{ jolokia_port }}/tcp"
+    - "{{ jvb_statistics_port }}/tcp"
+    - "{{ jvb_harvester_port }}/tcp"
+    - "{{ jvb_harvester_port }}/udp"
+    - 10000-20000/udp
+  tags: firewall,jitsi

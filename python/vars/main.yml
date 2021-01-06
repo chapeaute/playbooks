@@ -1,0 +1,7 @@
+---
+# vars file for python
+python_packages:
+  - "rh-python{{ python_version_short }}"
+  - "rh-python{{ python_version_short }}-python-pip"
+
+python_extra_packages: []

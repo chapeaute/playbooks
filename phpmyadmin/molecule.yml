@@ -1,0 +1,16 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: phpmyadmin
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+      capabilities: ['SYS_ADMIN']
+      ansible_groups:
+        - phpmyadmin
+verifier:
+  name: testinfra

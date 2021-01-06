@@ -1,0 +1,4 @@
+---
+# vars file for jitsi_generic
+jitsi_meet_install_tmp_dir: "/tmp/jitsi-meet-{{ jitsi_meet_version }}"
+jitsi_etc_dir: /etc/jitsi-meet

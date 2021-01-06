@@ -1,0 +1,17 @@
+---
+
+- name: RedHat | Allow httpd to write z-push log files
+  file:
+    path: "{{zpush_log_dir}}"
+    state: directory
+    recurse: true
+    owner: "{{apache2_user}}"
+    group: "{{apache2_group}}"
+    setype: httpd_sys_rw_content_t
+
+- name: RedHat | Allow logrotate to rotate z-push logs
+  sefcontext:
+    target: "{{zpush_log_dir}}(/.*)?"
+    setype: var_log_t
+    state: present
+    reload: yes

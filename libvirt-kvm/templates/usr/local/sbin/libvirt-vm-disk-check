@@ -1,0 +1,22 @@
+#!/bin/bash
+
+export LANG="en_US.UTF-8"
+
+rc=0
+tmp_file=$(mktemp)
+vm_list=$1
+
+if [ $# -eq 0 ]; then
+        vm_list=$(virsh list | grep running | awk '{print $2}')
+fi
+
+for vm in $vm_list
+do
+        echo "==== Check VM: $vm ===="
+        virt-filesystems --long -h --all -d $vm 2>&1 | tee $tmp_file
+        egrep -q "unknown|libguestfs: error:|iso9660" $tmp_file && rc=1
+done
+
+rm $tmp_file
+
+exit $rc

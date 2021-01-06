@@ -1,0 +1,25 @@
+---
+# handlers file for wso2
+
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: Restart wso2sp-dashboard
+  service:
+    name: wso2sp-dashboard
+    state: restarted 
+
+- name: Restart wso2sp-manager
+  service:
+    name: wso2sp-manager
+    state: restarted 
+
+- name: Restart wso2sp-worker
+  service:
+    name: wso2sp-worker
+    state: restarted 
+
+- name: Restart wso2sp-editor
+  service:
+    name: wso2sp-editor
+    state: restarted 

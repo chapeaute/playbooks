@@ -1,0 +1,16 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Install ip route to detect ansible_default_ipv4.address
+      package:
+        name: iproute
+    - name: setup to get ansible_default_ipv4.address
+      setup:
+    - name: Install firewalld
+      import_role:
+        name: basic-firewalld
+    - name: Install coturn
+      import_role:
+        name: coturn
+      vars:

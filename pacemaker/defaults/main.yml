@@ -1,0 +1,31 @@
+---
+# Global settings
+firewall_setup: true
+firewall_zone: public
+
+# Defaults settings for pacemaker
+pcmk_cluster_name: pacemaker
+pcmk_hacluster_passwd: "{{ lookup('password', 'credential/{{ pcmk_cluster_name }}-pcmk_hacluster_password chars=ascii_letters,digits') }}"
+pcmk_hacluster_passwd_sha: '$6$DLCEHvTVX/.JHhj4$miKcrARx2YV/j43ijd5YJgGZIv/mlkGFMUQHkMuyQr1NC54Elo6gy1t67.8deMnAT22ZEpwRhykgPD.8GIVrZ1' # mkpasswd --method=SHA-512
+pcmk_node_timeout: 120
+pcmk_hosts:
+#pcmk_drbd_rsc:
+#  rsc_name: data
+#  mnt_point: /srv
+#  dir:
+#    - src_dir: /var/lib/mysql
+#      dst_dir: /srv/mysql
+#    - src_dir: /var/www
+#      dst_dir: /srv/www
+#pcmk_vip_rsc:
+#  - vip1:
+#    interface: eth0
+#    address: 192.168.122.100
+#    netmask: 24
+#  - vip2:
+#    interface: eth1
+#    address: 172.16.122.100
+#    netmask: 24
+#pcmk_svc_rsc:
+#  - mariadb
+#  - httpd

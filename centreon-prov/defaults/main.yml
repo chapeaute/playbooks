@@ -1,0 +1,220 @@
+---
+# Variables for centreon serveur provisionning
+centreon_server: 127.0.0.1
+centreon_poller: [ "{{ centreon_server }}" ]
+#centreon_poller_exclude:
+centreon_bind_addr: "{{ ansible_default_ipv4.address }}"
+#centreon_bind_interface:
+centreon_force_prov: false
+centreon_prov_purge_cache: true
+
+# CLAPI parameters
+centreon_clapi_conf: /etc/centreon/clapi.conf
+centreon_clapi_user: admin
+centreon_clapi_pass: changeme
+
+# Auto-discovery Disk parameters
+centreon_disk_plugin: /usr/lib/nagios/plugins/check_centreon_snmp_remote_storage
+centreon_disk_svc_tpl: "OS-Linux-Disk-Generic-Name-SNMP-custom"
+centreon_disk_svc_prefix: "Sys-Disk-"
+centreon_disk_svc_macro: "DISKNAME"
+centreon_disk_svc_macro_extra: ""
+centreon_disk_exclude: "/dev/shm,/run.*,/sys/fs/cgroup,/var/lib/docker/containers/.*"
+
+# Auto-discovery Interface parameters
+centreon_traffic_plugin: /usr/lib/nagios/plugins/check_centreon_snmp_traffic
+centreon_traffic_svc_tpl: "OS-Linux-Traffic-Generic-Name-SNMP-custom"
+centreon_traffic_svc_prefix: "Sys-Traffic-"
+centreon_traffic_svc_macro: "INTERFACENAME"
+centreon_traffic_svc_macro_extra: ""
+centreon_traffic_exclude: "vnet*,veth.*"
+
+# Auto-discovery Bacula client backup
+centreon_backup_dir_group: bacula-dir
+centreon_backup_plugin: /usr/lib/nagios/plugins-agent/disco_bacula_jobs
+centreon_backup_svc_tpl: "App-Backup-Bacula-FD-SSH"
+centreon_backup_svc_prefix: "Svc-Backup-"
+centreon_backup_svc_macro: "FD"
+centreon_backup_svc_macro_extra: ""
+centreon_backup_exclude: ""
+centreon_backup_ssh_user: "{{ centagt_ssh_user|default('centreon') }}"
+
+# Auto-discovery Mule ESB applications
+centreon_muleesb_dir_group: muleesb
+centreon_muleesb_plugin: /usr/lib/nagios/plugins-agent/disco_muleesb_apps
+centreon_muleesb_svc_tpl: "App-MuleESB-HTTP-Expected-Content-Custom"
+centreon_muleesb_svc_prefix: "App-MuleESB-"
+centreon_muleesb_svc_macro: "APPNAME|APPPORT"
+centreon_muleesb_svc_macro_extra: ""
+centreon_muleesb_exclude: ""
+centreon_muleesb_ssh_user: "{{ centagt_ssh_user|default('centreon') }}"
+
+# Auto-discovery NodeJS applications
+centreon_nodejs_dir_group: nodejs
+centreon_nodejs_plugin: /usr/lib/nagios/plugins-agent/disco_nodejs_apps
+centreon_nodejs_svc_tpl: "App-NodeJS-HTTP-Expected-Content-Custom"
+centreon_nodejs_svc_prefix: "App-NodeJS-"
+centreon_nodejs_svc_macro: "APPNAME|APPPORT"
+centreon_nodejs_svc_macro_extra: ""
+centreon_nodejs_exclude: ""
+centreon_nodejs_ssh_user: "{{ centagt_ssh_user|default('centreon') }}"
+
+# Auto-discovery Tomcat applications
+centreon_tomcat_dir_group: tomcat
+centreon_tomcat_plugin: /usr/lib/nagios/plugins-agent/disco_tomcat_apps
+centreon_tomcat_svc_tpl: "App-Tomcat-HTTP-Expected-Content-Custom"
+centreon_tomcat_svc_prefix: "App-Tomcat-"
+centreon_tomcat_svc_macro: "APPNAME"
+centreon_tomcat_svc_macro_extra: ""
+centreon_tomcat_exclude: "host-manager,manager,ROOT"
+centreon_tomcat_ssh_user: "{{ centagt_ssh_user|default('centreon') }}"
+
+# Auto-discovery Apache applications
+centreon_apache_dir_group: apache
+centreon_apache_plugin: /usr/lib/nagios/plugins-agent/disco_apache_vhosts
+centreon_apache_svc_tpl: "App-Apache-vHost-Expected-Content-Custom"
+centreon_apache_svc_prefix: "App-Apache-"
+centreon_apache_svc_macro: "APPNAME|APPPORT|APPPROTO"
+centreon_apache_svc_macro_extra: ""
+centreon_apache_exclude: ""
+centreon_apache_ssh_user: "{{ centagt_ssh_user|default('centreon') }}"
+
+# Resources list to declare on centreon server
+centreon_rsc:
+  - name: USER1
+    value: /usr/lib/nagios/plugins
+  - name: SSHUSER
+    value: "{{ centagt_ssh_user }}"
+  - name: CENTREONPLUGINS
+    value: /usr/lib/centreon/plugins
+  - name: AGENTPLUGINS
+    value: "{{ centagt_plugin_dir }}"
+
+# Host macro list to declare on centreon server
+centreon_mcr_host:
+  - template: Servers-MariaDB-SSH
+    name: MYSQLUSERNAME
+    value: "{{ monitoring_nagios_db_user|default('nagios') }}"
+  - template: Servers-MariaDB-SSH
+    name: MYSQLPASSWORD
+    value: "{{ monitoring_nagios_db_pass|default('changeme') }}"
+  - template: Servers-MongoDB-SSH
+    name: MONGODBUSERNAME
+    value: "{{ monitoring_nagios_db_user|default('nagios') }}"
+  - template: Servers-MongoDB-SSH
+    name: MONGODBPASSWORD
+    value: "{{ monitoring_nagios_db_pass|default('changeme') }}"
+  - template: Servers-PostgreSQL
+    name: POSTGRESUSERNAME
+    value: "{{ monitoring_nagios_db_user|default('nagios') }}"
+  - template: Servers-PostgreSQL
+    name: POSTGRESPASSWORD
+    value: "{{ monitoring_nagios_db_pass|default('changeme') }}"
+  - template: Servers-Tomcat-SSH
+    name: TOMCATUSERNAME
+    value: "{{ tomcat_centreon_user|default('centreon') }}"
+  - template: Servers-Tomcat-SSH
+    name: TOMCATPASSWORD
+    value: "{{ tomcat_centreon_pass|default('changeme') }}"
+  - template: Servers-Redis-SSH
+    name: REDISMAXMEMORY
+    value: "{{ (ansible_memtotal_mb*redis_setting_maxmemory_prct|default(0.8))|int }}M"
+  - template: Servers-Redis-Sentinel-SSH
+    name: REDISAUTHFILE
+    value: "{{ redis_sentinel_auth_file|default('/etc/redis-auth.conf') }}"
+
+# Service macro list to declare on centreon server
+centreon_mcr_svc:
+  - template: App-Protocol-DNS-Request-Custom
+    name: SEARCH
+    value: smile.ci
+
+# Auto-provisioning hostgroup association
+centreon_host_grp:
+  - name: "ovh"
+    template: "Site-OVH"
+  - name: "rp"
+    template: "Site-RP"
+  - name: "smile"
+    template: "Site-Smile"
+
+# Auto-provisioning host template association
+centreon_host_tpl:
+  - name: apache
+    template: Servers-Apache-SSH
+  - name: basic-server
+    template: OS-Linux-SNMP|OS-Linux-SSH
+  - name: bacula-dir
+    template: Servers-Bacula-DIR-SNMP
+  - name: bacula-fd
+    template: Servers-Bacula-FD-SNMP
+  - name: bacula-sd
+    template: Servers-Bacula-SD-SNMP
+  - name: bind
+    template: Servers-DNS
+  - name: brms
+    template: Servers-BRMS
+  - name: capsule
+    template: Servers-Capsule-SNMP
+  - name: drbd
+    template: Servers-DRBD-SSH
+  - name: elasticsearch
+    template: Servers-ElasticSearch-SSH
+  - name: etcd
+    template: Servers-Etcd
+  - name: filebeat
+    template: Servers-Filebeat-SNMP
+  - name: galera
+    template: Servers-Galera-SSH|Servers-MariaDB-SSH
+  - name: haproxy
+    template: Servers-HAProxy-SSH
+  - name: kafka
+    template: Servers-Kafka
+  - name: katello
+    template: Servers-Katello-SNMP
+  - name: kibana
+    template: Servers-Kibana-SNMP
+  - name: keepalived
+    template: Servers-KeepAlived-SNMP
+  - name: lsyncd
+    template: Servers-Lsyncd-SNMP
+  - name: logstash
+    template: Servers-Logstash
+  - name: mariadb
+    template: Servers-MariaDB-SSH
+  - name: mongodb
+    template: Servers-MongoDB-SSH
+  - name: nfs
+    template: Servers-NFS-SNMP
+  - name: nginx
+    template: Servers-Nginx
+  - name: pacemaker
+    template: Servers-PCS-SSH
+  - name: pcs
+    template: Servers-PCS-SSH
+  - name: proftpd
+    template: Servers-Proftpd-SNMP
+  - name: ogoproxy-manager
+    template: Servers-Ogo-Manager
+  - name: tomcat
+    template: Servers-Tomcat-SSH
+  - name: postfix
+    template: Servers-Postfix-MTA
+  - name: postgresql
+    template: Servers-PostgreSQL
+  - name: redis
+    template: Servers-Redis-SSH
+  - name: redis-sentinel
+    template: Servers-Redis-Sentinel-SSH
+  - name: rundeck
+    template: Servers-Rundeck-SNMP
+  - name: varnish
+    template: Servers-Varnish
+  - name: wso2am
+    template: Servers-WSO2AM
+  - name: wso2ei
+    template: Servers-WSO2EI
+  - name: wso2is
+    template: Servers-WSO2IS
+  - name: zimbra
+    template: Servers-Zimbra

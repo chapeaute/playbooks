@@ -1,0 +1,10 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: midio
+          groups: spark
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQCpmzTb3J3ckFT9rECBf43Rvk01H5BDeowkipM/szcbwbQOtwJ/r0aLpRSTpbRq3hyKfqYnc2XoH/2osTQkIcX4gvB8z/RyHymcoH4KOYFTUYXWygHJVH/MJKoeZU30du5ngukCnN5sZdp6KrD+YKpKmeZFsxForRulYWRAtlXEzhPR2KU01817kiyGsIZQPl6T6zh1FYxFJvgckxA9n7nnKv0BiID3e83ppttKiDJ/5EZuVSFAPpfehwF3N09kOs1DDjVBiO15qVm+U+587HV1ukgtCsv1XWjpf0SddC37fZILlq6tOHMRbSlQtCzJAFve6GBwU38KPz1T0bptnJkZ1507RF0QQDti7AL+TCCjEbOSdFGEWLE0pAsBQQEtGVr+62GuItExE1RgKCw6WtoIijo838sG17yBuBA+mm+nKhJZ4IYZhDexrhaxkF4qXZxdVNBwenxGZyV3A2kro7F7bDVt/lOO+kpqAX3QmhZmACSCZGkgPQwuza+WIbu2xN8= michael.diomande@smile.ci

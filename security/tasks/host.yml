@@ -1,0 +1,14 @@
+---
+- name: host | Configure 'multi' directive in /etc/host.conf
+  lineinfile:
+    dest:   /etc/host.conf
+    regexp: "^multi .*"
+    line:   "multi {{ sec_host_multi }}"
+  when: security_level >= 1
+
+- name: host | Configure 'order' directive in /etc/host.conf
+  lineinfile:
+    dest:   /etc/host.conf
+    regexp: "^order .*"
+    line:   "order {{ sec_host_order }}"
+  when: security_level >= 1

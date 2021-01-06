@@ -1,0 +1,11 @@
+---
+
+- hosts: cassandra
+  vars:
+    cassandra_path_home: /srv/cassandra
+    cassandra_bind_addr: "{{ ansible_eth0.ipv4.address }}"
+    cassandra_cluster_name: "cassandra"
+    cassandra_hosts: "{{ groups['cassandra'] }}" 
+  roles:
+    - role: cassandra
+      

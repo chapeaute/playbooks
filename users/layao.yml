@@ -1,0 +1,12 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users:
+        - login: layao
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCXwycAv8AIfPaBbAMzjduw7EhyQv2Viimp8+FTb1UaxUX/Qci4KP1Z6/X1L32zsMv5z7jV2h6Sd8UoehPikySkgr5DfwvI7LDCKFLnVQLjyMXL2dYwcni+H5jCO1HoRDCh4pkKPFKWtX3wN2Xk1O7bmOwcQt16al7XHq033CGHPRZAPiOHEILJwZf5JKD1rvBV/CqWLVeJcHmP0ihx0GL4k3MXp2nShCYw/3jWa/SjO0Ndrtj1m6vZI5sUU84zT5/59+8cFrf8z2Gnvg9A4YJecwSy/Ut5eHBW444YPBIP16UNW2I6OHDLqHm7ePlPJF66LRKomNnybd6ciA1EaxGhtGN7hEpub0ab9c+JDjQSjY+6RRMfybGEAbOhM7nfE+dkEkRNo3yIx0efxS5UtgEqEQrSWSPPEZdEyVZTWbfm1I7NJau400d7OvwvygIT0gP2f2gI4IKIz4BdWdDJW/ybxVnLL6iPLZO6+8nXalbFxoXUB9oq4Y2iFTNm4xosVZMb8mzWnBmuOjomIfby9F9vTfk+3X7x2EHlDkiDpGitj/5tbGzeUM3B1LAY8Svsy1c11I/9j1W+ybScdqYAX+6IJz0u9+NKnhJm6/7UJzLbnUG+4mmqTSWDuzJb8O0KJb59qhMD2SEl/QiCeTt9xFeVROYveIXDZ4px0DN2NKnGQQ== lazare.yao@smile.ci
+

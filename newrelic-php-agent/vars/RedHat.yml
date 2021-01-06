@@ -1,0 +1,4 @@
+---
+
+apache2_service_name: httpd
+newrelic_php_config: /etc/php.d/newrelic.ini

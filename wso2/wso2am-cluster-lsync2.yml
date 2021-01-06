@@ -1,0 +1,15 @@
+---
+- hosts: wso2am
+  vars:
+    wso2am_version: 3.2.0
+    # WSO2 Password
+    wso2am_admin_pass: changeme
+    # Address of MySQL host
+    # wso2am_db_host: "db_host_address"
+    # Percentage of total memory dedicated to jvm
+    wso2am_memory_size_prct: 0.6
+    # WSO2 root directory
+    wso2am_root_dir: /var/lib
+    wso2am_nodes: "{{ groups['wso2am'] }}"
+  roles:
+    - role: wso2am

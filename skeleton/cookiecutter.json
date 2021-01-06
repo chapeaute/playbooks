@@ -1,0 +1,9 @@
+{
+    "role_name": "Role Name",
+    "author": "Your name",
+    "email": "Your email",
+    "description": "Describe your role",
+    "company": "Your company",
+    "license": ["BSD", "MIT", "GPLv2", "GPLv3", "Apache", "CC-BY"],
+    "min_ansible_version": 2.7
+}

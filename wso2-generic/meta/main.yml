@@ -1,0 +1,107 @@
+galaxy_info:
+  author: your name
+  description: your description
+  company: your company (optional)
+
+  # If the issue tracker for your role is not on github, uncomment the
+  # next line and provide a value
+  # issue_tracker_url: http://example.com/issue/tracker
+
+  # Some suggested licenses:
+  # - BSD (default)
+  # - MIT
+  # - GPLv2
+  # - GPLv3
+  # - Apache
+  # - CC-BY
+  license: license (GPLv2, CC-BY, etc)
+
+  min_ansible_version: 1.2
+
+  # If this a Container Enabled role, provide the minimum Ansible Container version.
+  # min_ansible_container_version:
+
+  # Optionally specify the branch Galaxy will use when accessing the GitHub
+  # repo for this role. During role install, if no tags are available,
+  # Galaxy will use this branch. During import Galaxy will access files on
+  # this branch. If Travis integration is configured, only notifications for this
+  # branch will be accepted. Otherwise, in all cases, the repo's default branch
+  # (usually master) will be used.
+  #github_branch:
+
+  #
+  # platforms is a list of platforms, and each platform has a name and a list of versions.
+  #
+  # platforms:
+  # - name: Fedora
+  #   versions:
+  #   - all
+  #   - 25
+  # - name: SomePlatform
+  #   versions:
+  #   - all
+  #   - 1.0
+  #   - 7
+  #   - 99.99
+
+  galaxy_tags: []
+    # List tags for your role here, one per line. A tag is a keyword that describes
+    # and categorizes the role. Users find roles by searching for tags. Be sure to
+    # remove the '[]' above, if you add tags to this list.
+    #
+    # NOTE: A tag is limited to a single word comprised of alphanumeric characters.
+    #       Maximum 20 tags per role.
+
+dependencies:
+  - role: openjdk
+    openjdk_version: "{{ wso2_generic_java_version }}"
+    when: wso2_generic_java_impl == 'openjdk'
+  - role: oracle-java
+    oracle_java_version: "{{ wso2_generic_java_version }}"
+    when: wso2_generic_java_impl == 'oraclejdk'
+  - role: generic-service
+    genericservice_root: "{{ wso2_generic_root_dir }}"
+    genericservice:
+      service_type: simple
+      name: "{{ wso2_generic_service_name }}"
+      source_url: "{{ wso2_generic_download_url }}"
+      subpath: "{{ wso2_generic_subpath }}"
+      start_command: "{{ wso2_generic_start_command }}"
+      stop_command: "{{ wso2_generic_stop_command }}"
+      limitopenfiles: 655360
+      system_home: "{{ wso2_generic_home_dir }}"
+      create_service: "{{ wso2_generic_create_service|default(true) }}"
+      create_home: false
+      tmp_dest: "{{ wso2_generic_download_tmp_dir }}"
+      chowned_dirs:
+      # log_glob: "{{ wso2_generic_log_glob }}"
+      firewall_port: "{{ wso2_generic_ports }}"
+      # do_start: "{{ wso2_generic_start_service|default(False) }}"
+      do_start: false
+      env_vars:
+        JAVA_HOME: "{{ java_home }}"
+        JVM_MEM_OPTS: "-Xms{{wso2_generic_memory_size}} -Xmx{{wso2_generic_memory_size}}"
+        JAVA_OPTS: "{{ wso2_generic_default_java_opts }} {{ wso2_generic_java_opts }}"
+  - role: ssl-certs
+    tags: config_ssl
+    ssl_certs_keystore_filename: wso2carbon
+    ssl_certs_keystore_alias: wso2carbon
+    ssl_certs_filename: "{{ wso2_generic_service_name }}"
+    ssl_certs_path_owner:  "{{ wso2_generic_service_name }}"
+    ssl_certs_path_group:  "{{ wso2_generic_service_name }}"
+    ssl_certs_keystore_pass: "{{ wso2_generic_keystore_pass }}"
+    ssl_certs_generate_keystore: true
+    when: not wso2_generic_use_default_jks | bool
+  - role: apache-proxy
+    apache2_proxies:
+      "{{ wso2_generic_service_name }}":
+        ssl:
+          enabled: "{{  wso2_generic_enable_https_reverse }}"
+          redirect_to_https: true
+          certificate_file: "{{ ssl_certs_cert_path }}"
+          certificate_key_file: "{{ ssl_certs_privkey_path }}"
+        http_backends:
+          - 127.0.0.1:9763
+    when: wso2_generic_enable_http_reverse
+  - role: security-apache
+    when: wso2_generic_enable_http_reverse

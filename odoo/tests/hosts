@@ -1,0 +1,5 @@
+[all]
+odoo ansible_connection=docker
+
+[group1]
+odoo

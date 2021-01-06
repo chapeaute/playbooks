@@ -1,0 +1,10 @@
+---
+# handlers file for nodejs
+- name: Restart NodeJS
+  service:
+    name:  "{{ nodejs_service }}"
+    state: restarted
+
+- name: Systemd reload
+  systemd:
+    daemon_reload: yes

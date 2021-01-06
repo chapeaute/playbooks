@@ -1,0 +1,14 @@
+---
+# Global
+use_satellite_repo: false
+
+# defaults file for katello-agent
+katello_version: "3.4"
+katello_server: localhost
+katello_organization: Smile
+katello_activation_key: SmileKey
+katello_force_register: false
+katello_repofile_delete:
+  - CentOS-*.repo
+  - epel*.repo
+  - katello-client.repo

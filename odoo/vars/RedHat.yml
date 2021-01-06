@@ -1,0 +1,17 @@
+---
+# vars file for ansible-odoo
+odoo_dependencies_common:
+   - wkhtmltopdf
+   - python-gevent
+   - python-setuptools
+
+odoo_python_dependencies:
+   - unzip
+   - gcc
+   - wget
+   - nodejs-less
+   - libxslt-devel
+   - bzip2-devel
+   - openldap-devel
+   - libjpeg-devel
+   - freetype-devel

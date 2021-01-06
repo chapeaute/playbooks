@@ -1,0 +1,4 @@
+---
+# vars file for bacula-sd
+bacula_sd_service: bacula-sd
+bacula_conf_dir: /etc/bacula

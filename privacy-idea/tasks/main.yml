@@ -1,0 +1,127 @@
+---
+
+# tasks file for privacy-id
+- name: Create group privacy
+  group:
+    name: privacyidea
+    system: true
+    
+- name: ajouter le user privacy
+  user:
+    name: privacyidea
+    system: true
+
+- name: Creation des repertoire Privacy
+  file:
+    path: "{{ item }}"
+    state: directory
+    owner: privacyidea
+    group: privacyidea
+    mode: '0775'
+  with_items:
+    - /etc/privacyidea
+    - /opt/privacyidea
+    - /var/log/privacyidea
+
+- name: pré requis
+  package:
+    name: "{{ item }}"
+  with_items:
+    - python-virtualenv
+    - mod_wsgi 
+    - mod_ssl 
+    - python-virtualenv
+
+- name: Download requirements.txt
+  get_url:
+    url:  "https://raw.githubusercontent.com/privacyidea/privacyidea/v{{privacy_version}}/requirements.txt"
+    dest: /opt/privacyidea/requirements.txt
+
+
+- name: Installation de Privacy
+  become: yes
+  become_user: "privacyidea"
+  pip:
+    name: "{{ item }}"
+    virtualenv: /opt/privacyidea
+    #virtualenv_command: /opt/rh/rh-python36/root/usr/bin/virtualenv
+    extra_args: "-U"
+  with_items:
+    - pip
+    - setuptools
+
+
+- name: Installation requirements.txt
+  become: yes
+  become_user: "privacyidea"
+  pip:
+    requirements: /opt/privacyidea/requirements.txt
+    virtualenv: /opt/privacyidea
+    #virtualenv_command: /opt/rh/rh-python36/root/usr/bin/virtualenv
+
+- name: Installation de Privacy
+  become: yes
+  become_user: "privacyidea"
+  pip:
+    name: "privacyidea=={{privacy_version}}"
+    virtualenv: /opt/privacyidea
+    #virtualenv_command: /opt/rh/rh-python36/root/usr/bin/virtualenv
+
+- name: Creation du fichier de configuration
+  template:
+    src:  pi.cfg.j2
+    dest: /etc/privacyidea/pi.cfg
+    owner: privacyidea
+    group: privacyidea
+    mode: '0640'
+
+- name:  encryption key for the database
+  become_user: privacyidea
+  command: bin/pi-manage create_enckey 
+  args: 
+    chdir: /opt/privacyidea
+    creates: /etc/privacyidea/enckey
+     
+- name:  audit key for the database
+  become_user: privacyidea
+  command: bin/pi-manage create_audit_keys
+  args: 
+    chdir: /opt/privacyidea
+    creates: /etc/privacyidea/private.pem
+  register: privacy_audit_keys
+     
+- name:  audit key for the database
+  become_user: privacyidea
+  command: bin/pi-manage createdb
+  args: 
+    chdir: /opt/privacyidea
+  when: privacy_audit_keys is changed
+     
+- name:  audit key for the database
+  become_user: privacyidea
+  command: bin/pi-manage db stamp head -d /opt/privacyidea/lib/privacyidea/migrations/
+  args: 
+    chdir: /opt/privacyidea
+  when: privacy_audit_keys is changed
+     
+- name:  audit key for the database
+  become_user: privacyidea
+  command: "bin/pi-manage admin add {{ privacy_admin_user }} -p {{ privacy_admin_password }}"
+  args: 
+    chdir: /opt/privacyidea
+  when: privacy_audit_keys is changed
+     
+- include_tasks: "{{ ansible_os_family }}.yml"
+
+- name: Download privacyideaapp.wsgi
+  get_url:
+    url: https://raw.githubusercontent.com/NetKnights-GmbH/centos7/master/SOURCES/privacyideaapp.wsgi
+    dest: /etc/privacyidea/privacyideaapp.wsgi
+
+- name: Set custom configuration
+  template:
+    src: vhost.conf.j2
+    dest: /etc/httpd/conf.d/custom/privacy-idea.conf
+  notify: "Restart Apache"
+ 
+

@@ -1,0 +1,13 @@
+---
+-  hosts: all
+   vars:
+     drupal_php_version: "7.2"
+     drupal_php_extensions: [] # Add more extensions (Optional)
+     drupal_site_dir: /var/www
+     drupal_site_name: app-name
+     drupal_site_aliases: ['app-url']
+   roles:
+     - role: drupal
+     - role: security-apache
+       security_level: 2
+

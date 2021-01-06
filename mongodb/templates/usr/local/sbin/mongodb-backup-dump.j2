@@ -1,0 +1,114 @@
+#!/bin/bash
+
+BACKUP_DIR="{{ mongodb_backup_dir }}"
+DATE=$(date '+%Y%m%d_%H%M')
+
+AUTH_FILE="/root/.mongorc.js"
+AUTH_LINE=$(grep "^db.getSiblingDB" ${AUTH_FILE} | sed 's/.*"\(.*\)".*"\(.*\)".*"\(.*\)".*/\1:\2:\3/')
+MONGO_ADB=$(echo ${AUTH_LINE} | cut -d: -f1)
+MONGO_USER=$(echo ${AUTH_LINE} | cut -d: -f2)
+MONGO_PASS=$(echo ${AUTH_LINE} | cut -d: -f3)
+MONGO_AUTH_OPTS="--username ${MONGO_USER} --password ${MONGO_PASS} --authenticationDatabase ${MONGO_ADB}"
+
+function check_backup_state(){
+    if [ $(command -v cluster-state) ]; then
+        # Server status
+        HB_STATE=$(if [[ $(cluster-state) == '[master]' ]] ; then echo 'master' ; else echo 'backup' ; fi ; )
+
+        case $HB_STATE in
+            backup)
+                echo "This server isn't master on the cluster, stopping backup."
+                exit 0;
+            ;;
+            master)
+                echo "This server is master, starting backup process."
+            ;;
+            *)
+                echo "Unknown state: $HB_STATE";
+                exit 0;
+            ;;
+        esac
+    else
+        HB_STATE="BACKUP"
+        echo "Crm isn't configured on this server, forcing backup state"
+    fi
+}
+
+function check_replica_state() {
+    master=$(mongo ${MONGO_AUTH_OPTS} --quiet --eval "db.isMaster().ismaster")
+    if [[ $master == "false" ]]
+    then
+        echo "This server isn't master on the replica set, stopping backup."
+        exit 0
+    else
+        echo "This server is master on the replica set, starting backup process."
+    fi
+}
+
+function syntax() {
+    cat <<EOF
+Script to backup MongoDB databases
+
+Usage: ${0##*/} [-h|-n <db>]
+    -h        Display this message
+    -n <db>   Backup a specific database
+EOF
+}
+
+function exec_cmd() {
+    local cmd="$@"
+
+    # Backup must be done with root user, if not try to switch to this user
+    if [ "$UID" -eq 0 ]; then
+        eval "${cmd}"
+        return $?
+    else
+        >&2
+        echo "Script must be run with root privileges. Abording backup..."
+        exit 1
+    fi
+}
+
+function backup_db() {
+    local dbname=$1
+
+    if [ ! -d ${BACKUP_DIR} ]; then
+        mkdir -p ${BACKUP_DIR} || return 2
+    fi
+
+    echo "Backup $dbname: "
+    exec_cmd "mongodump ${MONGO_AUTH_OPTS} --gzip --db ${dbname} --out ${BACKUP_DIR}/backup-${DATE}"
+}
+
+function backup_all_db() {
+    for db in $(echo 'show dbs' | mongo ${MONGO_AUTH_OPTS} --quiet | awk '{print $1}')
+    do
+        backup_db ${db}
+    done
+}
+
+while getopts "hn:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        n)
+            DBNAME="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+check_backup_state
+check_replica_state
+
+if [ -n "${DBNAME}" ]; then
+    backup_db ${DBNAME}
+else
+    backup_all_db
+fi

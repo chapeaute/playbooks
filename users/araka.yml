@@ -1,0 +1,22 @@
+---
+
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users_groups:
+        - name: exploit
+      sudoers:
+        exploit:
+          state: present
+          lines:
+            - "%exploit ALL=(ALL) NOPASSWD: ALL"
+        default:
+          state: present
+          lines:
+            - 'Defaults    env_keep += "SSH_AUTH_SOCK"'
+      users:
+        - login: araka
+          groups: exploit
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDG6GQPvPOHXt57Js4qHfxNPF3aKV9mRjVUu6KcGc8bN8HW/eU46FUKjh/wY6x4Hk55rv5BcpwIiUk9hwmkt6UTXMWmrKZ/xQoD0W6yjyptmM7rNaTTymiEMZVDDL2qMlThOl5k2R3L5qZJmy3iMR+WNEH4d4HUsGyG4UPG5P9VahqFVDdad1VkxhNrVaZgFxWCBidu2jdmH5GWbYLAW0h0U/pwYUYyk7KDu9r8aL8lK8z0KE0nEl4aFFju19X1rGszcarmfv2xVI6jR8fvyfOrBH4QBlgRtjTMtWhB3J7S179+jzm1Cd1y29FawtZyfdWsld5EcC2xm4hmHaghcJ5FmTbbmA7HrLeNlzSyhhxREVmOsTPvuPRbgdZVhZMXbwgdngv3SwpubXHF+kKRYJ+7gnQIDgTx5aQP/ifb1aD+jn6oWWNjahABuURQoV1yjp8nz6ddG2lsKy8PREGJIqYsmdTkTVIFCpqpUNGG8idvG+E5mnuAuMFqot7S5VwzkMYv0MLXXLiO78tXulPhZbSFVjR6MjamzNZxfZJABIcYhbrXf8ONgQw22coz7hwHmAU5MnSXTb0cpecrzKxCbvHJVjmoJ5NYyvWcihvmZm0Gs26ll+5XpWvNSwNFmg4Js7r4YV8p4IK3EATJdQOLYGJdzUb3gq3FJzHZNUvSTnHHUQ== arnaud.aka@smile.ci

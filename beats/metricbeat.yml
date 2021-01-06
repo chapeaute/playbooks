@@ -1,0 +1,8 @@
+---
+- hosts: all
+  roles:
+    - role: metricbeat
+      mb_version: "7.0" 
+      #mb_kafka_hosts: "{{ groups['kafka'] }}"
+      #mb_logstash_hosts: "{{ groups['logstash'] }}"
+      #mb_es_hosts: "{{ groups['elasticsearch'] }}"

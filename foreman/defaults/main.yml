@@ -1,0 +1,35 @@
+---
+
+# General config.
+foreman_version: "2.2"
+foreman_answer_file_path: '/etc/foreman-installer/scenarios.d/foreman-answers.yaml'
+foreman_cmd_options: []
+foreman_hostname: "{{ ansible_fqdn }}"
+foreman_admin_username: admin
+foreman_admin_password: changeme
+foreman_db_manage: False
+foreman_db_remote_host: "{{ foreman_db_host }}"
+foreman_db_host: "{{ ansible_fqdn }}"
+foreman_db_database: foreman
+foreman_db_username: foreman
+foreman_db_password:  "{{ lookup('password', 'credential/{{ inventory_hostname }}-foreman_db_password chars=ascii_letters,digits') }}"
+
+# Puppet config.
+foreman_enable_puppet: False
+# enable_puppetdb used only in tasks/Setup_RedHat.yml.
+foreman_enable_puppetdb: False
+foreman_puppet_version: 6
+
+# Plugins/Capability.
+foreman_plugins: []
+foreman_proxy_plugins: []
+foreman_compute: []
+
+# Options.
+foreman_options: {}
+foreman_proxy_options: {}
+foreman_plugin_options: {}
+foreman_proxy_plugin_options: {}
+foreman_compute_options: {}
+puppet_options: {}
+puppet_server_options: {}

@@ -1,0 +1,7 @@
+---
+- hosts: estack-agent
+  vars:
+    _kafka_hosts: "{{ _estack_kafka_hosts }}"
+  roles:
+    - role: filebeat
+      fb_kafka_hosts: "{{ _kafka_hosts }}"

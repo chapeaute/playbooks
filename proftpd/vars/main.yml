@@ -1,0 +1,4 @@
+---
+# vars file for proftpd
+
+proftpd_dependencies: []

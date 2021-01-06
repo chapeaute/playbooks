@@ -1,0 +1,16 @@
+<VirtualHost *:{{apache2_port}}>
+
+		DocumentRoot {{ zpush_html_dir }}
+		<Directory {{ zpush_html_dir}}>
+				Options Indexes FollowSymLinks MultiViews
+				AllowOverride All
+				Require all granted
+		</Directory>
+
+		Alias /Microsoft-Server-ActiveSync {{zpush_html_dir}}/index.php
+		php_flag short_open_tag on
+		php_flag magic_quotes_runtime off
+		php_flag register_globals off
+		php_flag magic_quotes_gpc off
+
+</VirtualHost>

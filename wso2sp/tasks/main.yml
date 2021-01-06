@@ -1,0 +1,32 @@
+---
+# tasks file for wso2
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  tags: always
+
+
+- name: main | Create log dir
+  file:
+    path:  /var/log/wso2sp
+    state: directory
+    owner: wso2sp
+    group: wso2sp
+
+- name: main | start all enabled profiles
+  include_tasks: profiles.yml service="{{ item.service }}" enable="{{ item.enable }}"
+  with_items:
+    - { service: "manager", enable: "{{ wso2sp_enable_manager }}" }
+    - { service: "editor", enable: "{{ wso2sp_enable_editor }}" }
+    - { service: "dashboard", enable: "{{ wso2sp_enable_dashboard }}" }
+    - { service: "worker", enable: "{{ wso2sp_enable_worker }}" }
+

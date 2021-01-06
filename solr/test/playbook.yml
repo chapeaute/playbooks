@@ -1,0 +1,16 @@
+- hosts: all
+  vars:
+    ansible_user: root
+    solr:
+      source_url: http://www-eu.apache.org/dist/lucene/solr/6.3.0/solr-6.3.0.tgz
+      source_checksum: sha1:8e11c1d7af0ac516f6a2e7e1a486d216cc9944b8
+      subpath: solr-6.3.0
+      needed_libraries:
+        - http://search.maven.org/remotecontent?filepath=mysql/mysql-connector-java/5.1.26/mysql-connector-java-5.1.26.jar
+    solr_java_version: 8
+    solr_java_impl: openjdk
+  roles:
+    - role: solr
+  post_tasks:
+    - wait_for: port=8983 timeout=120
+    - local_action: uri url="http://{{ inventory_hostname }}:8983/solr/"

@@ -1,0 +1,7 @@
+---
+
+rocketchat_dependencies:
+  - gcc-c++
+  - GraphicsMagick
+  - curl
+  - make

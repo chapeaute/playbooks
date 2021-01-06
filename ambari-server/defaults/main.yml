@@ -1,0 +1,41 @@
+---
+
+# Global
+manage_firewalld: true
+
+# General
+ambari_openjdk_version: 8
+ambari_admin_password: admin
+ambari_server: "{{ ansible_fqdn }}"
+ambari_cluster_name: ambari
+ambari_version: 2.7.4.0
+ambari_hdp_version: 3.1
+ambari_disable_firewalld: "{{ manage_firewalld }}"
+ambari_root_dir: "{{ ambari_default_root_dir }}"
+
+
+# Cluster
+ambari_masters: ["{{ inventory_hostname }}"]
+ambari_slaves: "{{ ambari_masters }}"
+ambari_enable_kerberos: false
+
+# Database
+ambari_db_type: mysql
+ambari_db_user: ambari
+ambari_db_name: ambari
+ambari_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-ambari_db_pass chars=ascii_letters,digits') }}"
+ambari_db_host: "{{ inventory_hostname }}"
+ambari_db_remote_host: "{{ ambari_db_host }}"
+
+# Mysql variables
+ambari_mysql_jdbc_driver: /usr/share/java/mysql-connector-java.jar
+ambari_mysql_packages:
+  - mysql-connector-java
+ambari_mysql_port: 3306
+ambari_mysql_version: 10.2
+
+# Postgresql variables
+ambari_postgres_jdbc_driver: /usr/share/java/postgresql-jdbc.jar
+ambari_postgres_port: 5432
+ambari_postgres_packages:
+  - postgresql-jdbc

@@ -1,0 +1,13 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: wos2is
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+verifier:
+  name: testinfra

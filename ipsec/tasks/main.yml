@@ -1,0 +1,49 @@
+---
+# tasks file for ipsec
+
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+
+- name: main | Includer per OS config
+  include: "{{ ansible_os_family }}.yml"
+
+- name: main | Install ipsec packages
+  package:
+    name: "{{ ipsec_package }}"
+    state: present
+
+# Gather IP facts from ipify.org
+- name: main | get my public IP
+  ipify_facts:
+
+- name: main | Deploy sysctl
+  tags: sysctl
+  template:
+    src: etc/sysctl.d/sysctl.conf.j2
+    dest: /etc/sysctl.d/98-ipsec.conf
+  notify: reload sysctl
+
+- name: main | Deploy ipsec default configuration file
+  copy:
+    src: etc/{{ item }}
+    dest: /etc/{{ item }}
+  with_items:
+    - ipsec.secrets
+    - ipsec.conf
+
+- name: main | Install ipsec tunnels
+  include: tunnel.yml tunnel="{{ item }}"
+  with_items: "{{ ipsec_tunnels }}"
+  when: ipsec_tunnels | length > 0
+  tags: setup_tunnel

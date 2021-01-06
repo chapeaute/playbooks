@@ -1,0 +1,5 @@
+[all]
+kafka-1 ansible_connection=docker
+
+[kafka]
+kafka-1

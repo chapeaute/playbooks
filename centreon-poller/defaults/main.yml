@@ -1,0 +1,8 @@
+---
+use_satellite_repo: false
+
+# defaults file for centreon-poller
+centreon_server: "{{ ansible_fqdn }}"
+centreon_clapi_user: admin
+centreon_clapi_pass: changeme
+centreon_version: "19.10"

@@ -1,0 +1,9 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: stoua
+          groups: exploit
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDhp9XPyXe6TehBxjoYycyJkqlzIl8eORxCGoTCI/JYo4SY+M0rL8UugHRaxLTKjU1H0Rf8+LSghRqJyVIgsyMf2Wn5J6LdZuBnfJ8FVdjvuYwDDJezSWt8fmF8Sr4vwl5/tIcFpL3ZQASnfTF3F4H82OCZ31cX3ytDa0WZNbKFZXkk5xwe0+xRxeyJMgepiyJREmW8hsJbvIguseQ3Js3UZ/ljK439s2Gla+ZcW3z8aMDF2BOw5UpZPns/LDzVd2U9j5nxWleqHz//xrjP+pXRK5C0ilTgZqgb+Prpk8UnNmQbp5rEiUfrEGxKyDtJi1CKuTD7xq6If1sAXUFMKuLnlba3ozw7z4zOOtsZC8KUpDAO8HT69NSvefDUX5eKGtdrJFzIalbQkkR/kl9tXvbCH2t403PiGoeIFW7IATA2EExGejv3N6EuVLqxcB84nYdZ7erIxq7+a22Jfam2cWBmMStdBGAz+hU4fbohas6HmCpKGfspJCbo0wGVdIoU7hMJ1XdxrRfN9VXdhQ22bhnwqQ4VK1Pb3rPzMBIiK3JOcmQKsET/IP9CNHdwTobXsDYZ6jEdR4uG2aFdM7Yg74M7+D2AkHE1uH3VyYSYbVpMhFVJlC++1CzDvjUjqfd4H/BWHvEl92uoZccJQM/1hB92sYgnClg+LX63HEFZVftJNw== stephane.ouattara@smile.ci

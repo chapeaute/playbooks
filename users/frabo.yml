@@ -1,0 +1,22 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users_groups:
+        - name: exploit
+      sudoers:
+        exploit:
+          state: present
+          lines:
+            - "%exploit ALL=(ALL) NOPASSWD: ALL"
+        default:
+          state: present
+          lines:
+            - 'Defaults    env_keep += "SSH_AUTH_SOCK"'
+      users:
+        - login: frabo
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDG4akGhG9L6byx9ukMvH0ZnwQIaHYTGVSrXfwACui/HbcbA3pSaLFIxHfUbZS2X4XFSzKHbCeOaEVKD3GO9fM198+ilQdxBjnVkbkcIZvZkqdbim1tMuHDA5LTtMgFJV5M30UULh+/fYhV0EDofzrr3QfxHQ2vA2NTmgFg/LtfK+b6U7aGxrpDiwXr2jkZVM0kOa7C+qEBcFpCwDdqVUHYacxkippKpFUJ8ePbwhoGd+W0OpEkKLAfMzveIpAzaT9+ygArDcmGMbwjZw6Beq/cOeJLwbYdzzPR0LBdJHFQn42cZmkLPd3XB+SwMazoviTPb4gFVHKjvwQWGe1/sh8t franck.aboa@smile.ci

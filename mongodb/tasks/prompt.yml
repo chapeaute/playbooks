@@ -1,0 +1,17 @@
+---
+
+- name: prompt | Ensure /etc/bash.bashrc.d exist
+  tags: prompt
+  file:
+    path:  /root/.bashrc.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: prompt | Setup PS1
+  tags: prompt
+  copy:
+    src:  root/bashrc.d/mongodb-cluster-status
+    dest: /root/.bashrc.d/mongodb-cluster-status
+    mode: 0640

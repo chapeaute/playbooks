@@ -1,0 +1,23 @@
+[Unit]
+Description=NodeJS daemon
+Documentation=https://pm2.keymetrics.io/
+After=network.target
+
+[Service]
+Type=forking
+User={{ nodejs_user }}
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+Environment=PATH=/usr/bin:/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin
+Environment=PM2_HOME={{ nodejs_default_data_dir }}
+Environment=NODE_ENV={{ nodejs_env }}
+Environment=PM2_LOG_FILE_PATH={{ nodejs_default_data_dir }}/logs/pm2.log
+PIDFile={{ nodejs_default_data_dir }}/pm2.pid
+
+ExecStart={{ nodejs_prefix }}/lib/node_modules/pm2/bin/pm2 resurrect
+ExecReload={{ nodejs_prefix }}/lib/node_modules/pm2/bin/pm2 reload all
+ExecStop={{ nodejs_prefix }}/lib/node_modules/pm2/bin/pm2 kill
+
+[Install]
+WantedBy=multi-user.target

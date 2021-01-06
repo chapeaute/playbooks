@@ -1,0 +1,52 @@
+---
+- name: config | Check if directory exists
+  stat:
+    path: "{{ postgresql_backup_dir }}"
+  register: backup_dir
+
+- stat:
+    path: "{{ postgresql_data_dir }}"
+  register: data_dir
+
+- name: config | Create data directory
+  file:
+    state:   directory
+    path:    "{{ postgresql_data_dir }}"
+    setype:  postgresql_db_t
+    recurse: yes
+  when: not data_dir.stat.exists
+
+- name: config | Create home directory
+  file:
+    state:   directory
+    path:    "{{ postgresql_home_dir }}"
+    setype:  postgresql_db_t
+    recurse: yes
+  when: postgresql_data_dir != postgresql_default_data_dir
+
+- name: config | Create symlink from {{ postgresql_default_data_dir }} to data directory
+  file:
+    state: link
+    src:   "{{ postgresql_data_dir }}"
+    dest:  "{{ postgresql_default_data_dir }}"
+    force: true
+  when:  postgresql_data_dir != postgresql_default_data_dir
+
+- name: config | Create configuration directory
+  file:
+    state:   directory
+    path:    "/etc/postgresql/conf.d"
+    recurse: yes
+
+- name: RedHat | Install SELinux package
+  package:
+    name:  policycoreutils-python
+    state: present
+  when: ansible_selinux and ansible_selinux.status == "enabled"
+
+- name: RedHat | Set SELinux context
+  sefcontext:
+    target: "{{ postgresql_data_dir }}(/.*)?"
+    setype: postgresql_db_t
+    state:  present
+  when: postgresql_data_dir != postgresql_default_data_dir and ansible_selinux and ansible_selinux.status == "enabled"

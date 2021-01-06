@@ -1,0 +1,98 @@
+---
+- name: config | {{ nodejs_data_dir }}
+  stat:
+    path: "{{ nodejs_data_dir }}"
+  register: data_dir
+
+- name: deploy | Create {{ nodejs_group }} group
+  group:
+    name:  "{{ nodejs_group }}"
+    state: present
+
+- name: config | Create {{ nodejs_user }} user
+  user:
+    name:  "{{ nodejs_user }}"
+    group: "{{ nodejs_group }}"
+    home:  "{{ nodejs_data_dir }}"
+    createhome: yes
+  when: not data_dir.stat.exists
+
+- name: config | Create nodejs home directory {{ nodejs_data_dir }}
+  file:
+    path:  "{{ nodejs_data_dir }}"
+    state: directory
+    owner: "{{ nodejs_user }}"
+    group: "{{ nodejs_group }}"
+    mode:  0750
+
+- name: config | Create symlink from {{ nodejs_default_data_dir }} to data directory
+  file:
+    state: link
+    src:   "{{ nodejs_data_dir }}"
+    dest:  "{{ nodejs_default_data_dir }}"
+  when: nodejs_data_dir != nodejs_default_data_dir
+
+- name: config | Create symlink to logs directory /var/log/nodejs
+  file:
+    state: link
+    src:   "{{ nodejs_default_data_dir }}/logs"
+    dest:  /var/log/nodejs
+    force: yes
+  when: nodejs_data_dir != nodejs_default_data_dir
+
+- name: config | Create applications directory
+  file:
+    state: directory
+    path:  "{{ nodejs_default_data_dir }}/apps"
+    owner: "{{ nodejs_user }}"
+    group: "{{ nodejs_group }}"
+    mode:  0750
+
+- name: deploy | Set nodejs home directory to default {{ nodejs_default_data_dir }}
+  user:
+    name:  "{{ nodejs_user }}"
+    home:  "{{ nodejs_default_data_dir }}"
+
+- name: config | Add {{ nodejs_prefix }}/bin to $PATH
+  lineinfile:
+    path:   /etc/profile.d/node.sh
+    state:  present
+    line:   "PATH=$PATH:{{ nodejs_prefix }}/bin"
+    create: true
+
+- name: main | Set environment variables on users profile
+  lineinfile:
+    dest:   /etc/profile.d/node.sh
+    regexp: "^{{ item.key }}.*=.*"
+    line:   "{{ item.key }}={{ item.value }}"
+  with_items:
+    - key:   "export PM2_HOME"
+      value: "{{ nodejs_default_data_dir }}"
+    - key:   "export NODE_ENV"
+      value: "{{ nodejs_env }}"
+
+
+- name: config | Set permission on /etc/profile.d/node.sh
+  file:
+    path: /etc/profile.d/node.sh
+    mode: 0644
+
+- name: config | Register nodejs version
+  environment:
+    PATH: "{{ nodejs_prefix }}/bin:{{ ansible_env.PATH }}"
+  shell: "node -v | cut -d v -f 2-"
+  register: nodejs_installed_version
+  ignore_errors: yes
+  changed_when: false
+
+- name: config | Deploy logrotate file
+  template:
+    src:   "etc/logrotate.d/{{ item }}.j2"
+    dest:  "/etc/logrotate.d/{{ item }}"
+    owner: root
+    group: root
+    mode:  0644
+  with_items:
+    - nodejs
+  tags:
+    - config

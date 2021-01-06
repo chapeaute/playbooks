@@ -1,0 +1,46 @@
+---
+- name: RedHat | Install firewalld settings
+  package:
+    name: firewalld
+  when:
+    - ansible_distribution_version >= '7'
+    - firewall_setup
+
+- name: RedHat | Enable and start firewalld service
+  service:
+    name:    firewalld
+    state:   started
+    enabled: yes
+  when:
+    - ansible_distribution_version >= '7'
+    - firewall_setup
+
+- name: RedHat | Configure firewall rules
+  firewalld:
+    port:      "{{item}}/tcp"
+    zone:      "{{ firewall_zone }}"
+    state:     enabled
+    permanent: yes
+    immediate: yes
+  with_items:
+    - 80
+    - 443
+  when:
+    - ansible_distribution_version >= '7'
+    - firewall_setup
+
+- name: RedHat | Deploy GitLab repository
+  yum_repository:
+    name:          GitLab-CE
+    description:   Gitlab CE Repository
+    baseurl:       https://packages.gitlab.com/gitlab/gitlab-ce/el/{{ ansible_distribution_major_version }}/$basearch
+    gpgkey:        https://packages.gitlab.com/gpg.key
+    gpgcheck:      no
+    repo_gpgcheck: no
+    sslverify:     1
+    sslcacert:     /etc/pki/tls/certs/ca-bundle.crt
+
+- name: RedHat | Import GitLab key
+  rpm_key:
+    state: present
+    key:   https://packages.gitlab.com/gpg.key

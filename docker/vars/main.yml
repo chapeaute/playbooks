@@ -1,0 +1,5 @@
+---
+# vars file for docker
+docker_package: docker-ce
+docker_service: docker
+docker_default_data_dir: /var/lib/docker

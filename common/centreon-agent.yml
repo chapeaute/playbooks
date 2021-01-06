@@ -1,0 +1,10 @@
+---
+
+- hosts: all
+  roles:
+    - role: centreon-agent
+      tags: centreon-agent
+      centagt_ssh_enable: true
+      centagt_nrpe_enable: false
+    - role: centreon-prov
+      tags: centreon-prov

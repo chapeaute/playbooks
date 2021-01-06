@@ -1,0 +1,45 @@
+# Alfresco settings
+alfresco.rmi.services.host=0.0.0.0
+alfresco.context=alfresco
+alfresco.host=${localname}
+alfresco.port={{ alfresco_port }}
+alfresco.protocol=http
+
+user.name.caseSensitive=true
+
+# Path locations
+dir.root={{ alfresco_root_dir }}/data
+
+# Database configuration
+db.username={{ alfresco_db_user }}
+db.password={{ alfresco_db_pass }}
+db.name={{ alfresco_db_name }}
+db.host={{ alfresco_db_host }}
+db.port={{ alfresco_db_port }}
+db.schema.update=true
+db.pool.max=40
+
+{% if alfresco_db_driver == 'mysql' %}
+db.driver=org.gjt.mm.mysql.Driver
+db.url=jdbc:mysql://${db.host}:${db.port}/${db.name}?useUnicode=yes&characterEncoding=UTF-8
+{% elif alfresco_db_driver == 'postgresql'%}
+db.driver=org.postgresql.Driver
+db.url=jdbc:postgresql://${db.host}:${db.name}/${db.name}
+{% endif %}
+
+# External locations
+ooo.exe=/usr/bin/soffice
+ooo.enabled={{ alfresco_ooo_enabled }}
+jodconverter.officeHome=/usr/lib64/libreoffice
+jodconverter.portNumbers=8100
+jodconverter.enabled={{ alfresco_jodconverter_enabled }}
+img.root=./ImageMagick
+img.exe=/usr/bin/convert
+#swf.exe=/usr/bin/pdf2swf
+
+# Index configuration
+#index.recovery.mode=AUTO
+
+smart.folders.enabled=true
+smart.folders.model=alfresco/model/smartfolder-model.xml
+smart.folders.model.labels=alfresco/messages/smartfolder-model

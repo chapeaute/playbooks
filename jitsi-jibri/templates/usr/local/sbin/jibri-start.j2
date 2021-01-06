@@ -1,0 +1,32 @@
+#!/bin/bash
+
+
+syntax() {
+    echo "Launch one jibri instance"
+    echo "$0: instance_number"
+    echo "Example: $0 1"
+    exit 0
+}
+
+
+if [[ ! -z $instance ]]
+then
+  syntax
+fi
+
+instance=$1
+name=jitsi-jibri
+
+{{ jibri_container_cli }} container run \
+  --rm \
+  --name ${name}-$instance \
+  --rm --env-file={{ jitsi_config_file }} \
+  -e DISPLAY=:0 \
+  --cap-add SYS_ADMIN \
+  --cap-add NET_BIND_SERVICE \
+  --device /dev/snd:/dev/snd  \
+  -v {{ jibri_log_dir }}:/config/logs  \
+  -v {{ jitsi_recording_dir }}:/config/recordings  \
+  -v {{ jitsi_finalize_script }}:/config/finalize.sh  \
+  -v /dev/shm:/dev/shm  \
+  jitsi/jibri:stable-{{ jibri_version }}

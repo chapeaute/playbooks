@@ -1,0 +1,5 @@
+---
+- import_playbook: zimbra-stack-ldap.yml
+- import_playbook: zimbra-stack-mta.yml
+- import_playbook: zimbra-stack-proxy.yml
+- import_playbook: zimbra-stack-store.yml

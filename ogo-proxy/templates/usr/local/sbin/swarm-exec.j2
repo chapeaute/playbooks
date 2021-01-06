@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ $# -eq 1 ]; then
+	docker exec -ti `docker ps | grep $1$etcd | awk '{print $1}' | head -n 1` /bin/sh
+else
+	echo "Syntax: $0 servicename"
+	exit 1
+fi

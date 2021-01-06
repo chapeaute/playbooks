@@ -1,0 +1,20 @@
+#!/bin/bash
+
+# Default value for Centreon
+PREFIX="{{ centreon_apache_svc_prefix }}"
+SERVICETPL="{{ centreon_apache_svc_tpl }}"
+MACROEXTRA="{{ centreon_apache_svc_macro_extra }}"
+MACROEXTRA_NAME=$(echo $MACROEXTRA | sed -e 's/=[^|]*//g')
+MACROEXTRA_VALUE=$(echo $MACROEXTRA | sed -e 's/[^|]*=//g')
+MACRONAME="{{ centreon_apache_svc_macro }}|${MACROEXTRA_NAME}"
+PLUGIN_PATH="{{ centreon_apache_plugin }}"
+
+service_get_devices() {
+  local hostaddr="$1"
+
+  if [ "$SSHACCESS" == "yes" ]; then
+    ssh $SSHUSER@$hostaddr sudo $PLUGIN_PATH | awk -v macroextra_value="$MACROEXTRA_VALUE" '{print $1"|"$2"|"$3"|"macroextra_value}'
+  fi
+}
+
+source `dirname $0`/centreon-disco-common

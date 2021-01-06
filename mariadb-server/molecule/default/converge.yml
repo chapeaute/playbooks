@@ -1,0 +1,9 @@
+---
+- name: Converge
+  hosts: all
+  vars:
+    mysql_version: 10.5
+    security_level: 2
+  roles:
+    - role: mariadb-server
+    - role: security-mariadb

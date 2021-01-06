@@ -1,0 +1,218 @@
+---
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family }}.yml"
+
+- meta: flush_handlers
+
+- name: main | Deploy Object Storage configuration files
+  template:
+    src:   "var/www/nextcloud/config/objectstore.config.php.j2"
+    dest:  "{{ nextcloud_root_dir }}/shared/nextcloud/config/objectstore.config.php"
+    owner: "{{ apache2_user }}"
+    group: "{{ apache2_group }}"
+    mode:  "0400"
+  when:
+    - nextcloud_use_s3
+    - inventory_hostname == nextcloud_hosts[0]
+  tags:
+    - config
+
+- name: main | Check if nextcloud is installed
+  stat:
+    path: "{{ nextcloud_root_dir }}/shared/nextcloud/config/CAN_INSTALL"
+  register: nextcloud_can_installed
+
+- name: main | Install
+  become: true
+  become_user: "{{ apache2_user }}"
+  run_once: true
+  command: php occ maintenance:install --database "{% if nextcloud_db_backend == 'mariadb' or nextcloud_db_backend == 'galera' %}mysql{% else %}{{ nextcloud_db_backend }}{% endif %}" --database-host "{{ nextcloud_db_host }}" --database-name "{{ nextcloud_db_name }}" --database-user "{{ nextcloud_db_user }}" --database-pass "{{ nextcloud_db_pass }}" --admin-user "{{ nextcloud_admin_user }}" --admin-pass "{{ nextcloud_admin_pass }}" --data-dir "{{  nextcloud_data_dir }}"
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  when:
+    - nextcloud_can_installed.stat.exists
+    - inventory_hostname == nextcloud_hosts[0]
+
+- name: main | Install python package dependencies for galera alter table script
+  package:
+    name: MySQL-python
+  when:
+    - nextcloud_db_backend == 'galera'
+
+- name: main | Copy galera alter table script
+  copy:
+    src:   usr/local/sbin/nextcloud_mysql_create_pk
+    dest:  /usr/local/sbin/nextcloud_mysql_create_pk
+    owner: root
+    group: root
+    mode:  0750
+  when:
+    - nextcloud_db_backend == 'galera'
+
+- name: main | Add primary key on nextcloud table
+  command: /usr/local/sbin/nextcloud_mysql_create_pk -H "{{ nextcloud_db_host }}" -u "{{ nextcloud_db_user }}" -p "{{ nextcloud_db_pass }}" -d "{{ nextcloud_db_name }}"
+  run_once: true
+  when:
+    - nextcloud_can_installed.stat.exists
+    - nextcloud_db_backend == 'galera'
+    - inventory_hostname == nextcloud_hosts[0]
+
+- name: main | Remove CAN_INSTALL file
+  file:
+    path:  "{{ nextcloud_root_dir }}/shared/nextcloud/config/CAN_INSTALL"
+    state: absent
+
+- name: main | Set trusted_domains
+  become: true
+  become_user: "{{ apache2_user }}"
+  command: php occ config:system:set trusted_domains {{ item.0 }} --value={{ item.1 }}
+  run_once: true
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  with_indexed_items:
+   - "{{ nextcloud_vhost_name }}"
+   - "{{ nextcloud_vhost_aliases }}"
+   - "{{ nextcloud_trusted_extra_domains }}"
+  when:
+    - inventory_hostname == nextcloud_hosts[0]
+  tags:
+    - config
+
+- name: main | Set access protocol to {{ nextcloud_protocol }}
+  become: true
+  become_user: "{{ apache2_user }}"
+  command: "php occ config:system:set overwriteprotocol --value {{ nextcloud_protocol }}"
+  run_once: true
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  tags:
+    - config
+
+- name: main | Add index on database tables
+  become: true
+  become_user: "{{ apache2_user }}"
+  command: php occ db:add-missing-indices
+  run_once: true
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  when:
+    - inventory_hostname == nextcloud_hosts[0]
+
+- name: main | Update data type on database
+  become: true
+  become_user: "{{ apache2_user }}"
+  command: php occ db:convert-filecache-bigint
+  run_once: true
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  when:
+    - inventory_hostname == nextcloud_hosts[0]
+
+- name: main | Enable encryption module
+  become: true
+  become_user: "{{ apache2_user }}"
+  command: php occ app:enable encryption
+  run_once: true
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  when:
+    - nextcloud_encryption_enable
+  tags:
+    - config
+
+- name: main | Enable data encryption
+  become: true
+  become_user: "{{ apache2_user }}"
+  command: php occ encryption:enable
+  run_once: true
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  when:
+    - nextcloud_encryption_enable
+    - inventory_hostname == nextcloud_hosts[0]
+  tags:
+    - config
+
+- name: main | Configure performance and caching
+  become: true
+  become_user: "{{ apache2_user }}"
+  command: php occ config:system:set {{ item }}
+  run_once: true
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  with_items:
+    - memcache.local --value "\OC\Memcache\APCu"
+    - asset-pipeline.enabled --value true
+  when:
+    - inventory_hostname == nextcloud_hosts[0]
+  tags:
+    - config
+
+- name: main | Configure redis caching
+  become: true
+  become_user: "{{ apache2_user }}"
+  command: php occ config:system:set {{ item }}
+  run_once: true
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  with_items:
+    - redis "host" --value "{{ nextcloud_redis_host }}"
+    - redis "port" --value "{{ nextcloud_redis_port }}"
+    - redis "dbindex" --value "{{ nextcloud_redis_db }}"
+    - redis "password" --value "{{ nextcloud_redis_password }}"
+    - memcache.locking --value "\OC\Memcache\Redis"
+    - memcache.distributed --value "\OC\Memcache\Redis"
+  when:
+    - nextcloud_use_redis
+    - inventory_hostname == nextcloud_hosts[0]
+  tags:
+    - config
+
+- name: main | Set password policy
+  become: true
+  become_user: "{{ apache2_user }}"
+  command: php occ config:app:set password_policy {{ item.key }} --value {{ item.value }}
+  run_once: true
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  with_dict: {
+    enforceNonCommonPassword: "{% if nextcloud_pwd_non_common %}1{% else %}0{% endif %}",
+    enforceHaveIBeenPwned: "{% if nextcloud_pwd_non_common %}1{% else %}0{% endif %}",
+    enforceNumericCharacters: "{% if nextcloud_pwd_num_characters %}1{% else %}0{% endif %}",
+    enforceSpecialCharacters: "{% if nextcloud_pwd_spec_characters %}1{% else %}0{% endif %}",
+    enforceUpperLowerCase: "{% if nextcloud_pwd_upperlower_case %}1{% else %}0{% endif %}" }
+  when:
+    - inventory_hostname == nextcloud_hosts[0]
+  tags:
+    - config
+
+- name: main | Configure nextcloud extra system settings
+  include: "nextcloud_config.yml type='system' app='{{ c.key }}' keys='{{ c.value }}'"
+  with_dict: "{{ nextcloud_config_system }}"
+  loop_control:
+    loop_var: c
+  when:
+    - inventory_hostname == nextcloud_hosts[0]
+  tags:
+    - config
+
+- name: main | Configure nextcloud extra application settings
+  include: "nextcloud_config.yml type='app' app='{{ c.key }}' keys='{{ c.value }}'"
+  with_dict: "{{ nextcloud_config_app }}"
+  loop_control:
+    loop_var: c
+  when:
+    - inventory_hostname == nextcloud_hosts[0]
+  tags:
+    - config

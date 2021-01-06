@@ -1,0 +1,8 @@
+---
+
+proftpd_packages:
+    - proftpd
+
+proftpd_conf_file: /etc/proftpd/proftpd.conf
+apache_uid: 33
+apache_gid: 33

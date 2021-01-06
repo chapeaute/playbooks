@@ -1,0 +1,13 @@
+---
+
+- name: script | Deploy script
+  tags: script
+  template:
+    src:  "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}.j2"
+    owner: root
+    group: "{{ odoo_group }}"
+    mode: 0750
+  with_items:
+    - odoo-app-deploy
+    - odoo-app-delete

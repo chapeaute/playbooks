@@ -1,0 +1,25 @@
+# {{ ansible_managed }}
+
+{% if jicofo_auth == 'sso' %}
+org.jitsi.jicofo.auth.URL=shibboleth:default
+{% elif jicofo_auth == 'ldap' %}
+org.jitsi.jicofo.auth.URL=XMPP:{{ jicofo_xmpp_domain }}
+{% endif %}
+org.jitsi.jicofo.BRIDGE_MUC=JvbBrewery@{{ jicofo_xmpp_internal_muc }}
+{% if jicofo_use_jigasi | bool %}
+# Enable Jigasi
+org.jitsi.jicofo.jigasi.BREWERY=JigasiBrewery@{{ jicofo_xmpp_internal_muc }}
+{% endif %}
+{% if jicofo_use_jibri | bool %}
+# Enable Jibri
+org.jitsi.jicofo.jibri.BREWERY=JibriBrewery@{{ jicofo_xmpp_internal_muc }}
+org.jitsi.jicofo.jibri.PENDING_TIMEOUT=90
+{% endif %}
+
+{% if jicofo_disable_cert_check | bool %}
+# Disable certificate check
+org.jitsi.jicofo.ALWAYS_TRUST_MODE_ENABLED={{ jicofo_disable_cert_check | bool | lower }}
+{% endif %}
+
+# Enable health checks
+org.jitsi.jicofo.health.ENABLE_HEALTH_CHECKS={{ jicofo_enable_health_check | bool | lower }}

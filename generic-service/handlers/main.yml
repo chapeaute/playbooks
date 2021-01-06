@@ -1,0 +1,14 @@
+---
+
+- name: reload systemd
+  systemd:
+    daemon_reload: yes
+
+- name: "restart generic service"
+  service:
+    name:  "{{ genericservice.name }}"
+    state: restarted
+  when: genericservice.create_service|default(True)
+
+- name: Rename source directory by appending checksum
+  command: "mv {{ genericservice_root }}/{{ genericservice.name }}-releases/{{ genericservice.subpath }} {{ genericservice_root }}/{{ genericservice.name }}-releases/{{ genericservice.subpath }}-{{ archive_stat.stat.checksum }}"

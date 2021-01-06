@@ -1,0 +1,11 @@
+---
+- hosts: logstash-shipper
+  vars:
+    ls_version: "7.6"
+    # Input
+    ls_input_beats: true
+    # Output
+    ls_output_kafka: true
+    ls_kafka_hosts: "{{ groups['kafka'] }}"
+  roles:
+    - role: logstash

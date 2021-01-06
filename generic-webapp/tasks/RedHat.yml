@@ -1,0 +1,37 @@
+---
+
+- name: RedHat | Apply selinux config on rws dirs and files
+  tags: context
+  sefcontext:
+    target: "{{generic_webapp_shared_dir}}/{{ item }}(/.*)?"
+    setype: httpd_sys_rw_content_t
+    state: present
+    reload: yes
+  with_items:
+    - "{{ generic_webapp_rw_dirs }}"
+    - "{{ generic_webapp_rw_files }}"
+  when: ansible_selinux.status == "enabled"
+
+- name: RedHat | Define context httpd_sys_rw_content_t on rw dirs
+  file:
+    path: "{{ generic_webapp_shared_dir }}/{{ item }}"
+    setype: httpd_sys_rw_content_t
+    owner: "{{ generic_webapp_owner }}"
+    group: "{{ generic_webapp_group }}"
+    state: directory
+    follow: yes
+    recurse: yes
+  ignore_errors: yes
+  with_items:
+    - "{{ generic_webapp_rw_dirs }}"
+
+- name: RedHat | Define context httpd_sys_rw_content_t on rw files
+  file:
+    path: "{{ generic_webapp_shared_dir }}/{{ item }}"
+    setype: httpd_sys_rw_content_t
+    owner: "{{ generic_webapp_owner }}"
+    group: "{{ generic_webapp_group }}"
+    follow: yes
+  ignore_errors: yes
+  with_items:
+    - "{{ generic_webapp_rw_files }}"

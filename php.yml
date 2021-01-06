@@ -1,0 +1,20 @@
+# v1.0
+---
+- hosts: php
+  vars:
+    php_version: "7.2"
+  roles:
+    - role: php
+      tags: php
+      php_use_default_package: False
+      php_default_version: "{{ php_version }}"
+      php_extensions:
+        - curl
+        - pdo
+        - gd
+        - mysql
+        - mcrypt
+        - xml
+        - redis
+        - mbstring
+        - opcache

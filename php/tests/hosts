@@ -1,0 +1,5 @@
+[all]
+php ansible_connection=docker
+
+[php]
+php

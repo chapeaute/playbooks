@@ -1,0 +1,47 @@
+---
+# defaults file for hive
+
+# defaults file for hbase
+hbase_version: 2.1.4
+java_home: /usr/lib/jvm/jre-openjdk
+hbase:
+  source_url: https://www-eu.apache.org/dist/hbase/{{ hbase_version }}/hbase-{{ hbase_version }}-bin.tar.gz
+  subpath: hbase-{{hbase_version}}
+hbase_java_version: 8
+hbase_java_impl: openjdk
+hbase_memory_size_prct: 0.6
+hbase_memory_size: "{{ (ansible_memtotal_mb*hbase_memory_size_prct)|int }}M"
+hbase_root_dir: /var/lib
+hbase_install_dir: "{{ hbase_root_dir }}/hbase"
+
+apache_mirror: http://apache.mirrors.tds.net
+# alternatives are local (implemented), distributed (TODO!), pseudo-distributed (implemented)
+hbase_install_type: "local"
+hbase_use_hdfs: false
+hbase_standalone_dir: "file:///{{ hbase_install_dir }}/data"
+#Used only if hbase_use_hdfs is true
+hbase_hdfs_url: "hdfs://localhost:9000/hbase"
+hbase_manages_zk: false
+hbase_unsecure: true
+hbase_zk_nodes: "localhost"
+hbase_zookeeper_port: 2181
+hbase_zookeeper_data_dir: "{{ hbase_install_dir }}/zookeeper/data"
+hbase_zookeeper_extra_config:
+    hbase.zookeeper.port:  "{{ hbase_zookeeper_port }}"
+    hbase.zookeeper.retry.interval: 5000
+    hbase.zookeeper.retry.times: 29
+    hbase.zookeeper.root: "/hbase"
+    hbase.zookeeper.session.timeout: 30000
+hbase_dir: "{{ hbase_root_dir}}/hbase-{{hbase_version}}"
+hbase_log_level: INFO
+hbase_wait_for_period: 60
+hbase_table_sanity_checks: true
+hbase_default_site_properties:
+  hbase.table.sanity.checks: "{{ hbase_table_sanity_checks }}"
+  hbase.zookeeper.quorum: "{{ hbase_zk_nodes }}"
+  hbase.zookeeper.property.dataDir: "{{ hbase_zookeeper_data_dir }}"
+  hbase.cluster.distributed: "{{hbase_install_type != 'local'}}"
+  hbase.rootdir: "{{ hbase_hdfs_url if hbase_use_hdfs else hbase_zookeeper_data_dir}}"
+  zookeeper.znode.parent: "{{ '/hbase-unsecure' if hbase_unsecure  else '/hbase' }}"
+hbase_site_properties: {}
+hbase_combined_site_properties: "{{hbase_default_site_properties|combine(hbase_site_properties)}}"

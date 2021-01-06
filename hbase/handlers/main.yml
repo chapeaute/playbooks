@@ -1,0 +1,7 @@
+---
+# handlers file for hive
+
+- name: "Restart Hbase"
+  service:
+    name: hbase
+    state: restarted

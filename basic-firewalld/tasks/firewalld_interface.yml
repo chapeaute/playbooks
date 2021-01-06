@@ -1,0 +1,22 @@
+---
+- name: firewalld_interface | Ensure interfaces {{ interfaces }} are {{ state }} on {{ zone }} zone
+  firewalld:
+    zone:      "{{ zone }}"
+    interface: "{{ item }}"
+    state:     "{{ state }}"
+    permanent: true
+    immediate: yes
+  with_items: "{{ interfaces }}"
+  when:
+    - ansible_distribution_version >= '7'
+  tags:
+    - interface
+
+- name: firewalld_interface | Update ZONE directive in interfaces configuration file
+  lineinfile:
+    dest:   "/etc/sysconfig/network-scripts/ifcfg-{{ item }}"
+    regexp: "^.?ZONE=.*"
+    line:   "ZONE={{ zone }}"
+  with_items: "{{ interfaces }}"
+  tags:
+    - interface

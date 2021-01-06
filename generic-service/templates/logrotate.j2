@@ -1,0 +1,11 @@
+{{ genericservice_root }}/{{ genericservice.name }}/{{ genericservice.log_glob }}
+{
+    daily
+    rotate 365
+    dateext
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}

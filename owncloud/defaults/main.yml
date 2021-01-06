@@ -1,0 +1,37 @@
+---
+# defaults file for owncloud
+
+# Principal directories
+owncloud_root_dir: "/var/www"
+
+# download
+owncloud_version_channel: "releases" # mandatory # releases | prereleases | daily
+owncloud_archive_format: "tar.bz2" # zip | tar.bz2
+#owncloud_archive_format: "zip"
+owncloud_version_full: "10.2.0"
+
+# [CONFIG]
+owncloud_vhost_name: "owncloud"
+owncloud_vhost_aliases: []
+owncloud_trusted_domains:
+  - "{{ ansible_fqdn }}"
+  - "{{ ansible_default_ipv4.address }}"
+
+# [DATABASE]
+owncloud_admin_user: "admin"
+owncloud_admin_pass:  "{{ lookup('password', 'credential/{{ inventory_hostname }}-owncloud_admin_pass chars=ascii_letters,digits') }}"
+owncloud_db_host: "127.0.0.1"
+owncloud_db_backend: "mariadb" # "mysql"/"mariadb" | "pgsql"
+owncloud_db_name: "owncloud"
+owncloud_db_user: "owncloud"
+owncloud_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-owncloud_db_pass chars=ascii_letters,digits') }}"
+
+
+# PHP
+owncloud_max_upload_size: 1G
+owncloud_max_upload_time: 1000
+
+# Redis
+owncloud_use_redis: False
+owncloud_redis_host: 127.0.0.1
+owncloud_redis_port: 6379

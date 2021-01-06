@@ -1,0 +1,46 @@
+---
+
+
+- name: manual | Check if Composer is installed.
+  stat: "path={{ composer_path }}"
+  register: composer_bin
+
+- name: manual | Download Composer installer.
+  get_url:
+    url: https://getcomposer.org/installer
+    dest: /tmp/composer-installer.php
+    mode: 0755
+  when: not composer_bin.stat.exists
+
+- name: manual | Run Composer installer.
+  command: >
+    {{ composer_php_bin }} composer-installer.php {% if composer_version != '' %} --version={{ composer_version }}{% endif %}
+    chdir=/tmp
+  when: not composer_bin.stat.exists
+
+- name: manual | Move Composer into globally-accessible location.
+  shell: >
+    mv /tmp/composer.phar {{ composer_path }}
+    creates={{ composer_path }}
+  when: not composer_bin.stat.exists
+
+- name: manual | Update Composer to latest version (if configured).
+  shell: >
+    {{ composer_php_bin }} {{ composer_path }} self-update
+  register: composer_update
+  changed_when: "'Updating to version' in composer_update.stdout"
+  when: composer_keep_updated
+
+- name: manuel | Add {{ composer_path | dirname }} to $PATH
+  lineinfile:
+    path:   /etc/profile.d/composer.sh
+    state:  present
+    line:   "PATH=$PATH:{{ composer_path | dirname }}"
+    create: true
+
+- name: manual | Link {{ composer_path | dirname }} to /usr/bin
+  file:
+    src:   "{{ composer_path }}"
+    dest:  /bin/composer
+    state: link
+  when: composer_path | dirname != "/bin"

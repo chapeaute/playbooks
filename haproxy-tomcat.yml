@@ -1,0 +1,16 @@
+---
+- hosts: haproxy-tomcat
+  roles:
+    - role: haproxy
+      haproxy_pool_servers:
+        - name: tomcat
+          vip:
+            - 192.168.122.20
+          port: 8080
+          options:
+            - 'option httpchk OPTIONS /stats'
+            - 'balance url_param JSESSIONID check_post'
+            - 'cookie  JSESSIONID prefix'
+          haproxy_backend_servers: 
+            - { name: 'tomcat-1', address: '192.168.122.118:8080' }
+            - { name: 'tomcat-2', address: '192.168.122.119:8080' }

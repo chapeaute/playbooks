@@ -1,0 +1,32 @@
+#!/bin/bash
+
+NODEJS_USER="nodejs"
+APP_DIR="{{ nodejs_data_dir }}/apps"
+
+cmd="pm2 delete $1"
+
+function syntax() {
+    cat <<EOF
+Script to delete NodeJS application
+
+Usage: ${0##*/} <app_name>
+EOF
+}
+
+if [ $# -ne 1 ]; then
+    syntax
+fi
+
+if [ "$USER" != "$NODEJS_USER" ]; then
+    if [ "$UID" -eq 0 ]; then
+        su - $NODEJS_USER -c "${cmd}" && rm -rf ${APP_DIR}/$1
+        exit $?
+    else
+        >&2
+        echo "Script must be run with root or $NODEJS_USER user. Abording..."
+        exit 1
+    fi
+else
+    eval ${cmd}
+    exit $?
+fi

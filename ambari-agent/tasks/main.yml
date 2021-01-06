@@ -1,0 +1,80 @@
+---
+
+- name: main | include vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include_tasks: "{{ ansible_os_family }}.yml"
+
+- import_tasks: tuning.yml
+
+- name: "main | Create data directory {{ ambari_root_dir }}/ambari-agent"
+  file:
+    path: "{{ ambari_root_dir }}/ambari-agent"
+    state: directory
+    recurse: true
+    owner: root
+    group: root
+
+- name: "main | Link {{ ambari_default_root_dir }}/ambari-agent to {{ ambari_root_dir }}/ambari-agent"
+  file:
+    src: "{{ ambari_root_dir }}/ambari-agent"
+    dest: "{{ ambari_default_root_dir }}/ambari-agent"
+    state: link
+  when: ambari_default_root_dir != ambari_root_dir
+
+- name: "main | Link {{ ambari_default_root_dir }}/ambari-agent to {{ ambari_root_dir }}/ambari-agent"
+  file:
+    path: "{{ ambari_root_dir }}/hdp"
+    state: directory
+
+- name: "main | Link {{ ambari_default_root_dir }}/ambari-agent to {{ ambari_root_dir }}/ambari-agent"
+  file:
+    src: "{{ ambari_root_dir }}/hdp"
+    dest: "/usr/hdp"
+    state: link
+
+- name: "main | Create data directory"
+  file:
+    path: "{{ ambari_root_dir }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+  with_items:
+    - "{{ ambari_services }}"
+
+- name: "Link {{ ambari_default_root_dir }}/{{ item }} to {{ ambari_root_dir }}/{{ item }}"
+  file:
+    src: "{{ ambari_root_dir }}/{{ item }}"
+    dest: "{{ ambari_default_root_dir }}/{{ item }}"
+    state: link
+  with_items:
+    - "{{ ambari_services }}"
+  when: ambari_default_root_dir != ambari_root_dir
+
+- name: "main | Install the ambari-agent package"
+  package:
+    name: "{{ ambari_client_packages }}"
+    update_cache: yes
+    state: latest
+  notify: Reload systemd
+
+- name: "main | Launch config tasks"
+  import_tasks: config.yml
+  tags:
+    - config
+
+- name: "main | Make sure the ambari-agent service is started"
+  service:
+    name: ambari-agent
+    state: started
+    enabled: yes

@@ -1,0 +1,57 @@
+---
+# tasks file for elasticsearch
+# Include per-environment variables
+- name: Include vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  tags: always
+
+# tasks file for ansible-mariadb-galera-cluster
+- include: unconfigure_cluster.yml
+  when: >
+        galera_reconfigure is defined and
+        galera_reconfigure
+
+- include: "{{ ansible_os_family }}.yml"
+
+- include: setup_cluster.yml
+  tags: setup
+
+- include: configure_logrotate.yml
+  tags: setup
+
+- include: configure_user_db.yml
+  tags: setup
+
+- include: configure_backup_dir.yml
+  tags: config
+
+- include: admin_script.yml
+  tags:
+    - config
+    - script
+
+- include: configure_monitoring.yml
+  tags: monitoring
+  when: monitoring_nagios_enable or monitoring_galera_enable
+
+- include: configure_pmm.yml
+  tags: monitoring
+  when: monitoring_pmm_enable
+
+- include: galera_monitoring.yml
+  when: monitoring_galera_enable
+  tags: config_galera_monitoring
+
+# - selinux:
+#     policy: targeted
+#     state:  permissive

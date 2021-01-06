@@ -1,0 +1,25 @@
+---
+
+# Global
+manage_firewalld: true
+
+ambari_server: "{{ ansible_fqdn }}"
+ambari_disable_firewall: "{{ manage_firewalld }}"
+ambari_version: 2.7.4.0
+ambari_openjdk_version: 8
+ambari_root_dir: "{{ ambari_default_root_dir }}"
+ambari_services:
+  - ambari-server
+  - hadoop
+  - hadoop-hdfs
+  - hadoop-yarn
+  - hadoop-mapreduce
+  - ambari-metrics-collector
+  - ambari-metrics-monitor
+  - oozie
+  - hive
+  - hbase
+  - knox
+  - spark2
+  - zeppelin
+

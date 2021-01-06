@@ -1,0 +1,20 @@
+---
+
+- hosts: all
+  roles:
+    - role: elasticsearch
+      tags: elasticsearch
+      es_install_admin_scripts: false
+      es_heap_size_prct: 0.2
+      es_path_data: "/srv/elasticsearch/data"
+      es_path_logs: "/srv/elasticsearch/logs"
+      es_path_repo: "/srv/elasticsearch/repo"
+    - role: kibana
+      tags: kibana
+      kibana_enable_http_reverse: false
+      kibana_version: "6.0"
+    - role: apm-elastic
+      tags: apm
+      kibana_version: "6.0"
+      apm_elasticsearch_hosts: ["localhost"]
+

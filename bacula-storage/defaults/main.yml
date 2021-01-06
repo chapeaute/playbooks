@@ -1,0 +1,33 @@
+---
+
+# director variables
+bacula_dir_host: "{{ ansible_fqdn }}"
+bacula_dir_name: "bacula-dir"
+bacula_dir_service: "bacula-dir"
+
+# storage daemon variables
+bacula_sd_name: "{{ ansible_fqdn }}"
+bacula_sd_password: "{{ lookup('password', 'credential/{{ inventory_hostname }}-bacula_sd_password chars=ascii_letters,digits') }}"
+bacula_sd_address: "{{ ansible_fqdn }}"
+bacula_sd_port: 9103
+bacula_sd_archive_device: /var/spool/bacula
+bacula_sd_media_type: File
+bacula_sd_max_concurrent_jobs: 10
+bacula_dir_restore: /var/lib/bacula-restores
+
+# schedule retention
+bacula_daily_default_retention: 14
+bacula_daily_file_retention: "{{ bacula_daily_default_retention }}"
+bacula_daily_job_retention: "{{ bacula_daily_default_retention }}"
+bacula_daily_volume_retention: "{{ bacula_daily_default_retention }}"
+bacula_daily_volume_use_duration: 23 hours
+
+bacula_weekly_default_retention: 21
+bacula_weekly_file_retention: "{{ bacula_weekly_default_retention }}"
+bacula_weekly_job_retention: "{{ bacula_weekly_default_retention }}"
+bacula_weekly_volume_retention: "{{ bacula_weekly_default_retention }}"
+bacula_weekly_volume_use_duration: 23 hours
+
+# schedule time
+bacula_schedule_full: "sun at 00:05"
+bacula_schedule_diff: "mon-sat at 00:05"

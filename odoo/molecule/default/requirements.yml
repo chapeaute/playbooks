@@ -1,0 +1,13 @@
+---
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-firewalld.git
+  scm: git
+  version: v1.0.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/postgresql.git
+  scm: git
+  version: v1.3.6
+
+- src: git@git.smile.ci:adminsys/ansible/role/python.git
+  scm: git
+  version: v2.0.1

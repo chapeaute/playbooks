@@ -1,0 +1,9 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: stgou
+          groups: exploit
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCtbHMkbfZ3ya2p61kihmGB+AUTQGgN7pmrOs2uR4Fczg4FdmRrRlI6VOgj9nKGwwwiMWgdtBXRp10R4WKWEcc4pIMGrwbIsuLXBGAKwYwLcz8W3RBfrc+LUHUJ1FTOq+t4IQlL02Gz58C7T0ycwpPj3zsdhmwEJdze7G9a8EVqS0ndcZNku/rA3X90JU/eGcAWJUt24JSg271TmlYs5mFuAhBLdWGcL5Y74RZ9HiGfMVGi6iQpjj733uadM6Vvh22TnRTmmi9IG1Qk1YC8dbbHCdjG7uJBQLEX5wnrGX1l73MGYN7gvqsOkv/Rmc6/DHdSzxQc80+H2MQMT1kjs7R7nh/Qq42zzVIcdhI43uRcBnmR7mF+G9uXdnctlFwF5nUEF2joheCXyg7/0SQzejFg1p4VPT+X71v2Kvc5MrEkxaSlY/ANJHF/HtTf6ZyI1i+JTdy8DDhdD5BBkn2w3ivOFuM9plM9mAFg4njLp5zC6XO63dQ88Kwcg5QdqVv1plpGS1O+c5at9BlK+JW8X8lIdZm7fSTmVX+VCkxeF0TiOG/TwTgYhHPqC49jEqlYolyhwtLGGKrvZRkWPTcmLjP+l+rTMCG1CZeDa2d9s/wV0OpkclXdrioCk/VJ2pcIgP3OreKFuflxeCH9rJ1KTpNn5aUeqO5CZOld8oJ7Y1i0hw== stephane.goure-bi@smile.ci

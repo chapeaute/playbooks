@@ -1,0 +1,76 @@
+# Traefik worker configuration file
+defaultEntryPoints = ["http", "https"]
+
+insecureSkipVerify = true
+
+[entryPoints]
+  [entryPoints.monitoring]
+  address = ":7979"
+  [entryPoints.dashboard]
+  address = ":8080"
+    [entryPoints.dashboard.auth]
+      [entryPoints.dashboard.auth.basic]
+        users = [
+          "{{ traefik_opts.admin_user }}:{{ traefik_opts.admin_pass }}",
+      ]
+  [entryPoints.http]
+  address = ":80"
+{% if dumb_proxy_hosts is defined %}
+    [entryPoints.http.proxyProtocol]
+      trustedIPs = [{% for host in dumb_proxy_hosts -%}"{{ host }}" {%- if not loop.last -%}, {% endif -%}{%- endfor %}]
+{% endif %}
+{% if traefik_redirect_https and traefik_acme_enable %}
+    [entryPoints.http.redirect]
+    entryPoint = "https"
+{% endif %}
+  [entryPoints.https]
+  address = ":443"
+{% if dumb_proxy_hosts is defined %}
+    [entryPoints.https.proxyProtocol]
+      trustedIPs = [{% for host in dumb_proxy_hosts -%}"{{ host }}" {%- if not loop.last -%}, {% endif -%}{%- endfor %}]
+{% endif %}
+    [entryPoints.https.tls]
+      sniStrict =  {{ traefik_sni_strict }}
+      minVersion = "VersionTLS12"
+{% if traefik_cipher_list | length > 0 %}
+      cipherSuites = [{% for cipher in traefik_cipher_list -%}"{{ cipher }}" {%- if not loop.last -%}, {% endif -%}{%- endfor %}]
+{% endif %}
+
+[traefikLog]
+format = "common"
+
+[accessLog]
+format = "json"
+
+[api]
+entryPoint = "dashboard"
+dashboard = true
+  [api.statistics]
+  recentErrors = 10
+
+[ping]
+entryPoint = "monitoring"
+
+[metrics]
+  # Enable Traefik to export internal metrics to Prometheus
+  [metrics.prometheus]
+    entryPoint = "monitoring"
+    buckets = [0.1,0.3,1.2,5.0]
+
+[etcd]
+endpoint = "{{ etcd_opts.dns }}:2379"
+prefix = "/traefik"
+watch = true
+useAPIV3 = true
+
+{% if traefik_acme_enable %}
+[acme]
+email = "{{ traefik_acme_mail }}"
+storage = "{{ traefik_acme_key }}/account"
+caServer = "{{ traefik_acme_caserver }}"
+entryPoint = "https"
+acmeLogging = true
+onHostRule = true
+  [acme.httpChallenge]
+    entryPoint = "http"
+{% endif %}

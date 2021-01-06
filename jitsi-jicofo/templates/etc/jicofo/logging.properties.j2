@@ -1,0 +1,58 @@
+# {{ ansible_managed }}
+
+handlers= java.util.logging.FileHandler
+
+# Handlers with XMPP debug enabled:
+#handlers= java.util.logging.FileHandler, org.jitsi.impl.protocol.xmpp.log.XmppPacketsFileHandler
+
+
+java.util.logging.ConsoleHandler.level = ALL
+java.util.logging.ConsoleHandler.formatter = net.java.sip.communicator.util.ScLogFormatter
+java.util.logging.ConsoleHandler.filter = org.jitsi.impl.protocol.xmpp.log.ExcludeXmppPackets
+
+net.java.sip.communicator.util.ScLogFormatter.programname=Jicofo
+
+# All logs level
+.level=INFO
+net.sf.level=SEVERE
+net.java.sip.communicator.plugin.reconnectplugin.level=FINE
+org.ice4j.level=SEVERE
+org.jitsi.impl.neomedia.level=SEVERE
+
+# Do not worry about missing strings
+net.java.sip.communicator.service.resources.AbstractResourcesService.level=SEVERE
+
+#net.java.sip.communicator.service.protocol.level=ALL
+
+# File logging
+java.util.logging.SimpleFormatter.format= %5$s%n
+java.util.logging.FileHandler.level = INFO
+java.util.logging.FileHandler.formatter = net.java.sip.communicator.util.ScLogFormatter
+java.util.logging.FileHandler.pattern = {{ jicofo_log_dir }}/jicofo.log
+java.util.logging.FileHandler.limit = 100MB
+java.util.logging.FileHandler.count = 1
+java.util.logging.FileHandler.append = true
+
+
+# To enable XMPP packets logging add XmppPacketsFileHandler to the handlers property
+org.jitsi.impl.protocol.xmpp.log.PacketDebugger.level=INFO
+org.jitsi.impl.protocol.xmpp.colibri.level=INFO
+org.jitsi.impl.protocol.xmpp.log.XmppPacketsFileHandler.pattern= {{ jicofo_log_dir }}/jicofo-xmpp.log
+org.jitsi.impl.protocol.xmpp.log.XmppPacketsFileHandler.append=true
+org.jitsi.impl.protocol.xmpp.log.XmppPacketsFileHandler.limit=200000000
+org.jitsi.impl.protocol.xmpp.log.XmppPacketsFileHandler.count=3
+
+# Syslog (uncomment handler to use)
+com.agafua.syslog.SyslogHandler.transport = udp
+com.agafua.syslog.SyslogHandler.facility = local0
+com.agafua.syslog.SyslogHandler.port = 514
+com.agafua.syslog.SyslogHandler.hostname = localhost
+com.agafua.syslog.SyslogHandler.formatter = net.java.sip.communicator.util.ScLogFormatter
+com.agafua.syslog.SyslogHandler.escapeNewlines = false
+com.agafua.syslog.SyslogHandler.filter = org.jitsi.impl.protocol.xmpp.log.ExcludeXmppPackets
+
+# Sentry (uncomment handler to use)
+io.sentry.jul.SentryHandler.level=WARNING
+
+# to disable double timestamps in syslog uncomment next line
+#net.java.sip.communicator.util.ScLogFormatter.disableTimestamp=true

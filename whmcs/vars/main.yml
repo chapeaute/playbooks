@@ -1,0 +1,9 @@
+---
+# vars file for whmcs
+whmcs_rw_dirs:
+  - whmcs/templates_c
+  - whmcs/downloads
+  - whmcs/attachments
+  - whmcs/install/log
+
+whmcs_rw_files: []

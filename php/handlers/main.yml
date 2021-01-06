@@ -1,0 +1,17 @@
+---
+
+- name: "Restart PHP-FPM"
+  service:
+    name: "{{ php_fpm_service }}"
+    state: restarted
+  when: php_use_scl
+
+- name: "Restart Apache Service"
+  service:
+    name: "{{ apache_service_name }}"
+    state: restarted
+  when: not php_use_scl
+
+- name: "Reload Systemd"
+  systemd:
+    daemon_reload: yes

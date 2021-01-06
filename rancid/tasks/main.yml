@@ -1,0 +1,62 @@
+---
+# tasks file for rancid
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  tags: always
+
+- name: main | Install Rancid and Git
+  yum: name={{item}} state=installed
+  with_items:
+    - rancid
+    - git
+  tags: 
+    - install
+
+- name: main | Configure Rancid for Git
+  lineinfile:
+    dest: "{{ rancid_conf_dir }}/rancid.conf"
+    regexp: "^{{ item.key }}=.*"
+    line:   "{{ item.key }}={{ item.value }}"
+  with_items: 
+    - {key: 'CSVROOT', value: '$BASEDIR/GIT; export CVSROOT'}
+    - {key: 'RCSSYS', value: 'git; export RCSSYS'}
+  tags: 
+    - config
+
+- name: main | Define Equipements Groups
+  lineinfile:
+    dest: "{{ rancid_conf_dir }}/rancid.conf"
+    regexp: "^{{ item.key }}=.*"
+    line:   "{{ item.key }}={{ item.value }}"
+  with_items: 
+    - {key: 'LIST_OF_GROUPS', value: '"{{ rancid_equipments_groups | join(" ")}}"'}
+  register: update_groups
+  tags: 
+    - config
+
+
+- name: main | Create cloginrc file
+  copy:
+    dest:    "{{ rancid_data_dir }}/.cloginrc"
+    content: ""
+    owner:   "{{ rancid_user }}"
+    group:   "{{ rancid_group }}"
+    mode:    0640
+    force:   no
+
+
+- name: main | Execute rancid-cvs
+  command: rancid-cvs
+  become: true
+  become_user: "{{ rancid_user }}"
+  when: update_groups.changed

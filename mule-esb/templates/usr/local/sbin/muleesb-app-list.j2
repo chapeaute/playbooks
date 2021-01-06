@@ -1,0 +1,73 @@
+#!/bin/bash
+
+SERVICE_NAME="{{ mule_esb_service_name }}"
+APP_DIR="{{ mule_esb_default_root_dir }}/{{ mule_esb_service_name }}/apps"
+
+print_error(){
+    echo -e "\e[1;31m$@\e[0;39m"
+}
+
+print_success(){
+    echo -e "\e[1;32m$@\e[0;39m"
+}
+
+function syntax() {
+    cat <<EOF
+Script to deploy list Mule ESB applications deployed on serveur
+
+Usage: ${0##*/}
+    -h                Display this message
+EOF
+}
+
+while getopts "h" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+
+if [ ! -d "${APP_DIR}" ]; then
+    echo "Application directory ${APP_DIR} not found."
+    exit 1
+fi
+
+mule_env=$(systemctl show $SERVICE_NAME | grep '^ExecStart=' | sed -e 's/.*-M-Dmule.env=\([^ ]*\) .*/\1/')
+mule_dir=$(systemctl show $SERVICE_NAME | grep '^WorkingDirectory=' | cut -d= -f2)
+
+if [ -z $mule_env ]; then
+    echo "Could not determine Mule ESB environment" 
+    exit 1
+fi
+
+[[ -n $mule_dir ]] && APP_DIR="$mule_dir/apps"
+
+if [ ! -d "$APP_DIR" ]; then
+    echo "Could find Mule ESB working directory"
+    exit 1
+fi
+
+for app in $(find $APP_DIR/* -maxdepth 0 -type d)
+do
+    APP_NAME=$(basename $app)
+    mule_prop_file="${APP_DIR}/${APP_NAME}/classes/${mule_env}.properties"
+
+    if [ -f $mule_prop_file ]; then
+        port=$(egrep "http.api.front.port=|http.api.port=" $mule_prop_file | cut -d= -f2 | tr -d '\r')
+        if [ -z $port ]; then
+          echo "Port not found for application $APP_NAME"
+        else
+          echo -n "$APP_NAME (Port:$port) "
+          netstat -plnt | awk '{print $4}' | egrep -q ":$port\$" && print_success "running" || print_error "stopped"
+        fi
+    fi
+done | column -t
+

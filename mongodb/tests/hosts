@@ -1,0 +1,5 @@
+[all]
+mongodb ansible_connection=docker
+
+[mongodb]
+mongodb

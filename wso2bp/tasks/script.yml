@@ -1,0 +1,15 @@
+---
+
+- name: script | Add scripts
+  tags: script
+  template:
+    src: "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode: 0755
+  with_items:
+    - wso2bp-app-deploy
+    - wso2bp-app-undeploy
+    - wso2bp-lib-deploy
+    - wso2bp-lib-undeploy

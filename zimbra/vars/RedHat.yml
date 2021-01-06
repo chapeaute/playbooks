@@ -1,0 +1,21 @@
+---
+
+zimbra_dependencies:
+  - unzip
+  - net-tools
+  - sysstat
+  - openssh-clients
+  - perl-core
+  - libaio
+  - nmap-ncat
+  - libstdc++
+
+
+
+zimbra_absents:
+  - postfix
+  - sendmail
+
+
+
+zimbra_os: RHEL

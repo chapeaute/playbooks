@@ -1,0 +1,3 @@
+#!/bin/bash
+
+curl -s -X GET "http://127.0.0.1:5601/api/saved_objects/_find?type=dashboard&fields=title" -H 'kbn-xsrf: true'  | jq '.saved_objects | .[] | "- "+ .attributes.title + " ( uuid: " + .id + " )"' -r

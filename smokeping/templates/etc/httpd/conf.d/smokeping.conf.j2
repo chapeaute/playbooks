@@ -1,0 +1,23 @@
+<VirtualHost 0.0.0.0:80>
+
+    DocumentRoot  /usr/share/smokeping/htdocs
+    ScriptAlias /smokeping/sm.cgi  /usr/share/smokeping/cgi/smokeping.fcgi
+    Alias       /smokeping/images  /var/lib/smokeping/images
+    Alias       /smokeping         /usr/share/smokeping/htdocs
+
+    #ScriptAlias /smokeping/sm.cgi  /usr/share/smokeping/cgi/smokeping_cgi
+
+    <Directory "/usr/share/smokeping" >
+        Require all granted
+        # Require ip 2.5.6.8
+        # Require host example.org
+        Options +ExecCGI
+        AddHandler cgi-script .cgi
+    </Directory>
+
+    <Directory "/var/lib/smokeping" >
+    Require all granted
+    # Require ip 2.5.6.8
+    # Require host example.org
+    </Directory>
+</VirtualHost>

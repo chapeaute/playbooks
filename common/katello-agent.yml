@@ -1,0 +1,18 @@
+---
+
+- hosts: all
+  serial: 2
+  tags: katello
+  environment: "{{ inventory__group_environment|default({}) }}"
+  roles:
+  - role: katello-agent
+    katello_version: "3.4"
+    katello_force_register: False
+    katello_organization: "CLIENT"
+    katello_activation_key: Default
+    katello_repofile_delete:
+      - CentOS-*.repo
+      - epel*.repo
+      - katello-client.repo
+      - filebeat.repo
+      - MariaDB.repo

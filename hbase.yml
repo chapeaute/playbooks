@@ -1,0 +1,8 @@
+---
+
+- hosts: hbase
+  roles:
+    - role: zookeeper
+    - role: hbase
+      hbase_root_dir: /srv
+      hbase_memory_size_prct: 0.7

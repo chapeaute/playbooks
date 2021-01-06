@@ -1,0 +1,9 @@
+---
+use_satellite_repo: False
+
+# defaults file for rundeck
+rundeck_admin_pass: changeme
+rundeck_port: 4440
+rundeck_ansible_enable: True
+rundeck_apache_proxy_enable: False
+rundeck_apache_vhostname: "{{ ansible_fqdn }}"

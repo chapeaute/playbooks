@@ -1,0 +1,43 @@
+---
+# defaults file for wso2
+
+wso2sp_version: 4.3.0
+wso2sp_ports:
+  - 9443/tcp
+  - 9543/tcp
+  - 7611/tcp
+  - 7711/tcp
+  - 9711/tcp
+  - 9090/tcp
+  - 9190/tcp
+  - 9543/tcp
+  - 9643/tcp
+  - 9290/tcp
+  - 9092/tcp
+  - 9743/tcp
+  - 7443/tcp
+wso2sp_java_version: 8
+wso2sp_java_impl: openjdk
+wso2sp_memory_size_prct: 0.6
+wso2sp_memory_size: "{{ (ansible_memtotal_mb*wso2sp_memory_size_prct)|int }}M"
+wso2sp_root_dir: "/var/lib"
+
+# Admin
+wso2sp_admin_user: admin
+wso2sp_admin_pass: admin
+
+# Database configuration
+wso2sp_db_enable: false
+wso2sp_db_driver: mysql
+#wso2sp_db_host: "{{ ansible_fqdn }}"
+wso2sp_db_port: 3306
+wso2sp_db_user: wso2sp
+wso2sp_db_pass: "{{ lookup('password', 'credential/wso2sp_db_pass chars=ascii_letters,digits') }}"
+wso2sp_db_name: wso2sp
+wso2sp_db_remote_host: "{{ wso2sp_db_host }}"
+
+# PROFILES
+wso2sp_enable_manager: true
+wso2sp_enable_dashboard: true
+wso2sp_enable_worker: true
+wso2sp_enable_editor: false

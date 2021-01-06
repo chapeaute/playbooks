@@ -1,0 +1,41 @@
+# v1.0
+---
+- hosts: apache,mariadb,php,tomcat
+  vars:
+    tomcat_install_dir: /var/lib
+    tomcat_heap_size_prct: 0.3
+    # Apache variables
+    site_name: "app-name"
+    site_aliases: ["app-url"]
+    site_dir:  "/var/www"
+    docs_dir:  "{{ site_dir }}/{{ site_name }}/htdocs"
+    # MariaDB variables
+    mysql_version: "10.2"
+    mysql_data_dir: "/var/lib/mysql"
+    mysql_config_innodb_buffer_pool_size_prct: 0.3
+    mysql_config_max_connections: 250
+    # PHP variables
+    php_version: "7.2"
+  roles:
+    - role: tomcat
+    - role: apache
+      apache2_data_dir: "{{ site_dir }}"
+      apache2_vhosts:
+        site:
+          vhost_name: "{{ site_name }}" 
+          server_aliases: "{{ site_aliases }}"
+    - role: php
+      php_use_default_package: False
+      php_default_version: "{{ php_version }}"
+      php_extensions:
+        - curl
+        - pdo
+        - gd
+        - mysql
+        - mcrypt
+        - xml
+        - redis
+        - mbstring
+        - opcache
+    - role: mariadb-server
+

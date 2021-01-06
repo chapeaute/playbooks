@@ -1,0 +1,29 @@
+---
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- import_tasks: config.yml
+  tags: config
+
+- import_tasks: scripts.yml
+  tags: scripts
+
+- import_tasks: monitoring.yml
+  when: spark_enable_monitoring
+  tags:
+    - config
+    - config_monitoring
+    - monitoring
+
+- import_tasks: service.yml
+  tags: service

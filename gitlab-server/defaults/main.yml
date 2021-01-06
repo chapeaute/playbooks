@@ -1,0 +1,12 @@
+---
+# Global settings
+firewall_setup: true
+firewall_zone: public
+
+# defaults file for gitlab
+gitlab_unicorn_worker: 3
+gitlab_unicorn_listen: 0.0.0.0
+gitlab_backup_dir: "{{ gitlab_default_backup_dir }}"
+gitlab_backup_age: 0
+gitlab_external_url: "{{ ansible_fqdn }}"
+#gitlab_user_deploy:

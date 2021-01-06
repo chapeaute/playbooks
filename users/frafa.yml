@@ -1,0 +1,15 @@
+---
+
+- hosts: all
+  roles:
+    - role: basic-user
+      users_groups:
+        - name: dev
+      users:
+        - login: frafa
+          groups: 
+            - dev
+            - exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC6oFipzyQUZR0SOisHzr6t6D9D+FEtTR/BwvpFy7DXuiNhK8jjBXUx6ip95iMPi5vx5Qb9jy0DmReJi/vM2FE4J47oVJRPZcJNahPU/wI9HbjSBsk7ROh+8LomUhOwUb6glJh/+GC+9vkRkX1BllaEd7jCpdn5Yft/LaWmSRIsxcik46p5CKJ5M7s6tDP60MrBofUq985LxCPPwxK2/1fCCo5+5+6Gdzs8MAzo2iYi6M2bmjCeQVzf0sgiRCyphPgzsO7ig4gWD88VhnYvVBbBce0Uw+mi1RejwWbk5R3ybw4R7UyM8lSVtfgcknC/cDrJ1KBHw1qx82CSenxpxms8O/MdODsNoU/ys79ogyju0vKl08Z1JPLN4Zzofe009a52e/WhivY0seMkPGfGPueHL7Eb+apslqMB2v2f/jpXGM2KDPNygWfvqWQ6G7N3x7pYWq8WyN4rjv79wf6LdrlX06uQUuZhg53W03/XyGndlrLMY9NTzNb7AcuCU4EBReqzRh+ZzYwCHM7NuLwUW5qcElaQR4hW7gmcZrnjoYYSNnrvDlwACM6KM+w08mhVoRLi9Zg1XdpDP3If/kk6vg6jeQrIjhFHnCHbYn4Icw00dVzfhI9JCNFmcpGzI0gbwikGhAlZPGDNmYH7rqPd2e7TrU9HKCOQEJrYCWOkoUM9Uw== francois.famian@sfl.ci

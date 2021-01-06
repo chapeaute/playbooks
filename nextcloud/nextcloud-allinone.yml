@@ -1,0 +1,21 @@
+# v1.0
+---
+- hosts: nextcloud
+  vars:
+    nextcloud_admin_user: "admin"
+    nextcloud_admin_pass: "changeme"
+    nextcloud_version: "19.0.1"
+    nextcloud_vhost_name: nextcloud.smile.ci
+    nextcloud_webroot_dir: /srv/www
+    nextcloud_encryption_enable: True
+    # Redis settings
+    redis_enable_password: True
+    nextcloud_use_redis: True
+    nextcloud_redis_password: "{{ redis_password }}"
+  roles:
+    - role: redis
+      redis_memory_prct: 0.2
+      when: nextcloud_use_redis
+    - role: mariadb-server
+      mysql_config_innodb_buffer_pool_size_prct: 0.35
+    - role: nextcloud

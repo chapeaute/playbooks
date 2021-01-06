@@ -1,0 +1,7 @@
+---
+# handlers file for wso2
+
+- name: "Restart service"
+  service:
+    name: "{{ wso2_generic_service_name }}"
+    state: restarted

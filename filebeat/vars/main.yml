@@ -1,0 +1,23 @@
+---
+
+# All
+fb_all_modules:
+  - apache2
+  - auditd
+  - elasticsearch
+  - haproxy
+  - icinga
+  - iis
+  - iptables
+  - kafka
+  - kibana
+  - logstash
+  - mongodb
+  - mysql
+  - nginx
+  - osquery
+  - postgresql
+  - redis
+  - suricata
+  - system
+  - traefik

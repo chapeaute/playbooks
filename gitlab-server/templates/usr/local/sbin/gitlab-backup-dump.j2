@@ -1,0 +1,48 @@
+#!/bin/bash
+
+# Append custom script to path
+PATH=$PATH:/usr/local/sbin
+
+# Set where backups should be saved in
+BACKUP_DIR={{ gitlab_backup_dir }}
+
+# Get current date
+CUR_DATE=`date +%Y-%m-%d`
+
+# Set backup log file
+LOG_FILE=$BACKUP_DIR/backup-gitlab-$CUR_DATE.log
+
+# Default return code
+ret=0
+extra_opts=''
+
+# Logging
+log() {
+  echo `date "+%Y-%d-%m %H:%M:%S"`": $1" >> $LOG_FILE
+  echo `date "+%Y-%d-%m %H:%M:%S"`": $1"
+}
+
+# Create backupdir if not exists
+if [ ! -d $BACKUP_DIR ]; then
+    echo "$BACKUP_DIR doesn't exist."
+    echo "Creating $BACKUP_DIR..."
+    mkdir -p $BACKUP_DIR
+fi
+
+# Check if backup dir is writable
+if [ ! -w $BACKUP_DIR ]; then
+    echo "Error: $BACKUP_DIR is not writable, exiting..."
+    exit 1
+fi
+
+echo -n "" > $LOG_FILE
+exec 2>> $LOG_FILE
+
+log "=== Start gitlab backup ==="
+
+gitlab-rake gitlab:backup:create
+ret=$?
+
+log "=== End gitlab backup ==="
+
+exit $ret

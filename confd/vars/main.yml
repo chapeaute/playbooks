@@ -1,0 +1,6 @@
+---
+# vars file for confd
+confd_service_name: confd
+confd_user: root
+confd_group: root
+confd_conf_dir: /etc/confd

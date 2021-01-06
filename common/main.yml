@@ -1,0 +1,13 @@
+---
+- import_playbook: katello-agent.yml
+- import_playbook: basic-server.yml
+- import_playbook: basic-route.yml
+- import_playbook: user/admin-smile.yml
+- import_playbook: user/admin-deploy.yml
+- import_playbook: user/admin-ocit.yml
+- import_playbook: filebeat-agent.yml
+- import_playbook: monitoring-agent.yml
+- import_playbook: bacula-agent.yml
+- import_playbook: postfix.yml
+- import_playbook: ntp-agent.yml
+- import_playbook: security.yml

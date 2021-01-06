@@ -1,0 +1,12 @@
+# v1.0
+---
+- hosts: all
+  vars:
+    galera_cluster_name: galera
+    mariadb_version: 10.1
+    mariadb_data_dir: /var/lib/mysql
+    mariadb_innodb_buffer_pool_size_prct: 0.7
+    mariabd_max_connections: 250
+  roles:
+    - role: mariadb-galera-cluster
+      galera_nodes: "{{ play_hosts }}"

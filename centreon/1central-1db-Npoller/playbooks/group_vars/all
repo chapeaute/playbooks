@@ -1,0 +1,23 @@
+_server_main_interface: "{{ ansible_default_ipv4.interface }}"
+
+#### PTF MONITORING ####
+## Mandatory variables
+# Monitoring server variables
+_monitoring_server_host: "{{ groups['centreon-central'][0] }}"
+_monitoring_database_host: "{{ groups['centreon-database'][0] }}"
+_monitoring_poller_hosts: "{{ groups['centreon-poller'] }}"
+_monitoring_mariadb_data_dir: "/var/lib/mysql"
+_monitoring_mariadb_backup_dir: "/var/backup/mysql"         # Dump directory
+_monitoring_admin_user: admin
+_monitoring_admin_pass: sigipsr
+
+## Monitoring client variables
+# SNMP
+snmp_community: client-ro
+# MariaDB
+monitoring_nagios_db_user: monitoring
+monitoring_nagios_db_pass: YSk5vdzQN4NngCJt
+
+## Optionnal variables
+monitoring_nagios_enable: true
+monitoring_nagios_server_fqdn: 127.0.0.1 # Check by SSH in localhost

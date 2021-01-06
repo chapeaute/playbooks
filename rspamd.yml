@@ -1,0 +1,13 @@
+---
+
+- hosts: all
+  vars: 
+     redis_hosts: []
+  roles:
+    - role: rspamd
+      rspamd_redis_hosts: "{{ redis_hosts }}"
+      rspamd_redis_password: fYdkPISacMlyyVcTigtt
+      rspamd_enable_http_reverse_ssl: true
+    - role: redis
+      when: redis_hosts | length > 0
+  

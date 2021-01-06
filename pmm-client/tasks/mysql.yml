@@ -1,0 +1,10 @@
+---
+- name: mysql | Check if MySQL service is enable
+  shell: pmm-admin list 2>/dev/null | grep -q "^mysql:" && echo configure || echo unconfigure
+  changed_when: False
+  check_mode: no
+  register: pmm_mysql
+
+- name: mysql | Add MySQL service to PMM Server
+  command: "pmm-admin add mysql --user {{ pmmclient_mysql_user }} --password {{ pmmclient_mysql_pass }} --query-source perfschema"
+  when: "'unconfigure' in pmm_mysql.stdout"

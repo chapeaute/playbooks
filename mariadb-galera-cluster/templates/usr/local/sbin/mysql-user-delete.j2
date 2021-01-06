@@ -1,0 +1,69 @@
+#!/bin/bash
+#
+# Drop MySQL user with on specify database
+#
+# Syntax : mysql-user-drop -u username -d database
+#
+
+USER_FILE=/root/.my.cnf
+MYSQL_CMD="mysql --defaults-extra-file=$USER_FILE -NB -e"
+
+syntax ()
+{
+	cat << EOF
+Usage: ${0##*/} -u username
+
+Delete MySQL user on specify database
+Options :
+	-u username   name of user to drop (required)
+	-h            display this help
+EOF
+}
+
+# Check arguments
+if [ $# -eq 0 ]; then
+	syntax
+	exit 1
+fi
+
+while getopts "u:h" opt; do
+	case $opt in
+		u)
+			username=$OPTARG
+			;;
+		h)
+			syntax && exit 0
+			;;
+		:)
+			echo "option $opt requires an argument"
+			syntax && exit 1
+			;;
+		\?)
+			echo "unkwown arg: $opt $OPTARG"
+			syntax && exit 1
+			;;
+	esac
+done
+
+if [ "$username" == "" ]; then
+	syntax
+	exit 1
+fi
+
+# Check command
+if [[ ! `command -v mysql` ]]; then
+	echo "Client \"mysql\" not found. Try to install it with :
+	\"apt-get install mysql-client\" on Debian system
+	\"yum install MariaDB-client\" on CentOS"
+	exit 1
+fi
+
+# Create user if not exist
+exist_user=$($MYSQL_CMD "SELECT COUNT(User) FROM mysql.user WHERE User='$username'")
+
+if [ "$exist_user" -eq 0 ]; then
+	echo "Unkown user $username"
+  exit 1
+else
+	$MYSQL_CMD "DROP USER '$username'@'%'" && echo "User $username dropped !"
+fi

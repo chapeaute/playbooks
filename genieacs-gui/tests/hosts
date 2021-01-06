@@ -1,0 +1,5 @@
+[all]
+genieacs-gui ansible_connection=docker
+
+[genieacs-gui]
+genieacs-gui

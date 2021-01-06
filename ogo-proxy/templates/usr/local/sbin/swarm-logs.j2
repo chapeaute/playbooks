@@ -1,0 +1,23 @@
+#!/bin/bash
+trap 'k' INT
+
+k() {
+    trap '' INT TERM     # ignore INT and TERM while shutting down
+    kill -TERM 0         # fixed order, send TERM not INT
+    wait
+    echo "Logs terminated."
+}
+
+if [ $# -ne 1 ]; then
+	echo "Please provide service name"
+	exit 1
+fi
+
+service=$1
+
+for svc in $(docker service ls | awk '{print $2}' | grep "$service")
+do
+	docker service logs ${svc} --tail 10 -f &
+done
+
+wait

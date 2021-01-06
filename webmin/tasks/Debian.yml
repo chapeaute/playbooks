@@ -1,0 +1,12 @@
+---
+
+- name: Debian | import webmin key
+  apt_key:
+    url: http://www.webmin.com/jcameron-key.asc
+    state: present
+
+- name: Debian | Add webmin repo
+  apt_repository:
+    repo: deb http://download.webmin.com/download/repository sarge contrib
+    filename: webmin
+    state: present

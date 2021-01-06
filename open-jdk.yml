@@ -1,0 +1,4 @@
+---
+- hosts: open-jdk
+  roles:
+    - openjdk

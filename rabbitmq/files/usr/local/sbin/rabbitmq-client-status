@@ -1,0 +1,4 @@
+#!/bin/bash
+
+echo -e "=== Connections ==="
+rabbitmqctl -q list_connections peer_host peer_port recv_cnt recv_oct send_cnt send_oct send_pend user vhost state | column -t

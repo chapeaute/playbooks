@@ -1,0 +1,5 @@
+---
+- hosts: zpush
+  roles:
+    - role: zpush
+      zpush_backend_url: https://zimbra.smile.ci

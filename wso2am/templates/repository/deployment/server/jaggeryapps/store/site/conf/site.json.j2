@@ -1,0 +1,72 @@
+{
+  "theme" : {
+    "base" : "wso2"
+  },
+  "context" : "/store",
+  "showPublicStoreURL":true,
+  "showThemesMenu":false,
+  "tagWiseMode" :"true",
+  "tagGroupKey" :"-group",
+  "ssoConfiguration" : {
+    "enabled" : "{{ wso2am_sso_enable }}",
+    "issuer" : "API_STORE",
+    "identityProviderURL" : "{{ wso2am_sso_url }}/samlsso",
+    "keyStoreName" : "/var/lib/wso2am/repository/resources/security/wso2carbon.jks",
+    "keyStorePassword" : "{{ wso2am_keystore_pass }}",
+    "identityAlias" : "wso2carbon",
+    "responseSigningEnabled":"false",
+    "assertionSigningEnabled":"false",
+    "verifyAssertionValidityPeriod":"true",
+    "timestampSkewInSeconds":"300",
+    "audienceRestrictionsEnabled":"true",
+    "passive" : "true",
+    "signRequests" : "true",
+    "assertionEncryptionEnabled" : "false",
+    "idpInit" : "false",
+    "idpInitSSOURL" : "{{ wso2am_sso_url }}/samlsso?spEntityID=API_STORE",
+    "acsURL" : "{{ wso2am_url }}/store/jagg/jaggery_acs.jag", //In passive or request signing mode, use only if default Assertion Consumer Service URL needs to be overidden
+    "loginUserNameAttribute" : "",
+    //"identityProviderLogoutURL" : "https://localhost:9443/samlsso",
+    //"externalLogoutPage" : "https://localhost:9443/samlsso?slo=true",
+    //"nameIdPolicy" : "urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified", //If not specified, 'urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified' will be used
+  },
+  "oidcConfiguration" : {
+    "enabled" : "false",
+    "issuer" : "API_STORE",
+    "identityProviderURI" : "http://localhost:8080/openid-connect-server-webapp/",
+    "authorizationEndpointURI" : "http://localhost:8080/openid-connect-server-webapp/authorize",
+    "tokenEndpointURI" : "http://localhost:8080/openid-connect-server-webapp/token",
+    "userInfoURI" : "http://localhost:8080/openid-connect-server-webapp/userinfo",
+    "jwksURI" : "http://localhost:8080/openid-connect-server-webapp/jwk",
+    "logoutEndpointURI" : "http://localhost:8080/openid-connect-server-webapp/logout",
+    "authHttpMethod": "POST",
+    "clientConfiguration" : {
+      "clientId" : "client_am_store",
+      "clientSecret" : "secret",
+      "responseType" : "code",
+      "authorizationType" : "authorization_code",
+      "scope" : "phone email address openid profile",
+      "redirectURI" : "https://localhost:9443/store/jagg/jaggery_oidc_acs.jag",
+      "postLogoutRedirectURI" : "https://localhost:9443/store/",
+      "clientAlgorithm" : "RS256"
+    }
+  },
+  "mutualAuthConfiguration" : {
+    "enabled" : "false"
+  },
+  "forum" : {
+    "topicsPerPage" : "5",
+    "repliesPerPage" : "5",
+    "resourceIdentifier" : "common"
+  },
+
+
+  "reverseProxy" : {
+    "enabled" : false,    // values true , false , "auto" - will look for  X-Forwarded-* headers
+    "host" : "sample.proxydomain.com", // If reverse proxy do not have a domain name use IP
+    "context":"",
+    //"regContext":"" // Use only if different path is used for registry
+  },
+  "mapExistingAuthApps" : false,
+  "whiteListedHostNames" : ["localhost"]
+}

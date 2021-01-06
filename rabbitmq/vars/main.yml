@@ -1,0 +1,13 @@
+---
+rabbitmq_user: rabbitmq
+rabbitmq_group: rabbitmq
+
+rabbitmq_default_data_dir: "/var/lib/rabbitmq"
+rabbitmq_erlang_cookie_file: "{{ rabbitmq_default_data_dir }}/.erlang.cookie"
+
+rabbitmq_services:
+  - rabbitmq-server
+
+rabbitmq_packages:
+  - "rabbitmq-server-{{ rabbitmq_version }}"
+  - jq

@@ -1,0 +1,60 @@
+
+-- {{ ansible_managed }}
+
+plugin_paths = { "{{ prosody_modules_dir }}" }
+
+admins = {
+{% for user in prosody_admin_users %}
+  "{{ user }}",
+{% endfor %}
+}
+modules_enabled = {
+{% for module in prosody_modules_enabled %}
+  "{{ module }}";
+{% endfor %}
+}
+modules_disabled = {
+{% for module in prosody_modules_disabled %}
+  "{{ module }}";
+{% endfor %}
+}
+
+allow_registration = {{ prosody_allow_registration | lower }}
+c2s_require_encryption = {{ prosody_c2s_require_encryption | lower }}
+s2s_require_encryption = {{ prosody_s2s_require_encryption | lower }}
+s2s_secure_auth = {{ prosody_s2s_secure_auth | lower}}
+
+c2s_ports = {
+{% for port in prosody_c2s_ports %}
+  {{ port }},
+{% endfor %}
+}
+s2s_port = {
+{% for port in prosody_s2s_ports %}
+  {{ port }},
+{% endfor %}
+}
+http_port = {
+{% for port in prosody_http_ports %}
+  {{ port }},
+{% endfor %}
+}
+component_ports = {
+{% for port in prosody_component_ports %}
+  {{ port }},
+{% endfor %}
+}
+component_interface = "0.0.0.0"
+
+authentication = "{{ prosody_auth_provider }}"
+
+
+log = "{{ prosody_log_dir }}/prosody.log"
+
+certificates = "/etc/prosody/certs";
+pidfile = "/run/prosody/prosody.pid";
+daemonize = false;
+
+VirtualHost "localhost"
+
+Include "conf.d/*.cfg.lua"

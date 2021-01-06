@@ -1,0 +1,11 @@
+---
+- name: install | Download source files
+  get_url:
+    url:       "{{ confd_src_url }}"
+    dest:      "/sbin/{{ confd_service_name }}"
+    owner:     "{{ confd_user }}"
+    group:     "{{ confd_group }}"
+    mode:      0750
+    sha256sum: "{{ confd_src_checksum |default(omit)}}"
+  register: dlfile
+  check_mode: no

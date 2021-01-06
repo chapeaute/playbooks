@@ -1,0 +1,13 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users_groups:
+        - name: exploit
+      users:
+        - login: lengu
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC7D38fcgy3nNbV1eAKN1vN3PoMnb093VNWvkYpXaF8f+waaftKSD2SVfS4WWhZhiByk1zMp9lW5i61hb3Ju7Ts2mvK5ywNXKNND+y6ZVLcLL6qUPS7D15KObZDNhE3q0eNVzx5vg4HxS+7da2Jr9NsZuVp9A0+RtQvWUeHUC8UPN9+JC5j/y40ljeYMDsPsoo9MKvG2SsYZEyaqrgMIQZftOs3a1ql2QBuRGjOBx4PY7yb/5nSxNDA0O2azsNyQZ/Pu4mgeJZkKLuZiYVKkX9/gwV9kwmDr6vWcIEF25Nlq1j06DT4e1Av1neFIy5UCEomjLk2la6WIB55znRlqazJ leandre.nguessan@smile.ci
+

@@ -1,0 +1,8 @@
+---
+- name: apm | Download Elastic Agent APM
+  get_url:
+    url:   "{{ tomcat_apm_url }}"
+    dest:  "{{ tomcat_default_root_dir }}/lib/apm-agent.jar"
+    owner: "{{ tomcat_user }}"
+    group: "{{ tomcat_group }}"
+    mode:   0644

@@ -1,0 +1,6 @@
+---
+
+docker_package_dependencies:
+  - device-mapper-persistent-data
+  - lvm2
+docker_extra_packages: []

@@ -1,0 +1,5 @@
+#!/bin/bash
+
+svc_name=${1-{{ docker_swarm_stack_name }}_{{ proxy_mgr_opts.dns }}}
+svc_list=$(docker service ls | grep $svc_name | awk '{print $2" "}' | tr -d "\n")
+watch -n 1 "docker service ps $svc_list | grep 'Running' | sort -k2"

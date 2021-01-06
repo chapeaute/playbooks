@@ -1,0 +1,12 @@
+---
+- hosts: keepalived
+  roles:
+    - role: keepalived
+      keepalived_vrrp_instance:
+        INSTANCENAME:
+          interface: eth1
+          vrid: 128
+          pass: changeme
+          vip:
+            - 192.168.122.20
+            - 192.168.122.21

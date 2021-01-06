@@ -1,0 +1,31 @@
+---
+
+- name: "Debian | installing rspamd required packages"
+  apt:
+    name: "{{ package }}"
+    state: present
+  loop: "{{ rspamd_repo_dep }}"
+  loop_control:
+    loop_var: package
+  retries: 3
+  delay: 2
+
+- name: "Debian | importing rspamd gpg key"
+  apt_key:
+    state: present
+    keyring: /etc/apt/trusted.gpg.d/rspamd.gpg
+    url: "{{ rspamd_repo_key }}"
+
+- name: "Debian | add rspamd repository"
+  template:
+    src: "etc/apt/sources.list.d/repo.j2"
+    dest: /etc/apt/sources.list.d/rspamd.list
+    owner: root
+    group: root
+    mode: 0644
+  register: rspamd_repo
+
+- name: "Debian | update debian repository cache"
+  apt:
+    update_cache: true
+  when: rspamd_repo.changed

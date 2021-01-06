@@ -1,0 +1,18 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users_groups:
+        - name: exploit
+      sudoers:
+        exploit:
+          state: present
+          lines:
+            - "%exploit ALL=(ALL) NOPASSWD: ALL"
+      users:
+        - login: yadia
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC6lN0xdyLCthHQoBABPO/Pj6fTnlXURWlu29YpLTYngsCZ+LolLOE3fr409EIpR55LkldCtU92+zDku8fOEqPmUskewf5QbFFRpNVt5P1iZQse4nmnHIYoB1nbxBUhNcbMLQKHz6vFM63GTWZc+mJGp1zsUbv7Vri6OrGtLaBRlPZ/H1oH3q3fS4vYghVLhI5kjtP6Nwv1FnNjuuwUsg8QJUWtXM6f92iIKW+vOsvuEMlN6JaIUU3KSx90PIvuw2nbxKRoUfKsV2pSJ9fPl0O0FiOAL8teef7IJpIU9klt+KNtrqyd6C+2MwG3lQRV4mSMSbURG6c/j3B5BYC2n5Kp+ZW+st8dZAa4bISHF3JGcTM8ww+DCQ5ED6hAcG1FXrz5qDv3j/+Sb2lt2PGEC5Och0EOYPOnxJBtTmC6fy08WEAIs9ERFwGYhvRVSvE3ibee+urK+4YZvLGM+wEOgtN9A8UU6aIZ9/KBkfX3wUX0Ww2Q+iWCo9/jVyfkLcS+j+qxORQd0lZlR+nhEebo5/2j9I1KvTQ91FVWhmvOppGt10LtBm6diQRqMYQNrvO69OOlDtNRWGPxa3YYwHCJ6vZzysw+wNjU8Oiy/0WdnWZWsbp4cLHt74UUbXpADLptfHR3minPXcG9eYUh3J1sG53byO12+8PdWtgWFBjYvg/0kw== yacouba.doumbia@sfl.ci

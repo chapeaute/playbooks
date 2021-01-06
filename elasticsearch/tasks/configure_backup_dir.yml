@@ -1,0 +1,43 @@
+---
+- name: configure_backup_dir | stat {{ es_backup_dir }}
+  stat:
+    path: "{{ es_backup_dir }}"
+  register: backup_dir
+
+- name: configure_backup_dir | Create backup directory
+  file:
+    state:   directory
+    path:    "{{ es_backup_dir }}"
+    recurse: yes
+  when:
+    - not backup_dir.stat.exists
+
+- name: configure_backup_dir | Remove backup directory
+  file:
+    state: absent
+    path:  "{{ es_default_backup_dir }}"
+  when:
+    - es_backup_dir != es_default_backup_dir
+    - es_force_remove_backup_dir
+
+- name: configure_backup_dir | Create parent backup dir if not exist
+  file:
+    path: "{{ es_default_backup_dir | dirname }}"
+    state: directory
+    recurse: yes
+
+- name: configure_backup_dir | Create symlink from {{ es_default_backup_dir }} to backup directory
+  file:
+    state: link
+    src:   "{{ es_backup_dir }}"
+    dest:  "{{ es_default_backup_dir }}"
+  when:
+    - es_backup_dir != es_default_backup_dir
+
+- name: configure_backup_dir | Create symlink from {{ es_default_backup_dir }} to backup directory
+  file:
+    state: link
+    src:   "{{ es_backup_dir }}"
+    dest:  "{{ es_default_backup_dir }}"
+  when:
+   - es_backup_dir != es_default_backup_dir

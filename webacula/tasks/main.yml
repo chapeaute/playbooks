@@ -1,0 +1,118 @@
+---
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | stat {{ webacula_root_dir }}/webacula
+  stat:
+    path: "{{ webacula_root_dir }}/webacula"
+  register: webacula_dir
+
+- name: main | Decompress tar of webacula
+  unarchive:
+    src: files/webacula.tar.tgz
+    dest: "{{ webacula_root_dir }}/"
+    owner: apache
+    group: apache
+  when: webacula_dir.stat.exists == False
+
+- name: main | Add apache in bacula groupe
+  user:
+    name: apache
+    groups: apache,bacula
+    append: yes
+
+- name: main | Generation of the webacula password
+  shell: "{{ webacula_root_dir }}/webacula/install/password-to-hash.php {{ webacula_admin_pass }}"
+  args:
+    chdir: "{{ webacula_root_dir }}/webacula/install"
+  register: password_hash
+
+- name: main | Configure db.conf
+  template:
+   src: usr/share/webacula/install/db.conf.j2
+   dest: "{{ webacula_root_dir }}/webacula/install/db.conf"
+   owner: root
+   group: root
+   mode: 755
+
+- name: main | Allow httpd to write to cache dir
+  file:
+    path: "{{ webacula_root_dir }}/webacula/data/cache"
+    owner: apache
+    group: apache
+    setype: httpd_sys_rw_content_t
+    state: directory
+    recurse: true
+  when: ansible_os_family == "RedHat" and ansible_selinux is defined and ansible_selinux.status == "enabled"
+
+- name: main | Permit php to network connect
+  seboolean:
+    name: "{{ item }}"
+    state: yes
+    persistent: yes
+  with_items:
+    - httpd_can_network_connect
+    - httpd_can_network_connect_db
+  when: ansible_os_family == "RedHat" and ansible_selinux is defined and ansible_selinux.status == "enabled"
+
+- name: main | Set webacula scripts as executables
+  file:
+    path: "{{ item }}"
+    mode: 655
+  with_items:
+    - "{{ webacula_root_dir }}/webacula/install/MySql/10_make_tables.sh"
+    - "{{ webacula_root_dir }}/webacula/install/MySql/20_acl_make_tables.sh"
+
+- name: main | Execution of ./10_make_tables.sh|execute script
+  command: "{{ webacula_root_dir }}/webacula/install/MySql/10_make_tables.sh"
+  args:
+    chdir: "{{ webacula_root_dir }}/webacula/install/MySql/"
+
+- name: main | Execution ./20_acl_tables.sh|execute script
+  command: "{{ webacula_root_dir }}/webacula/install/MySql/20_acl_make_tables.sh"
+  args:
+    chdir: "{{ webacula_root_dir }}/webacula/install/MySql/"
+
+- name: main | Link webacula.conf into /etc/httpd/conf.d/webacula.conf
+  file:
+    src: "{{ webacula_root_dir }}/webacula/install/apache/webacula.conf"
+    dest: /etc/httpd/conf.d/webacula.conf
+    state: link
+  notify: Restart httpd
+
+- name: main | Copy webacula.conf to /etc/httpd/conf.d/webacula.conf
+  template:
+    src: usr/share/webacula/bconsole.conf.j2
+    dest: "{{ webacula_root_dir }}/webacula/bconsole.conf"
+
+- name: main | Copy webacula.conf to /etc/httpd/conf.d/webacula.conf
+  template:
+    src: usr/share/webacula/install/apache/webacula.conf
+    dest: "{{ webacula_root_dir }}/webacula/install/apache/webacula.conf"
+  notify: Restart httpd
+
+- name: main | Add webacula directory in apache owner and apache group
+  file:
+    path: "{{ webacula_root_dir }}/webacula"
+    owner: apache
+    group: apache
+    mode: 0755
+    recurse: yes
+
+- name: main | Configure config.ini
+  template:
+    src: usr/share/webacula/application/config.ini.j2
+    dest: "{{ webacula_root_dir }}/webacula/application/config.ini"
+    owner: apache
+    group: apache
+    mode: 0755

@@ -1,0 +1,25 @@
+---
+- hosts: wso2bp
+  vars:
+    # WSO2 Version
+    wso2bp_version: 6.6.0
+    # WSO2 Password
+    wso2bp_admin_pass: changeme
+    # Address of MySQL host
+    wso2bp_db_host: "db_host_address"
+    # NFS server host
+    wso2bp_nfs_host: "nfs_host_address"
+    # Percentage of total memory dedicated to jvm
+    wso2bp_memory_size_prct: 0.6
+    # WSO2 data directory
+    # wso2bp_root_dir: /srv
+    wso2bp_data_root_dir: "/srv/nfs/wso2"
+    wso2bp_nodes: "{{ groups['wso2bp'] }}"
+  roles:
+    - role: nfs-client
+      nfs_mounts:
+        - server: "{{ wso2bp_nfs_host }}"
+          remotedir: /srv
+          localdir: /srv/nfs
+    - role: wso2bp
+      wso2bp_repl_method: nfs

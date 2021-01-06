@@ -1,0 +1,21 @@
+---
+use_satellite_repo: false
+
+# defaults file for pmm-client
+# PMM server parameter
+pmmserver_address: 127.0.0.1
+pmmserver_username: admin
+pmmserver_password: changeme
+
+# PMM mysql parameter
+pmmclient_mysql_enable: False
+pmmclient_mysql_user: pmm
+pmmclient_mysql_pass: changeme
+
+# PMM mongo parameter
+pmmclient_mongo_enable: False
+pmmclient_mongo_user: pmm
+pmmclient_mongo_pass: changeme
+
+# PMM proxy parameter
+pmmclient_proxy_enable: False

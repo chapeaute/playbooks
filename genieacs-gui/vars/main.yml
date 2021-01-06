@@ -1,0 +1,6 @@
+---
+# vars file for genieacs-gui
+genieacs_gui_default_data_dir: /var/lib/genieacs-gui
+genieacs_gui_secret: 75c1a2199d7905cb7b2b7b5c6df91ed144652177a282f2fe0d9f65dc578b86d47c7006172130fe88552fa797ff6513e222f15da05de8e55d4da31666cbe274c0
+genieacs_gui_user: genieacs-gui
+genieacs_gui_group: genieacs-gui

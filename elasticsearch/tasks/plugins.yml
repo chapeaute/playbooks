@@ -1,0 +1,20 @@
+---
+# - name: plugins | Install Elasticsearch 2.x plugins
+#  command: "{{ es_plugin_bin }} {{ es_plugin_inst_opt }} {{ item.value.name }} -DproxyHost={{ es_proxy_host|default() }} -DproxyPort={{ es_proxy_port|default() }}"
+#  register: es_plugin_result
+#  with_dict: "{{ es_plugins }}"
+#  changed_when: "'es_plugin_result.rc' == 0"
+#  failed_when: "es_plugin_result.rc != 0 and not 'already exists' in es_plugin_result.stdout"
+#  ignore_errors: yes
+#  when: es_major_version == '2'
+
+- name: plugins | install elasticsearch plugins
+  elasticsearch_plugin:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ es_plugins }}"
+  when:
+    - es_plugins is defined
+    - es_major_version >= '6'
+  notify:
+    - "Restart Elasticsearch"

@@ -1,0 +1,20 @@
+---
+- name: deploy_scripts | Deploy centreon clapi authentication file
+  template:
+    src:   etc/centreon/clapi.conf.j2
+    dest:  "{{ centreon_clapi_conf }}"
+    owner: root
+    group: root
+    mode:  0640
+
+- name: deploy_scripts | Deploy admin scripts
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "{{ centreon_script_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - centreon-conf-export
+    - centreon-conf-export-htpl
+    - centreon-conf-import

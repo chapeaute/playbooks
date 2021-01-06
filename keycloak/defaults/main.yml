@@ -1,0 +1,27 @@
+---
+# defaults file for keycloak
+
+keycloak_service_name: keycloak
+keycloak_user: "{{ keycloak_service_name }}"
+keycloak_group: "{{ keycloak_service_name }}"
+keycloak_version: 7.0.0
+keycloak:
+  source_url: "https://downloads.jboss.org/keycloak/{{ keycloak_version }}/keycloak-{{ keycloak_version }}.zip"
+  subpath: "keycloak-{{ keycloak_version }}"
+keycloak_java_version: 8
+keycloak_java_impl: openjdk
+keycloak_memory_size_prct: 0.75
+keycloak_memory_size: "{{ (ansible_memtotal_mb*keycloak_memory_size_prct)|int }}"
+keycloak_logs_dir: /var/lib/keycloack/standalone/log
+keycloak_root_dir: /var/lib
+keycloak_env:
+keycloak_limit_openfiles: 8192
+keycloak_wrapper_opts: {}
+#  - key: -opt1
+#    value: val1
+#  - key: -opt2
+#    value: val2
+
+
+keycloak_admin_user: admin
+keycloak_admin_pass: smile

@@ -1,0 +1,33 @@
+Include /etc/proftpd/modules.conf
+
+IdentLookups                    off
+ServerName                      {{ proftpd_server_name }}
+ServerType                      standalone
+DefaultServer                   on
+ShowSymlinks                    on
+TimeoutIdle                     1200
+ListOptions                     "-l"
+DenyFilter                      \*.*/
+Port                            0
+
+MaxInstances                    {{ proftpd_max_instances }}
+
+# Set the user and group that the server runs as
+User                            {{ proftpd_user_daemon_name }}
+Group                           {{ proftpd_group_daemon }}
+Umask                           022  022
+AllowOverwrite                  on
+SystemLog {{proftpd_log_dir}}/proftpd.log
+TransferLog {{proftpd_log_dir}}/xferlog
+
+{% if proftpd_enable_pam -%}
+AuthPAM        on
+{% else %}
+AuthPAM        Off
+{% endif %}
+{% if proftpd_users|length > 0 -%}
+AuthUserFile   {{ proftpd_auth_user_file }}
+{% endif -%}
+UseFtpUsers Off
+DefaultRoot    ~
+Include /etc/proftpd/conf.d/

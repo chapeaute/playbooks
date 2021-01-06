@@ -1,0 +1,106 @@
+#!/bin/bash
+
+CLAPI_CONF={{ centreon_clapi_conf }}
+CLAPI_BIN={{ centreon_clapi_bin }}
+PLUGIN_DIR=/usr/lib/nagios/plugins
+TMP_CONF=/var/cache/centreon/centreon-conf.cache
+EXCL_TPL="generic-service,generic-active-service,generic-active-host"
+
+[ -r $CLAPI_CONF ] && source $CLAPI_CONF
+
+CLAPI_CMD="$CLAPI_BIN -u $CLAPI_USER -p $CLAPI_PASS"
+
+if [ $# -lt 1 -o $# -gt 2 ]; then
+cat <<EOF
+Script to export centreon host template configuration
+
+Usage: ${0##*/} [-f] template_name"
+    -f             flush cache
+    template_name  Host template name to export
+EOF
+    exit 1
+fi
+
+if [ "$1" == "-f" ]; then
+    rm -f $TMP_CONF
+    HTPL=$2
+else
+    HTPL=${2:-$1}
+fi
+
+if [ -z $HTPL ]; then
+    echo "Missing host template to export"
+    exit 1
+fi
+
+[[ ! -f "$TMP_CONF" ]] && $CLAPI_CMD -e | uniq > $TMP_CONF
+
+function exclude_tpl
+{
+    local tpl=$1    
+    local rc=1
+
+    [[ -z $tpl ]] && return 1
+
+    for excl in ${EXCL_TPL//,/ }
+    do
+      [[ $tpl =~ ^$excl$ ]] && rc=0
+    done
+
+    return $rc
+}
+
+function export_cmd_configuration
+{
+    local cmd=$1
+
+    [[ -z $cmd ]] && return
+
+    cat $TMP_CONF | grep "^CMD;[^\;]*;$cmd;"
+}
+
+function export_stpl_parent_configuration
+{
+    local stpl=$1
+
+    [[ -z $stpl ]] && return
+    exclude_tpl $stpl && return
+
+    for tpl in $(cat $TMP_CONF | grep "^STPL;ADD;$stpl;" | awk -F';' '{print $5}')
+    do
+        export_stpl_parent_configuration $tpl
+    done
+
+    cmd=$(cat $TMP_CONF | grep "^STPL;setparam;$stpl;check_command;" | awk -F';' '{print $NF}')
+
+    if [ -n $cmd ]; then
+        export_cmd_configuration $cmd
+    fi
+
+    cat $TMP_CONF | grep "^STPL;[^\;]*;$stpl;"
+}
+
+function export_htpl_parent_configuration
+{
+    local htpl=$1
+
+    [[ -z $htpl ]] && return
+    exclude_tpl $htpl && return
+
+    for tpl in $(cat $TMP_CONF | grep "^HTPL;addtemplate;$htpl;" | awk -F';' '{print $NF}')
+    do
+        export_htpl_parent_configuration $tpl
+    done
+
+    cat $TMP_CONF | egrep "^HTPL;[^\;]*;$htpl;"
+
+    # Export service template dependencies
+    for tpl in $(cat $TMP_CONF | grep "^STPL;addhosttemplate;[^\;]*;$htpl$" | awk -F';' '{print $3}')
+    do
+        export_stpl_parent_configuration $tpl
+    done
+}
+
+# Export host template dependencies
+export_htpl_parent_configuration $HTPL
+

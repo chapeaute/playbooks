@@ -1,0 +1,14 @@
+---
+
+- name: Firewall | Open port
+  firewalld:
+    port: "{{ item }}"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  loop:
+    - "{{ coturn_listening_port }}/tcp"
+    - "{{ coturn_listening_port }}/udp"
+    - "{{ coturn_tls_listening_port }}/tcp"
+    - "{{ coturn_min_port }}-{{ coturn_max_port }}/udp"
+  tags: firewall,jitsi

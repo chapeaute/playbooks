@@ -1,0 +1,88 @@
+---
+
+- name: ssh | Set Banner /etc/banner
+  template:
+    src: etc/issue.net.j2
+    dest: /etc/issue.net
+    owner: root
+    group: root
+    mode: 0600
+  when:
+    - security_level >= 1
+    - sec_ssh_banner_issue is defined
+  tags:
+    - banner
+
+- name: ssh | Disable sftp in ssh server
+  tags: sftp
+  lineinfile:
+    dest:   /etc/ssh/sshd_config
+    regexp: "Subsystem.*"
+    line:   "Subsystem sftp /usr/libexec/openssh/sftp-server"
+    state: "{{ sec_ssh_disable_sftp | ternary('absent', 'present') }}"
+  notify:
+    - Reload SSH
+
+- name: ssh | Set SSH configuration parameter
+  lineinfile:
+    dest:   /etc/ssh/sshd_config
+    regexp: "^#?{{ item.key }} .*"
+    line:   "{{ item.key }} {{ item.value }}"
+  with_items:
+    - key:   Protocol
+      value: 2
+    - key:   LogLevel
+      value: INFO
+    - key:   X11Forwarding
+      value: "no"
+    - key:   AllowTcpForwarding
+      value: "{{ ssh_enable_tcp_forwarding }}"
+    - key:   MaxAuthTries
+      value: 4
+    - key:   IgnoreRhosts
+      value: "yes"
+    - key:   IgnoreUserKnownHOSTS
+      value: "yes"
+    - key:   HostbasedAuthentication
+      value: "no"
+    - key:   PermitRootLogin
+      value: "{{ ssh_enable_root_login }}"
+    - key:   PermitEmptyPasswords
+      value: "no"
+    - key:   PermitUserEnvironment
+      value: "no"
+    - key:   KexAlgorithms
+      value: "curve25519-sha256@libssh.org,ecdh-sha2-nistp521,ecdh-sha2-nistp384,ecdh-sha2-nistp256,diffie-hellman-group-exchange-sha256"
+    - key:   Ciphers
+      value: "{{ sec_ssh_ciphers }}"
+    - key:   MACs
+      value: "{{ sec_ssh_macs }}"
+    - key:   ClientAliveInterval
+      value: "{{ ssh_enable_client_alive_interval }}"
+    - key:   ClientAliveCountMax
+      value: "{{ sec_ssh_client_alive_count_max  }}"
+    - key:   LoginGraceTime
+      value: "{{ sec_ssh_login_grace_time  }}"
+    - key:   UsePAM
+      value: "{{ sec_ssh_use_pam }}"
+    - key:   PubkeyAuthentication
+      value: "yes"
+  notify:
+    - Reload SSH
+  when: security_level >= 1
+
+- name: ssh | Set SSH configuration parameter
+  lineinfile:
+    dest:   /etc/ssh/sshd_config
+    regexp: "^#?{{ item.key }} .*"
+    line:   "{{ item.key }} {{ item.value }}"
+  with_items:
+    - key:   Banner
+      value: "/etc/issue.net"
+  notify:
+    - Reload SSH
+  when:
+    - security_level >= 1
+    - sec_ssh_banner_issue is defined
+  tags:
+    - banner

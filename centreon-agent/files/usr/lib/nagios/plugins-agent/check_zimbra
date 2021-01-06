@@ -1,0 +1,92 @@
+#!/usr/bin/perl -w
+
+use strict;
+use Getopt::Std;
+use vars qw/ %opt /;
+
+# Just change this command line to be compatible with your setup
+my $zimbra_status_command='/opt/zimbra/bin/zmcontrol status';
+
+
+# You should'n change anything behind this line.
+my $DEBUG=0;
+my $output="";
+my $warning_svc="";
+my $critical_svc="";
+my $warn_state=0;
+my $crit_state=0;
+my ($service, $state);
+
+getopts('w:c:hd', \%opt);
+
+if (exists $opt{h}) {
+    usage();
+    exit(0);
+}
+if (exists $opt{d}) {
+    $DEBUG=1;
+}
+if (exists $opt{w}) {
+    $warning_svc=$opt{w};
+}
+if (exists $opt{c}) {
+    $critical_svc=$opt{c};
+}
+
+
+# Getting zimbra status :
+open (ZMSTATUS, "$zimbra_status_command |");
+while (<ZMSTATUS>){
+    print $_ if $DEBUG;
+    if (/^Host/){
+        my ($tmp, $hostname)=split();
+        $output="HOST : $hostname";
+		next;
+    } else {
+        ($service, $state)=split();    
+    }
+    if ( $state eq "Running" ){
+        $output=$output . ", $service : OK";
+    } elsif ( $state eq "Stopped" ){
+		if ( $critical_svc =~ m/$service/ ) {
+    	   	$output=$output . ", $service : STOPPED (CRITICAL)";
+			$crit_state=1;
+		} elsif ( $warning_svc =~ m/$service/ ) {
+   			$output=$output . ", $service : STOPPED (WARNING)";
+			$warn_state=1;
+		} else {
+			$output=$output . ", $service : STOPPED (UNMONITOR)";
+		}
+    }
+}
+print $output . "\n";
+close (ZMSTATUS);
+
+if ( $crit_state ) {
+	exit(2);
+} elsif ( $warn_state ) {
+	exit (1);
+}
+
+exit(0);
+
+sub usage {
+    if (@_ == 1) {
+        print "$0: $_[0].\n";
+    }
+    print << "EOF";
+Usage: $0 [options]
+  -s
+     stopped service are ignored until some daemon is faulty
+  -S
+     stopped service give warning state if a service is faulty
+  -C
+     stopped service give critical if a service is faulty
+  -e service1,service2,..
+     list of excluded services from monitoring
+  -d
+     enable debug mode
+  -h
+     display usage information
+EOF
+}

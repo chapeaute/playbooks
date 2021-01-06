@@ -1,0 +1,12 @@
+# v1.0
+---
+- hosts: nodejs
+  vars:
+    nodejs_data_dir: /var/lib/nodejs
+    nodejs_app_port: 8080
+  roles:
+     - role: nodejs
+       nodejs_install_pm2: True
+       nodejs_npm_global_packages:
+         - express
+       nodejs_port: ['{{ nodejs_app_port }}']

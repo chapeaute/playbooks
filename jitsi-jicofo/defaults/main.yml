@@ -1,0 +1,82 @@
+---
+
+# Global Monitoring
+jolokia_port: 8778
+jolokia_version: 1.6.2
+
+# Global jitsi variables
+jitsi_auth: "anonymous"
+jitsi_domain: "{{ ansible_fqdn }}"
+jitsi_xmpp_domain: "{{ jitsi_domain }}"
+jitsi_xmpp_server: "{{ ansible_fqdn }}"
+jitsi_xmpp_auth_domain: "auth.{{ jitsi_xmpp_domain }}"
+jitsi_xmpp_jvb_user: jvb
+jitsi_xmpp_jibri_user: jibri
+jitsi_xmpp_recorder_user: recorder
+jitsi_xmpp_jicofo_user: focus
+jitsi_xmpp_internal_muc: "internal.{{ jitsi_xmpp_auth_domain }}"
+jitsi_use_jigasi: true
+jitsi_use_jibri: true
+jitsi_stun_servers: []
+jitsi_turn_secret: "{{ lookup('password', 'credential/jitsi_turn_secret chars=ascii_letters,digits') }}"
+jitsi_turn_servers: []
+jitsi_use_turn_server: "{% if jitsi_turn_servers|length > 0 %}true{% else %}false{% endif %}"
+jitsi_turn_credentials_port: 4443
+# jitsi_ssl_cert_path: "{{ ssl_certs_cert_path }}"
+# jitsi_ssl_key_path: "{{ ssl_certs_privkey_path }}"
+
+# Jicofo variables
+jicofo_java_version: 8
+#jicofo_version: 1.0-644-1
+jicofo_version: 1.0-612-1
+jicofo_deb_url: "http://download.jitsi.org/stable/jicofo_{{ jicofo_version }}_all.deb"
+
+# Disable cert check
+jicofo_disable_cert_check: true
+# Enable health check
+jicofo_enable_health_check: true
+
+# XMPP server to connect to. Default is the host machine.
+jicofo_xmpp_server: "{{ jitsi_xmpp_server }}"
+
+jicofo_stun_servers: "{{ jitsi_stun_servers }}"
+jicofo_turn_servers: "{{ jitsi_turn_servers }}"
+# jitsi_stun_servers:
+#   - stun:meet-jit-si-turnrelay.jitsi.net:443
+
+
+# Authentication. Can be set to
+#  * False : no authentication at all (can also be None)
+#  * sso : In this case, you have to protect /login with your SSO system (through a reverse proxy)
+#    And once authenticated, send the HTTP headers mail and displayName with the appropriate values
+#    Note that jitsi Android client does not support sso authentication, so mobile users will be able
+#    to join an existing conf, but not create one easily
+#  * ldap : Will use an LDAP server for authentication. Works on mobile, but is a bit less convinient
+#    than sso for desktop users. See all the jitsi_ldap_xxxx settings
+jicofo_auth: "{{ jitsi_auth }}"
+jicofo_auth_jwt_id:  "{{ lookup('password', 'credential/{{ jitsi_xmpp_domain }}-jicofo_auth_jwt_id chars=ascii_letters,digits') }}"
+jicofo_auth_jwt_secret: "{{ lookup('password', 'credential/{{ jitsi_xmpp_domain }}-jicofo_auth_jwt_secret chars=ascii_letters,digits') }}"
+
+# Account for videobridge
+jicofo_jvb_xmpp_user: "{{ jitsi_xmpp_jvb_user }}"
+
+# Account for jicofo
+jicofo_xmpp_user: "{{ jitsi_xmpp_jicofo_user }}"
+jicofo_xmpp_pass: "{{ lookup('password', 'credential/{{ jitsi_xmpp_domain }}-jicofo_xmpp_pass chars=ascii_letters,digits') }}"
+jicofo_xmpp_secret: "{{ lookup('password', 'credential/{{ jitsi_xmpp_domain }}-jicofo_xmpp_secret chars=ascii_letters,digits') }}"
+jicofo_xmpp_domain: "{{ jitsi_xmpp_domain }}"
+jicofo_xmpp_auth_domain: "{{ jitsi_xmpp_auth_domain }}"
+jicofo_xmpp_internal_muc: "{{ jitsi_xmpp_internal_muc }}"
+
+# Jicofo Memory
+jicofo_memory_size_prct: 0.7
+jicofo_memory_size: "{{ (ansible_memtotal_mb*jicofo_memory_size_prct)|int }}m"
+
+
+# True if we want to use jigasi or jibri
+jicofo_use_jigasi: "{{ jitsi_use_jigasi }}"
+jicofo_use_jibri: "{{ jitsi_use_jibri }}"
+
+# Certs
+jicofo_ssl_cert_path: "{{ jitsi_ssl_cert_path | default(ssl_certs_cert_path) }}"
+jicofo_ssl_key_path: "{{ jitsi_ssl_key_path | default(ssl_certs_privkey_path) }}"

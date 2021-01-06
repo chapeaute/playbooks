@@ -1,0 +1,6 @@
+---
+
+
+	# sudo semanage fcontext -a -t httpd_sys_content_t "$USERHOME/Nominatim/(website|lib|settings)(/.*)?"
+	# sudo semanage fcontext -a -t lib_t "$USERHOME/Nominatim/module/nominatim.so"
+	# sudo restorecon -R -v $USERHOME/Nominatim

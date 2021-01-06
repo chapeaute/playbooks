@@ -1,0 +1,13 @@
+---
+
+- name: Postgresql | Create postgresql user
+  tags:
+    - config
+    - config_db
+  become: yes
+  become_user: postgres
+  postgresql_user:
+    user: "{{ odoo_db_user }}"
+    password: "{{ odoo_db_pass }}"
+    role_attr_flags: CREATEDB,SUPERUSER
+  delegate_to: "{{ odoo_db_remote_host }}"

@@ -1,0 +1,112 @@
+---
+# defaults file for security
+security_level: 1
+
+sec_securetty_list:
+  - console
+  - vc/1
+  - vc/2
+  - vc/3
+  - vc/4
+  - vc/5f
+  - vc/6
+  - vc/7
+  - vc/8
+  - vc/9
+  - vc/10
+  - vc/11
+  - tty1
+  - tty2
+  - tty3
+  - tty4
+  - tty5
+  - tty6
+  - tty7
+  - tty8
+  - tty9
+  - tty10
+  - tty11
+  - ttyS0
+  - ttysclp0
+  - sclp_line0
+  - 3270/tty1
+  - hvc0
+  - hvc1
+  - hvc2
+  - hvc3
+  - hvc4
+  - hvc5
+  - hvc6
+  - hvc7
+  - hvsi0
+  - hvsi1
+  - hvsi2
+  - xvc0
+
+security_filesystem: true
+security_filesystem_opts:
+  tmp:
+    dev:  "/dev/mapper/vg-tmp"
+    path: "/tmp"
+    opts: "nodev,nosuid,noexec"
+    type: "ext4"
+  shm:
+    dev:  "shm"
+    path: "/dev/shm"
+    opts: "noexec"
+    type: "tmpfs"
+
+security_disable_unused_fs:
+  - cramfs
+  - freevxfs
+  - jffs2
+  - hfs
+  - hfsplus
+  - squashfs
+  - udf
+  - vfat
+
+security_aide: true
+security_auditd: true
+security_files_permissions: true
+security_kernel: true
+security_syslog: true
+security_cron: true
+security_ssh: true
+security_tcp_wrappers: false
+security_tty: true
+security_host: true
+
+security_tcp_wrappers_allow:
+  - "ALL: 192.168.9.0/255.255.255.0, 10.108.25.0/255.255.255.0, 10.108.21.0/255.255.255.0, 192.168.230.0/255.255.255.0, 192.168.0.0/255.255.255.0, 192.168.0.0/255.255.0.0"
+
+security_tcp_wrappers_deny:
+  - "ALL: ALL"
+
+# Kernel
+kernel_pid_max: 65535
+kernel_panic: 60
+kernel_sysrq: 0
+
+# Hosts
+sec_host_order: hosts,bind
+sec_host_multi: "off"
+
+# SSH
+ssh_enable_root_login: "no"
+ssh_enable_tcp_forwarding: "no"
+ssh_enable_client_alive_interval: 3600
+sec_ssh_login_grace_time: 60
+sec_ssh_client_alive_count_max: 0
+sec_ssh_use_pam: "yes"
+sec_ssh_disable_sftp: false
+sec_ssh_ciphers: "aes256-ctr,aes192-ctr,aes128-ctr,aes256-cbc,aes192-cbc,aes128-cbc,3des-cbc"
+sec_ssh_macs: "hmac-sha2-512-etm@openssh.com,hmac-sha2-256-etm@openssh.com,umac-128-etm@openssh.com,hmac-sha2-512,hmac-sha2-256,umac-128@openssh.com"
+# sec_ssh_banner_issue:
+#  ------------------------- ATTENTION -----------------
+#  CE SERVEUR EST LA PROPRIETE DE XXXXX TOUTE UTILISATION
+#  NON AUTORISEE EST PASSAIBLE DE POURSUITES JUDICIAIRES TEL QUE
+#  PREVU A CET EFFET PAR LA LOI.
+
+# AIDE
+security_aide_mail_disable: true

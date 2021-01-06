@@ -1,0 +1,31 @@
+- hosts: all
+  vars:
+    # Apache variables
+    site_name: "www.smile.ci"
+    site_dir:  "/var/www"
+    docs_dir:  "{{ site_dir }}/{{ site_name }}/htdocs"
+    # MariaDB variables
+    mysql_version: 10.1
+    mysql_data_dir: "/var/lib/mysql"
+    mysql_config_innodb_buffer_pool_size_prct: 0.7
+    mysql_config_max_connections: 500 
+    privacy_db_pass: OXu0ab1MeSTAf2t7
+    # privacyidea variable
+    privacy_version: 3.3.3
+    privacy_db_user: pi
+    privacy_db_name: pi 
+    privacy_db_host: localhost
+  roles:
+    - role: apache
+      tags: apache
+      apache2_data_dir: "{{ site_dir }}"
+      apache2_vhosts:
+        site:
+          vhost_name: "{{ site_name }}"    
+    - role: mariadb-server
+      mysql_databases:
+        pi:
+          db_name :  "{{ privacy_db_name }}"
+          user: "{{ privacy_db_user }}"
+          password: "{{ privacy_db_pass }}"
+    - role: privacy-idea

@@ -1,0 +1,12 @@
+---
+# vars file for trafficserver
+
+ts_default_root_dir: /var/lib
+ts_default_install_dir: "{{ ts_default_root_dir }}/trafficserver"
+ts_user: trafficserver
+ts_group: trafficserver
+ts_download_dir: /tmp
+ts_download_url: "http://archive.smile.ci/trafficserver/{{ ts_package }}"
+ts_package: "apache-trafficserver-{{ ts_version }}-{{ ts_iteration }}.x86_64.rpm"
+ts_iteration: 1
+ts_service_name: trafficserver

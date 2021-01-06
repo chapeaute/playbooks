@@ -1,0 +1,5 @@
+---
+- hosts: security
+  roles:
+    - role: security
+      security_level: 1

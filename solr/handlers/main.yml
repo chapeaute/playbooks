@@ -1,0 +1,7 @@
+---
+# handlers file for solr
+- name: "Restart Solr"
+  service:
+    name: "{{ solr_service_name }}"
+    state: restarted
+  register: solr_restarted

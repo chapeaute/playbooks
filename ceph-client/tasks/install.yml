@@ -1,0 +1,24 @@
+---
+- name: install | Install extra packages
+  package:
+    name: "{{ ceph_client_extra_packages | join(',') }}"
+    state: present
+  tags:
+    - setup
+    - install
+
+- name: install | Install ceph repository
+  package:
+    name: "{{ ceph_repo_package }}"
+    state: present
+  tags:
+    - setup
+    - install
+
+- name: install | Install ceph client packages
+  package:
+    name: "{{ ceph_client_packages }}"
+    state: present
+  tags:
+    - setup
+    - install

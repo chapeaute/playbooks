@@ -1,0 +1,6 @@
+neighbours {
+  {% for server in rspamd_nodes %}
+  {{ hostvars[server]['ansible_hostname']
+ }} { host = "{{ rspamd_http_protocol }}://{{ hostvars[server]['ansible_default_ipv4']['address'] }}:443"; }
+  {% endfor %}
+}

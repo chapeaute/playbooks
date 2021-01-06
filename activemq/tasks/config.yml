@@ -1,0 +1,50 @@
+---
+
+- name: config | change credentials on old web interface
+  lineinfile:
+    dest: "{{ activemq_install_dir }}/conf/jetty-realm.properties"
+    regexp: "^{{activemq_admin_login}}"
+    line: "{{ activemq_admin_login }}: {{ activemq_admin_pass }}, admin"
+  notify: "Restart Activemq"
+
+- name: config | change credentials on new hawtio web interface
+  lineinfile:
+    dest: "{{ activemq_install_dir }}/conf/users.properties"
+    regexp: "^{{activemq_admin_login}}"
+    line: "{{ activemq_admin_login }}={{ activemq_admin_pass }}"
+  notify: "Restart Activemq"
+
+- name: config | Add user to groups admins
+  lineinfile:
+    dest: "{{ activemq_install_dir }}/conf/groups.properties"
+    regexp: ^admin
+    line: "admins={{ activemq_admin_login }}"
+  notify: "Restart Activemq"
+
+- name: config | link log dir
+  file:
+    src: "{{ activemq_install_dir }}/data"
+    dest: "{{ activemq_log_dir }}"
+    state: link
+
+- name: config | remove kahaDB persistenceAdapter
+  lineinfile:
+    path: "{{activemq_install_dir}}/conf/activemq.xml"
+    state: absent
+    regexp: "kahaDB"
+  notify: "Restart Activemq"
+
+- name: config | add zookeeper persistenceAdapter
+  blockinfile:
+    path: "{{activemq_install_dir}}/conf/activemq.xml"
+    marker: "<!-- {mark} ANSIBLE MANAGED BLOCK -->"
+    insertafter: '<persistenceAdapter>'
+    content: |
+            <replicatedLevelDB
+                directory="${activemq.data}/leveldb"
+                replicas="{{zk_hosts | length}}"
+                bind="tcp://0.0.0.0:0"
+                zkAddress="{% for item in zk_hosts -%}{{ item }}:{{zk_client_port}} {%- if not loop.last -%},{% endif -%}{%- endfor %}"
+                hostname="{{ansible_hostname}}"
+            />
+  notify: "Restart Activemq"

@@ -1,0 +1,18 @@
+---
+
+zimbra_dependencies:
+  - sudo
+  - libpcre3
+  - libgmp3c2
+  - lib32gmp3-dev
+  - libgmp3-dev
+  - sysstat
+  - libexpat1
+  - libidn11
+  - perl-modules
+  - wget
+  - lzma
+
+
+
+zimbra_os: UBUNTU

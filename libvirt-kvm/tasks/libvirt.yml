@@ -1,0 +1,47 @@
+---
+- name: libvirt | Install libvirt
+  package:
+    name:  "{{ libvirt_packages | join(',') }}"
+    state: installed
+
+- name: libvirt | Start libvirt
+  service:
+    name:    "{{ libvirt_service }}"
+    state:   started
+    enabled: yes
+
+- name: libvirt | Deploy libvirt configuration
+  lineinfile:
+    dest:   /etc/libvirt/libvirt.conf
+    regexp: '^uri_default ='
+    line:   'uri_default = "qemu:///system"'
+
+- include: libvirt-backup.yml
+
+- name: libvirt | Create libvirt temporary directory
+  file:
+    path:    "{{ libvirt_tmp_dir }}"
+    state:   directory
+    recurse: true
+  when: libvirt_networks is defined
+  tags:
+    - net-config
+    - pool-config
+
+- name: libvirt | Deploy virtual network configuration
+  include: "libvirt-vnet.yml libvirt_network={{ item }}"
+  with_items:
+    - "{{ libvirt_networks | default([]) }}"
+  tags: net-config
+
+- name: libvirt | Deploy pool configuration
+  include: "libvirt-pool.yml libvirt_pool={{ item }}"
+  with_items:
+    - "{{ libvirt_pools | default([]) }}"
+  tags: pool-config
+
+- name: libvirt | Update devpts entry in /etc/fstab
+  lineinfile:
+    dest:   /etc/fstab
+    regexp: '^devpts		/dev/pts	devpts'
+    line:   'devpts		/dev/pts	devpts	gid=5,mode=620	0	0'

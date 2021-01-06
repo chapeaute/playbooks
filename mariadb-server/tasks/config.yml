@@ -1,0 +1,58 @@
+---
+
+# Install MySQL if not yet installed
+- include: percona-repo.yml
+  when: mysql_flavor == "percona"
+
+- include: mariadb-repo.yml
+  when: mysql_flavor == "mariadb"
+
+- stat:
+    path: "{{ mysql_backup_dir }}"
+  register: backup_dir
+
+- name: Config | Create default backup directory
+  file:
+    state:   directory
+    path:    "{{ mysql_default_backup_dir | dirname }}"
+    recurse: yes
+  when: not backup_dir.stat.exists
+
+- name: config | Create backup directory
+  file:
+    state:   directory
+    path:    "{{ mysql_backup_dir }}"
+    recurse: yes
+  when: not backup_dir.stat.exists
+
+- name: config | Create symlink from {{ mysql_default_backup_dir }} to backup directory
+  file:
+    state: link
+    src:   "{{ mysql_backup_dir }}"
+    dest:  "{{ mysql_default_backup_dir }}"
+  when: mysql_backup_dir != mysql_default_backup_dir
+
+- name: config | Create symlink from {{ mysql_default_backup_dir }} to backup directory
+  file:
+    state: link
+    src:   "{{ mysql_backup_dir }}"
+    dest:  "{{ mysql_default_backup_dir }}"
+  when: mysql_backup_dir != mysql_default_backup_dir
+
+- stat:
+    path: "{{ mysql_data_dir }}"
+  register: data_dir
+
+- name: config | Create data directory
+  file:
+    state:   directory
+    path:    "{{ mysql_data_dir }}"
+    recurse: yes
+  when: not data_dir.stat.exists
+
+- name: config | Create symlink from {{ mysql_default_data_dir }} to data directory
+  file:
+    state: link
+    src:   "{{ mysql_data_dir }}"
+    dest:  "{{ mysql_default_data_dir }}"
+  when: mysql_data_dir != mysql_default_data_dir

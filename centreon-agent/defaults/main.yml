@@ -1,0 +1,44 @@
+---
+# Variables for NRPE configuration
+
+# Global variables
+use_satellite_repo: false
+centagt_plugin_dir: /usr/lib/nagios/plugins-agent
+centreon_poller: "[{{ centreon_server|default('127.0.0.1') }}]"
+centreon_version: "20.10"
+
+centagt_sudo_lines:
+  - "centreon ALL=(zimbra) NOPASSWD: {{ centagt_plugin_dir }}/check_zimbra"
+  - "centreon ALL=(zimbra) NOPASSWD: {{ centagt_plugin_dir }}/check_zimbra_services"
+  - "centreon ALL=(zimbra) NOPASSWD: {{ centagt_plugin_dir }}/check_zimbra_spam_count *"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/check_postfix_mailqueue"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/check_pcs"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/check_redis"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/check_redis_sentinel"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/check_ogo"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/check_ogo_sites_cert"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/check_haproxy"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/check_bind_stats"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/check_mysql_health"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/centreon_plugins.pl *"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/check_bacula_lastbackup"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/disco_scan_nrpe_bacula_show"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/disco_nodejs_apps"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/disco_tomcat_apps"
+  - "centreon ALL=(ALL) NOPASSWD: {{ centagt_plugin_dir }}/disco_apache_vhosts"
+  - "centreon ALL=(ALL) NOPASSWD: /sbin/bconsole"
+
+
+# NRPE Configuration
+centagt_nrpe_enable: true
+centagt_nrpe_bind_address: 0.0.0.0
+centagt_nrpe_allowed_hosts: "{{ centreon_poller }}"
+centagt_nrpe_dont_blame: 1
+centagt_nrpe_server_port: 5666
+centagt_nrpe_enable_sepolicy: true
+
+
+# SSH configuration
+centagt_ssh_enable: false
+centagt_ssh_user: centreon
+centagt_ssh_keys: []

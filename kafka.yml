@@ -1,0 +1,19 @@
+# v1.0
+---
+
+- hosts: all
+  vars:
+    zk_data_dir:    "/var/lib/zookeeper"
+    kafka_data_dir: "/var/lib/kafka"
+    kafka_topic: logs
+    kafka_default_replication_factor: "{{ zk_hosts | length }}"
+    kafka_num_partitions: 12
+    kafka_log_retention_bytes: 536870912
+    kafka_log_segment_bytes: 536870912
+    zk_hosts: "{{ play_hosts }}"
+  roles:
+  - role: kafka
+    kafka_topics:
+      topic:
+        topic: "{{ kafka_topic }}"
+        zookeeper: "localhost:2181"

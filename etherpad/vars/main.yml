@@ -1,0 +1,6 @@
+---
+# vars file for etherpad
+etherpad_user: "{{ etherpad_service_name }}"
+etherpad_group: "{{ etherpad_user }}"
+etherpad_default_root_dir: /var/lib
+etherpad_install_dir: "{{ etherpad_root_dir }}/{{ etherpad_service_name }}"

@@ -1,0 +1,92 @@
+---
+
+- name: config | General configurations for version <= 2.6.0
+  tags:
+    - config
+    - config_cluster
+  template:
+    src: "repository/conf/{{ item }}.j2"
+    dest: "{{ wso2am_install_dir }}/repository/conf/{{ item }}"
+    owner: wso2am
+    group: wso2am
+    mode: 0640
+  with_items:
+    - api-manager.xml
+    - axis2/axis2.xml
+    - hazelcast.properties
+  when: wso2am_version is version_compare('2.6.0', '<=')
+  notify: "Restart wso2am"
+
+- name: config | log4j configurations
+  tags:
+    - config
+    - config_log
+  copy:
+    src: "repository/conf/{{ item }}"
+    dest: "{{ wso2am_install_dir }}/repository/conf/{{ item }}"
+    owner: wso2am
+    group: wso2am
+    mode: 0640
+  with_items:
+    - log4j.properties
+    - log4j2.properties
+  notify: "Restart wso2am"
+
+- name: Create mysql databases
+  import_role:
+    name: mysql-provider
+  when: wso2am_db_host is defined
+  tags: config_mysql
+  run_once: true
+  #delegate_to: "{{ wso2am_db_remote_host }}"
+  vars:
+    mysql_host: "{{ wso2am_db_remote_host }}"
+    mysql_users:
+      - user: "{{ wso2am_db_user }}"
+        password: "{{ wso2am_db_pass }}"
+        priv: "{{wso2am_db_app_name }}.*:ALL/{{ wso2am_db_shared_name }}.*:ALL"
+        host: "%"
+        state: present
+
+- name: config | Configure to use remote DB for version <= 2.6.0
+  tags:
+    - config
+    - config_mysql
+  template:
+    src: "repository/conf/{{ item }}.26.j2"
+    dest: "{{ wso2am_install_dir }}/repository/conf/{{ item }}"
+    owner: wso2am
+    group: wso2am
+    mode: 0640
+  with_items:
+    - datasources/master-datasources.xml
+  when: 
+    - wso2am_db_host is defined 
+    - wso2am_version is version_compare('2.6.0', '<=')
+  notify: "Restart wso2am"
+
+- name: config | Configure jaggeryapps for version <= 2.6.0
+  tags:
+    - config
+    - config_sso
+  template:
+    src: "repository/{{ item }}.j2"
+    dest: "{{ wso2am_install_dir }}/repository/{{ item }}"
+    owner: wso2am
+    group: wso2am
+    mode: 0640
+  with_items:
+    - deployment/server/jaggeryapps/publisher/site/conf/site.json
+    - deployment/server/jaggeryapps/admin/site/conf/site.json
+    - deployment/server/jaggeryapps/store/site/conf/site.json
+  when: wso2am_version is version_compare('2.6.0', '<=')
+  notify: "Restart wso2am"
+
+- name: config | Add wso2am import / export tool
+  copy:
+    src: "repository/deployment/server/webapps/api-import-export-2.6.0-v10.war"
+    dest: "{{ wso2am_install_dir }}/repository/deployment/server/webapps/api-import-export-2.6.0-v10.war"
+    owner: wso2am
+    group: wso2am
+    mode: 0640
+  when: wso2am_version is version_compare('2.6.0', '<=')

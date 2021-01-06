@@ -1,0 +1,6 @@
+---
+- name: RedHat | Install epel-release
+  package:
+    name:  "{{ item }}"
+    state: present
+  with_items: "{{ fail2ban_dependencies }}"

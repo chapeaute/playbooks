@@ -1,0 +1,5 @@
+---
+- hosts: rundeck
+  roles:
+    - role: rundeck
+      rundeck_admin_pass: S3curP@33wD

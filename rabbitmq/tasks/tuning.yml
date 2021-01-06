@@ -1,0 +1,20 @@
+---
+- name: tuning | Create rabbitmq specific service configuration files
+  file:
+    path:  /etc/systemd/system/rabbitmq-server.service.d/
+    state: directory
+    owner: root
+    group: root
+    mode:  0755
+
+- name: tuning | Deploy specify systemd configuration files for rabbitmq
+  template:
+    src:  etc/systemd/system/rabbitmq-server.service.d/limits.conf
+    dest: /etc/systemd/system/rabbitmq-server.service.d/limits.conf
+    owner: root
+    group: root
+    mode:  0644
+  notify:
+    - Reload Systemd
+    - Restart Rabbitmq
+

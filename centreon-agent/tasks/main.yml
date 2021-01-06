@@ -1,0 +1,42 @@
+---
+# include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: '{{ ansible_os_family }}.yml'
+
+- include: centreon_repo.yml
+  tags: repo
+
+- set_fact:
+    centreon_server_list: "{{ centreon_poller }}"
+  tags:
+    - always
+
+- set_fact:
+    centreon_server_list: "{{ centreon_poller }} + [ '{{ centreon_server }}' ]"
+  when: centreon_server is defined
+  tags:
+    - always
+
+- name: main | Deploy poller and central centreon-engine user SSH public key
+  include: "install_ssh.yml poller={{ item }}"
+  with_items:
+    - "{{ centreon_server_list }}"
+  when: centagt_ssh_enable == true and centagt_ssh_keys|length == 0
+
+- include: install_nrpe.yml
+  when: centagt_nrpe_enable == true
+
+- include: deploy_plugins.yml
+  tags:
+    - plugins

@@ -1,0 +1,150 @@
+# Traefik manager configuration file
+defaultEntryPoints = ["http", "https"]
+
+insecureSkipVerify = true
+
+[entryPoints]
+  [entryPoints.monitoring]
+  address = ":7979"
+  [entryPoints.dashboard]
+  address = ":8080"
+    [entryPoints.dashboard.auth]
+      [entryPoints.dashboard.auth.basic]
+        users = [
+          "{{ traefik_opts.admin_user }}:{{ traefik_opts.admin_pass }}",
+      ]
+  [entryPoints.http]
+  address = ":80"
+{% if dumb_proxy_hosts is defined %}
+    [entryPoints.http.proxyProtocol]
+      trustedIPs = [{% for host in dumb_proxy_hosts -%}"{{ host }}" {%- if not loop.last -%}, {% endif -%}{%- endfor %}]
+{% endif %}
+  [entryPoints.https]
+  address = ":443"
+{% if dumb_proxy_hosts is defined %}
+    [entryPoints.https.proxyProtocol]
+      trustedIPs = [{% for host in dumb_proxy_hosts -%}"{{ host }}" {%- if not loop.last -%}, {% endif -%}{%- endfor %}]
+{% endif %}
+    [entryPoints.https.tls]
+      sniStrict = {{ traefik_sni_strict }}
+      minVersion = "VersionTLS12"
+{% if traefik_cipher_list | length > 0 %}
+      cipherSuites = [{% for cipher in traefik_cipher_list -%}"{{ cipher }}" {%- if not loop.last -%}, {% endif -%}{%- endfor %}]
+{% endif %}
+{% if ogo_cli_crt_files|length > 0 %}
+      [entryPoints.https.tls.ClientCA]
+      files = [ {% for cert in ogo_cli_crt_files -%}
+"/etc/traefik/{{ cert | basename }}" {%- if not loop.last -%}, {% endif -%}
+{%- endfor %} ]
+      optional = false
+{% endif %}
+{% if ogo_api_crt_content != "" and ogo_api_key_content != "" %}
+      [[entryPoints.https.tls.certificates]]
+      certFile = """{{ ogo_api_crt_content }}"""
+      keyFile = """{{ ogo_api_key_content }}"""
+{% endif %}
+
+[traefikLog]
+format = "common"
+
+[accessLog]
+format = "json"
+
+[api]
+entryPoint = "dashboard"
+dashboard = true
+  [api.statistics]
+  recentErrors = 10
+
+[ping]
+entryPoint = "monitoring"
+
+[metrics]
+  # Enable Traefik to export internal metrics to Prometheus
+  [metrics.prometheus]
+    entryPoint = "monitoring"
+    buckets = [0.1,0.3,1.2,5.0]
+
+[etcd]
+endpoint = "{{ etcd_opts.dns }}:2379"
+prefix = "/traefik"
+watch = true
+useAPIV3 = true
+
+[file]
+
+[frontends]
+  # Access to Grafana dashboards
+  [frontends.grafana]
+  backend = "grafana"
+  entrypoints = ["http", "https"]
+    [frontends.grafana.routes.default]
+    rule = "PathPrefixStrip:/grafana"
+
+  # Access to Ogo API manager
+  [frontends.ogo-api]
+  backend = "ogo-api"
+  entrypoints = ["https"]
+    [frontends.ogo-api.routes.default]
+    rule = "Host:{{ ogo_manager_hostname }};PathPrefixStrip:/api,/ogo;AddPrefix:/"
+
+  # Access to Prometheus metrics API
+  [frontends.prometheus]
+  backend = "prometheus"
+  entrypoints = ["http", "https"]
+    [frontends.prometheus.routes.default]
+    rule = "PathPrefix:/prometheus"
+
+  # Access to RabbitMQ dashboard
+  [frontends.rabbitmq]
+  backend = "rabbitmq"
+  entrypoints = ["http", "https"]
+    [frontends.rabbitmq.routes.default]
+    rule = "PathPrefixStrip:/rabbitmq"
+
+  # Access to Traefik dashboards
+  [frontends.traefik]
+  backend = "traefik"
+  entrypoints = ["http", "https"]
+    [frontends.traefik.routes.default]
+    rule = "PathPrefixStrip:/traefik"
+
+[backends]
+  [backends.grafana]
+    [backends.grafana.servers.proxy]
+    url = "http://{{ grafana_opts.dns }}:3000/grafana"
+
+  [backends.ogo-api]
+    [backends.ogo-api.healthcheck]
+    path = "/version"
+    interval = "5s"
+    [backends.ogo-api.servers.proxy]
+    url = "http://{{ proxy_mgr_opts.dns }}:7007/"
+
+  [backends.prometheus]
+    [backends.prometheus.healthcheck]
+    path = "/prometheus/status"
+    interval = "15s"
+    [backends.prometheus.servers.proxy]
+    url = "http://{{ prometheus_opts.dns }}:9090/prometheus"
+
+  [backends.rabbitmq]
+    [backends.rabbitmq.servers.proxy]
+    url = "http://{{ rabbitmq_opts.dns }}:15672/"
+
+  [backends.traefik]
+    [backends.traefik.servers.proxy]
+    url = "http://{{ traefik_opts.dns }}:8080/dashboard"
+
+{% if traefik_acme_enable %}
+[acme]
+email = "{{ traefik_acme_mail }}"
+storage = "{{ traefik_acme_key }}/account"
+caServer = "{{ traefik_acme_caserver }}"
+entryPoint = "https"
+acmeLogging = true
+onHostRule = true
+  [acme.httpChallenge]
+    entryPoint = "http"
+{% endif %}
+

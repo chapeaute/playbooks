@@ -1,0 +1,256 @@
+#!/bin/bash
+
+CLAPI_CONF={{ centreon_clapi_conf }}
+CLAPI_BIN={{ centreon_clapi_bin }}
+
+if [ -r $CLAPI_CONF ]; then
+  source $CLAPI_CONF
+else
+  echo "Can't load CLAPI configuration file : $CLAPI_CONF"
+  exit 1
+fi
+
+CLAPI_OPT="-u $CLAPI_USER -p $CLAPI_PASS"
+CLAPI_CMD="$CLAPI_BIN $CLAPI_OPT"
+
+# Default values for SNMP
+SNMPCOMMUNITY="public"
+SNMPVERSION="2"
+SNMPPORT="161"
+
+# Default value for SSH
+SSHACCESS="no"
+SSHUSER="root"
+
+# Default script value
+EXCL_DEVICES=""
+TEST="no"
+
+function usage {
+  echo -e "\nUsage : $0 -H hostname [-i ipaddr] [-c snmp_community] [-v snmp_version] [-p snmp_port] [-t service_template] [-p service_prefix_name] [-m macro_name] [-b bastion_address] [-s] [-u ssh_user] [-S] [-e dev1,dev2]\n"
+  echo -e "  -H,--hostname <hostname>              host name in centreon"
+  echo -e "  -i,--ipaddr <ipaddr>                  host IP (default: hostname)"
+  echo -e "  -c,--snmp-community <snmp_community>  SNMP community to use (default: $SNMPCOMMUNITY)"
+  echo -e "  -v,--snmp-version <snmp_version>      SNMP community version to use (default: $SNMPVERSION)"
+  echo -e "  -p,--snmp-port <snmp_port>            SNMP port (default: $SNMPPORT)"
+  echo -e "  -t,--svc-template <service_template>  template to use for the service (default: $SERVICETPL)"
+  echo -e "  -n,--svc-prefix-name <prefix_name>    prefix for the service name (default: $PREFIX)"
+  echo -e "  -m,--macro-name <macro_name>          MACRO name list (separeted by '|' character) used to define device (default: $MACRONAME)"
+  echo -e "  -b,--bastion <bastion_address>        use bastion to access server not directly accessible from central (usually centreon poller)"
+  echo -e "  -s,--ssh                              use SSH to discover device"
+  echo -e "  -u,--ssh-user <ssh_user>              SSH user (default: $SSHUSER)"
+  echo -e "  -S,--show                             dry run, no change will be apply"
+  echo -e "  -e,--exclude \"dev1,dev2\"              device list to exlude separeted by ',' character"
+  echo -e "  -h,--help                             show this help message\n"
+  echo
+  echo -e "\nUsage : $0 -f <csv_file>\n"
+  echo -e "  -f,--csv <csv_file>                   CSV File to import"
+  echo -e "\nThe csv must be like that :"
+  echo -e "ipaddr;hostname;snmp_community;snmp_version;snmp_port;service_template;prefix_name"
+  exit 1
+}
+
+ARGS=$(getopt -o H:i:c:v:p:t:n:m:b:su:Se:h -l "hostname:,ipaddr:,snmp-community:,snmp-version:,snmp-port:,svc-template:,svc-prefix-name:,macro-name:,bastion:,ssh,ssh-user:,show,exclude:,help,csv:" -n "$0" -- "$@")
+
+if [[ $? -ne 0 || $# -eq 0 ]]; then
+  usage
+fi
+
+eval set -- "$ARGS";
+
+while true; do
+  case "$1" in
+    -H|--hostname)
+      shift
+      [[ -z "$1" ]] && usage
+      HOST_NAME="$1"
+      shift
+      ;;
+    -i|--ipaddr)
+      shift
+      [[ -z "$1" ]] && usage
+      HOST_ADDR="$1"
+      shift
+      ;;
+    -c|--snmp-community)
+      shift
+      [[ -z "$1" ]] && usage
+      SNMPCOMMUNITY="$1"
+      shift
+      ;;
+    -v|--snmp-version)
+      shift
+      [[ -z "$1" ]] && usage
+      SNMPVERSION="$1"
+      shift
+      ;;
+    -p|--snmp-port)
+      shift
+      [[ -z "$1" ]] && usage
+      SNMPPORT="$1"
+      shift
+      ;;
+    -t|--svc-template)
+      shift
+      [[ -z "$1" ]] && usage
+      SERVICETPL="$1"
+      shift
+      ;;
+    -n|--svc-prefix-name)
+      shift
+      [[ -z "$1" ]] && usage
+      PREFIX="$1"
+      shift
+      ;;
+    -m|--macro-name)
+      shift
+      [[ -z "$1" ]] && usage
+      MACRONAME="$1"
+      shift
+      ;;
+    -b|--bastion)
+      shift
+      [[ -z "$1" ]] && usage
+      SSHBASTION="$1"
+      shift
+      ;;
+    -s|--ssh)
+      shift
+      SSHACCESS="yes"
+      ;;
+    -u|--ssh-user)
+      shift
+      [[ -z "$1" ]] && usage
+      SSHUSER="$1"
+      shift
+      ;;
+    -S|--show)
+      TEST="yes"
+      TEST_INFO="[TEST MODE]"
+      shift
+      ;;
+    -e|--exclude)
+      shift
+      [[ -z "$1" ]] && usage
+      EXCL_DEVICES="$1"
+      shift
+      ;;
+    -h|--help)
+      shift
+      usage
+      ;;
+    -f|--csv)
+      shift
+      [[ -z "$1" ]] && usage
+      FILE="$1"
+      shift
+      break
+      ;;
+    --)
+      shift
+      break
+      ;;
+  esac
+done
+
+service_add() {
+  local hostname="$1"
+  local servicetpl="$2"
+  local prefix="$3"
+  local device_name="$4"
+  local device_args="$5"
+
+  RET=$($CLAPI_CMD -o SERVICE -a SHOW | grep "[0-9]*;$hostname;[0-9]*;$prefix$device_name;")
+  if [[ -z "$RET" ]]; then
+    if [ "$TEST" == "no" ]; then
+      $CLAPI_CMD -o SERVICE -a add -v "$hostname;$prefix$device_name;$servicetpl" > /dev/null
+
+      for args in ${device_args//|/ }
+      do
+        IFS=';' read macro_name dev_name dev_id <<< $args
+
+        $CLAPI_CMD -o SERVICE -a setmacro -v "$hostname;$prefix$device_name;$macro_name;${dev_id:-$dev_name}"
+      done
+    fi
+    echo "${TEST_INFO}$hostname => $device_name SUCCESSFULLY ADDED"
+  else
+    echo "${TEST_INFO}$hostname => $device_name ALREADY DEFINED"
+  fi
+}
+
+service_discovery() {
+  local hostaddr="$1"
+  local hostname="$2"
+  local snmpcommunity="$3"
+  local snmpversion="$4"
+  local snmpport="$5"
+  local servicetpl="$6"
+  local prefix="$7"
+  local rc=0
+
+  IFS='|' read -r -a macro_list <<< "$MACRONAME"
+
+  service_get_devices $hostaddr $snmpcommunity $snmpversion $snmpport | while read device
+  do
+    IFS='|' read -r -a device_arg_list <<< "$device"
+    device_name=$(echo $device | cut -d'|' -f 1 | cut -d';' -f 1)
+    device_args=""
+    m=0
+    rc=0
+
+
+    for excl in ${EXCL_DEVICES//,/ }
+    do
+      [[ $device_name =~ ^$excl$ ]] && rc=1
+    done
+
+    [[ -z $device_name ]] && rc=1
+
+    # Build macro list
+    for macro in ${macro_list[@]}
+    do
+      device_args="$device_args|${macro_list[$m]};${device_arg_list[$m]}"
+      ((m++))
+    done
+
+    device_args=$(echo $device_args | sed 's/^|//')
+
+    [[ $rc -eq 0 ]] && service_add $hostname $servicetpl $prefix $device_name $device_args || :
+  done
+}
+
+csv_add () {
+  file="$1"
+
+  # Check if filename exist
+  if [ ! -f $file ]; then
+    echo "Error: $file No such file or directory"
+    exit 1
+  fi
+  dos2unix $file
+
+  # Parse file and host
+  cat $file | while read line
+  do
+    local hostaddr=`echo $line | cut -d';' -f1`
+    local hostname=`echo $line | cut -d';' -f2`
+    local snmpcommunity=`echo $line | cut -d';' -f3`
+    local snmpversion=`echo $line | cut -d';' -f4`
+    local snmpport=`echo $line | cut -d';' -f5`
+    local servicetpl=`echo $line | cut -d';' -f6`
+    local prefix=`echo $line | cut -d';' -f7`
+
+    add_service "$hostaddr" "$hostname" "${snmpcommunity:-$SNMPCOMMUNITY}" "${snmpversion:-$SNMPVERSION}" "${snmpport:-$SNMPPORT}" "${servicetpl:-$SERVICETPL}" "${prefix:-$PREFIX}"
+  done
+
+}
+
+if [ -z $FILE ]; then
+  if [ -z $HOST_NAME ]; then
+    usage
+  else
+    service_discovery "${HOST_ADDR:-$HOST_NAME}" "$HOST_NAME" "$SNMPCOMMUNITY" "$SNMPVERSION" "$SNMPPORT" "$SERVICETPL" "$PREFIX"
+  fi
+else
+  csv_add $FILE
+fi

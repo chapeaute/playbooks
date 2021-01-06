@@ -1,0 +1,15 @@
+---
+- hosts: haproxy-galera
+  roles:
+    - role: haproxy
+      haproxy_mode: tcp
+      haproxy_pool_servers:
+        - name: galera
+          vip:
+            - 192.168.122.20
+          port: 3306
+          mode: tcp
+          haproxy_backend_servers: 
+            - { name: 'galera-1', address: '192.168.122.23:3306', options: 'check port 9200' }
+            - { name: 'galera-2', address: '192.168.122.24:3306', options: 'check port 9200' }
+            - { name: 'galera-3', address: '192.168.122.25:3306', options: 'check port 9200' }

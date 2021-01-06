@@ -1,0 +1,5 @@
+{% for node in wso2_generic_amnodes %}
+connectionfactory.TopicConnectionFactory = amqp://admin:admin@clientid/carbon?brokerlist='tcp://"{{ node }}":5672'
+
+{% endfor %}
+topic.throttleData = throttleData

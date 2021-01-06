@@ -1,0 +1,31 @@
+---
+# vars file for prosody
+prosody_packages:
+  - prosody
+  - lua-ldap
+  - lua-cyrussasl
+
+prosody_base_modules_enabled:
+  - roster
+  - saslauth
+  - tls
+  - dialback
+  - disco
+  - carbons
+  - pep
+  - private
+  - blocklist
+  - vcard4
+  - vcard_legacy
+  - version
+  - uptime
+  - time
+  - ping
+  - register
+  - admin_adhoc
+  - bosh
+  - pubsub
+
+# 3rd party modules to install
+prosody_base_modules:
+  - name: mod_auth_ldap

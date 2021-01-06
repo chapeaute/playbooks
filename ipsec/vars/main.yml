@@ -1,0 +1,4 @@
+---
+# vars file for ipsec
+
+ipsec_service: ipsec

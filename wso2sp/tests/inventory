@@ -1,0 +1,5 @@
+[all]
+wso2 ansible_connection=docker
+
+[wso2]
+wso2

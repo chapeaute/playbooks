@@ -1,0 +1,7 @@
+---
+# handlers file for coturn
+
+- name: Restart coturn
+  systemd:
+    name: coturn
+    state: restarted

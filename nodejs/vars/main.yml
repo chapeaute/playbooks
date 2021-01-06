@@ -1,0 +1,14 @@
+---
+# vars file for nodejs
+nodejs_service: nodejs
+nodejs_package: nodejs
+
+nodejs_user: nodejs
+nodejs_group: nodejs
+
+nodejs_default_data_dir: /var/lib/nodejs
+nodejs_prefix: /usr/local
+nodejs_dir: "node-v{{ nodejs_version }}-linux-x64"
+nodejs_archive: "{{ nodejs_dir }}.tar.gz"
+nodejs_download_url: "http://nodejs.org/dist/v{{ nodejs_version }}/{{ nodejs_archive }}"
+nodejs_logrotate_rotate: 14

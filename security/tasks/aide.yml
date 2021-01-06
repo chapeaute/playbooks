@@ -1,0 +1,30 @@
+---
+- name: aide | Install AIDE
+  package:
+    name:  "{{ aide_packages }}"
+  when: security_level >= 2
+
+- stat:
+    path: /var/lib/aide/aide.db.gz
+  register: aide_db
+
+- name: aide | Init AIDE
+  command: "aide --init"
+  when:
+    - security_level >= 2
+    - not aide_db.stat.exists
+
+- name: aide | Move db
+  command: mv /var/lib/aide/aide.db.new.gz /var/lib/aide/aide.db.gz
+  when:
+    - security_level >= 2
+    - not aide_db.stat.exists
+
+- name: aide | Enable cron
+  cron:
+    name: "Periodic checking of the filesystem integrity"
+    minute: "0"
+    hour: "5"
+    job: "/usr/sbin/aide --check"
+    disabled: "{{ security_aide_mail_disable }}"
+  when: security_level >= 2

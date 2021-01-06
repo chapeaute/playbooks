@@ -1,0 +1,6 @@
+---
+- hosts: all
+  roles:
+    - role: mule-esb
+      mule_esb_memory_size_prct: 0.4
+      mule_esb_root_dir: /srv

@@ -1,0 +1,51 @@
+#!/bin/bash
+
+TRAEFIK_CONF_DIR="/etc/traefik"
+APP_PORT=""
+
+function syntax() {
+    cat <<EOF
+Script to deploy new Traefik backend
+
+Usage: ${0##*/} [-h|-p <app_port>]
+    -h                      Display this message
+    -p <app_port>           Application port
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Abording..."
+    exit 1
+fi
+
+while getopts "hp:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        p)
+            APP_PORT="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+
+if [[ -z $APP_PORT ]]; then
+    syntax
+    exit 1
+fi
+
+grep -q "\[entryPoints.${APP_PORT}\]" ${TRAEFIK_CONF_DIR}/traefik.toml || {
+    sed -i "/\[entryPoints\]/a \    [entryPoints.${APP_PORT}]\n    address = \":${APP_PORT}\"" ${TRAEFIK_CONF_DIR}/traefik.toml
+    systemctl restart traefik
+    firewall-cmd -q --add-port=${APP_PORT}/tcp --permanent > /dev/null
+    firewall-cmd -q --reload > /dev/null > /dev/null
+}
+

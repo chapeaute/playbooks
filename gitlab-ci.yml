@@ -1,0 +1,8 @@
+---
+- hosts: all
+  roles:
+    - role: gitlab-server
+    - role: gitlab-runner
+      gitlab_runner_executor: docker
+      gitlab_runner_docker_image:
+        - "ansible/centos7-ansible"

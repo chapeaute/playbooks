@@ -1,0 +1,8 @@
+---
+- name: Converge
+  hosts: all
+  roles:
+    - role: openjdk
+      openjdk_version: 8
+    - role: openjdk
+      openjdk_version: 11

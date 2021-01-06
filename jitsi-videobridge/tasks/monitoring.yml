@@ -1,0 +1,25 @@
+---
+
+- name: Download jolokia to lib dir
+  get_url:
+    url: "https://repo1.maven.org/maven2/org/jolokia/jolokia-jvm/{{ jolokia_version }}/jolokia-jvm-{{ jolokia_version }}-agent.jar"
+    dest: "{{ jigasi_install_dir }}/lib/jolokia-jvm-{{ jolokia_version }}-agent.jar"
+    mode: 0644
+    owner: "{{ jvb_user }}"
+    group: "{{ jvb_group }}"
+
+- name: Deploy jolokia.properties
+  template:
+    src:   etc/jitsi-videobridge/jolokia.properties.j2
+    dest:  "{{ jvb_etc_dir }}/jolokia.properties"
+    owner: "{{ jvb_user }}"
+    group: "{{ jvb_group }}"
+    mode: 0644
+
+- name: Deploy jolokia.policy
+  copy:
+    src:   etc/jitsi-videobridge/jolokia.policy
+    dest:  "{{ jvb_etc_dir }}/jolokia.policy"
+    owner: "{{ jvb_user }}"
+    group: "{{ jvb_group }}"
+    mode: 0644

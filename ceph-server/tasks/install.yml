@@ -1,0 +1,28 @@
+---
+#- name: install | Disable SELinux
+#  selinux:
+#    state: disabled
+
+- name: install | Install extra packages
+  package:
+    name: "{{ ceph_server_extra_packages | join(',') }}"
+    state: present
+  tags:
+    - setup
+    - install
+
+- name: install | Install ceph repository
+  package:
+    name: "{{ ceph_repo_package }}"
+    state: present
+  tags:
+    - setup
+    - install
+
+- name: install | Install ceph deploy
+  package:
+    name: "{{ ceph_deploy_packages | join(',') }}"
+    state: present
+  tags:
+    - setup
+    - install

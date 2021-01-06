@@ -1,0 +1,23 @@
+---
+
+- name: Monitoring | Download jolokia to lib dir
+  get_url:
+    url:  https://repo1.maven.org/maven2/org/jolokia/jolokia-jvm/1.6.2/jolokia-jvm-{{ jolokia_version }}-agent.jar
+    dest: "{{ jicofo_install_dir }}/lib/jolokia-jvm-{{ jolokia_version }}-agent.jar"
+    mode: 0644
+
+- name: Monitoring | Deploy jolokia.properties
+  template:
+    src:   etc/jicofo/jolokia.properties.j2
+    dest:  "{{ jicofo_etc_dir }}/jolokia.properties"
+    owner: "{{ jicofo_user }}"
+    group: "{{ jicofo_user }}"
+    mode:  0644
+
+- name: Monitoring | Deploy jolokia.policy
+  copy:
+    src:   etc/jicofo/jolokia.policy
+    dest:  "{{ jicofo_etc_dir }}/jolokia.policy"
+    owner: "{{ jicofo_user }}"
+    group: "{{ jicofo_user }}"
+    mode:  0644

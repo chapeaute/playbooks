@@ -1,0 +1,12 @@
+---
+- name: nextcloud_config | Set nextcloud settings
+  become_user: "{{ apache2_user }}"
+  command: php occ config:{{ type }}:set {{ app }} {{ item.key }} --value {{ item.value }}
+  run_once: true
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  with_dict: "{{ keys }}"
+  when:
+    - inventory_hostname == nextcloud_hosts[0]
+  tags:
+    - config

@@ -1,0 +1,12 @@
+# {{ ansible_managed }}
+
+JICOFO_HOST={{ jicofo_xmpp_server }}
+JICOFO_DOMAIN={{ jicofo_xmpp_domain }}
+JICOFO_USER={{ jicofo_xmpp_user }}
+JICOFO_USERDOMAIN={{ jicofo_xmpp_auth_domain }}
+JICOFO_SECRET='{{ jicofo_xmpp_secret }}'
+JICOFO_USER_PASS='{{ jicofo_xmpp_pass }}'
+JICOFO_OPTS='--apis=rest,xmpp'
+JICOFO_MAX_MEMORY='{{ jicofo_memory_size}}'
+# {{ jicofo_etc_dir }}
+JAVA_SYS_PROPS="-Xms{{ jicofo_memory_size }} -Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION={{ jicofo_etc_dir | dirname }} -Dnet.java.sip.communicator.SC_HOME_DIR_NAME={{ jicofo_etc_dir | basename }} -javaagent:{{ jicofo_install_dir }}/lib/jolokia-jvm-{{ jolokia_version }}-agent.jar=config={{ jicofo_etc_dir }}/jolokia.properties -Djava.util.logging.config.file={{ jicofo_etc_dir }}/logging.properties -Djava.util.prefs.systemRoot={{ jicofo_install_dir }}/.java -Djava.util.prefs.userRoot={{ jicofo_install_dir }}/.java/.userPrefs"

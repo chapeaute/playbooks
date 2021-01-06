@@ -1,0 +1,4 @@
+---
+# handlers file for katello-agent
+- name: Yum Clean All
+  command: yum clean all

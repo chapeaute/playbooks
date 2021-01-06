@@ -1,0 +1,6 @@
+---
+
+- name: interfaces | Manage interface {{ name }}
+  template:
+    src: ifcfg.j2
+    dest: "/etc/sysconfig/network-scripts/ifcfg-{{ name }}"

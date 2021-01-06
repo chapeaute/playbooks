@@ -1,0 +1,10 @@
+---
+
+- hosts: activemq
+  vars:
+    # Root deploy dir
+    activemq_root_dir: "/var/lib"
+    # JVM Heap memory size
+    activemq_memory_size: 1G
+  roles:
+    - role: activemq

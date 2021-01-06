@@ -1,0 +1,9 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: eukou
+          groups: tomcat
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDIRaCtmaVOc/SxG/55DAISM8a+o1tEyfwV2bta2dwirGsfRXJYD/iN9N9TurH8819sf5+G5+QqwNLufKqhlGTNb6o+PBlYJYvRHewyff2szmHXaJxZr0BUl1+tJklKuhFY0Xzsckc8B53zJ/2BJ0ZqLv0byNjLFn4e/RMvrZ3wm8vA0PHpNnXuko9qS1cJC0vErgdk8ou0KqUjnsipDBdIqBXUFcsP8NGWu1yqgBZomgwza3d73XGv14vbyfAPxazEuJ9QdYaCMqfgufw00xhzueQ87I74BlodNOH7u+PogFjTjo7LHx9bluWJRRFKnvoDsFS+FJJ9XXbTUKTRZBTEfkYtcvpulaAyuAXBM/CttjA7qNX6MG4+Tlw0uXNRmPNCEYYe3d9IGFpUHdh5O4Uu5WMd6HtXlGnuFmCdsEIU/mO9RIOAaxKLV889gG6ccHcnSHIq/5PSuOKUYnsNEaDVwZk7vj3Z3/B21B8J5BCpVg/ZCtZ8S0mATyZoeycyBapNGj9XWExMmJ2/f/yTxZtrGSXmJeQD5Ksb7qwi0QfZN5rQMf86tluJsNd6R27bjFtBKOuVGN//FcRKYTqwoQDWx28VSSxmABFYE9Vk4du6pD4i3rpb6tnteAWlIzDLZ+QrS9FCCMBi1lCA3giaJYlkrttig9dO7irkfTVG3ZcE3w== eunice.kouame@smile.ci

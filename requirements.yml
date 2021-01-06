@@ -1,0 +1,652 @@
+- src: git@git.smile.ci:adminsys/ansible/role/activemq.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/alfresco.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/ambari-agent.git
+  scm: git
+  version: v0.9.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/ambari-server.git
+  scm: git
+  version: v0.9.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/ansistrano.git
+  scm: git
+  version: v1.0.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/apache.git
+  scm: git
+  version: v1.6.11
+
+- src: git@git.smile.ci:adminsys/ansible/role/apache-proxy.git
+  scm: git
+  version: v1.2.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/asterisk.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/auditbeat.git
+  scm: git
+  version: v0.9.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/autofs.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/bacula-agent.git
+  scm: git
+  version: v1.5.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/bacula-director.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/bacula-storage.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-disk.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-firewalld.git
+  scm: git
+  version: v1.0.9
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-interface.git
+  scm: git
+  version: v1.0.8
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-route.git
+  scm: git
+  version: v1.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-server.git
+  scm: git
+  version: v1.2.11
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-user.git
+  scm: git
+  version: v1.1.5
+
+- src: git@git.smile.ci:adminsys/ansible/role/bind.git
+  scm: git
+  version: v1.2.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/brms.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/cassandra.git
+  scm: git
+  version: v0.9.8
+
+- src: git@git.smile.ci:adminsys/ansible/role/centreon-agent.git
+  scm: git
+  version: v1.0.46
+
+- src: git@git.smile.ci:adminsys/ansible/role/centreon-poller.git
+  scm: git
+  version: v2.1.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/centreon-prov.git
+  scm: git
+  version: v1.2.16
+
+- src: git@git.smile.ci:adminsys/ansible/role/centreon-server.git
+  scm: git
+  version: v2.1.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/ceph-client.git
+  scm: git
+  version: v0.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/ceph-server.git
+  scm: git
+  version: v0.1.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/cerebro.git
+  scm: git
+  version: v1.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/composer.git
+  scm: git
+  version: v1.0.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/confd.git
+  scm: git
+  version: v0.5.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/coturn.git
+  scm: git
+  version: v1.0.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/csync2-lsyncd.git
+  scm: git
+  version: v1.1.5
+
+- src: git@git.smile.ci:adminsys/ansible/role/debian-backports.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/docker.git
+  scm: git
+  version: v1.4.6
+
+- src: git@git.smile.ci:adminsys/ansible/role/docker-swarm.git
+  scm: git
+  version: v1.2.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/drbd.git
+  scm: git
+  version: v1.2.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/drupal.git
+  scm: git
+  version: v1.0.10
+
+- src: git@git.smile.ci:adminsys/ansible/role/elastic.git
+  scm: git
+  version: v1.1.7
+
+- src: git@git.smile.ci:adminsys/ansible/role/elastic-apm.git
+  scm: git
+  version: v2.4.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/elasticsearch.git
+  scm: git
+  version: v2.5.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/erlang.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/etcd.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/etherpad.git
+  scm: git
+  version: v1.1.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/fail2ban.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/filebeat.git
+  scm: git
+  version: v2.5.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/flywaydb.git
+  scm: git
+  version: master
+
+- src: git@git.smile.ci:adminsys/ansible/role/foreman.git
+  scm: git
+  version: v0.9.5
+
+- src: git@git.smile.ci:adminsys/ansible/role/foreman-init.git
+  scm: git
+  version: master
+
+- src: git@git.smile.ci:adminsys/ansible/role/freeipa-client.git
+  scm: git
+  version: v1.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/freeipa-server.git
+  scm: git
+  version: v1.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/freeradius.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/freeradius-mysql.git
+  scm: git
+  version: v1.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/freeradius-proxy.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/generic-service.git
+  scm: git
+  version: v1.3.5
+
+- src: git@git.smile.ci:adminsys/ansible/role/generic-webapp.git
+  scm: git
+  version: v1.1.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/genieacs.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/genieacs-gui.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/gitlab-runner.git
+  scm: git
+  version: v1.2.6
+
+- src: git@git.smile.ci:adminsys/ansible/role/gitlab-server.git
+  scm: git
+  version: v1.1.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/glassfish.git
+  scm: git
+  version: v0.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/hadoop.git
+  scm: git
+  version: v1.3.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/haproxy.git
+  scm: git
+  version: v1.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/hbase.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/ioncube.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/ipsec.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/jitsi-jibri.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/jitsi-jicofo.git
+  scm: git
+  version: v1.2.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/jitsi-jigasi.git
+  scm: git
+  version: v1.0.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/jitsi-meet.git
+  scm: git
+  version: v1.1.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/jitsi-videobridge.git
+  scm: git
+  version: v1.0.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/kafka.git
+  scm: git
+  version: v1.2.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/katello-agent.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/keepalived.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/keycloak.git
+  scm: git
+  version: master
+
+- src: git@git.smile.ci:adminsys/ansible/role/kibana.git
+  scm: git
+  version: v2.5.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/kubernetes.git
+  scm: git
+  version: v0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/ldap-user.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/letsencrypt.git
+  scm: git
+  version: master
+
+- src: git@git.smile.ci:adminsys/ansible/role/libvirt-kvm.git
+  scm: git
+  version: v1.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/logstash.git
+  scm: git
+  version: v3.1.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/lua.git
+  scm: git
+  version: master
+
+- src: git@git.smile.ci:adminsys/ansible/role/mariadb-galera-cluster.git
+  scm: git
+  version: v1.5.11
+
+- src: git@git.smile.ci:adminsys/ansible/role/mariadb-server.git
+  scm: git
+  version: v1.3.7
+
+- src: git@git.smile.ci:adminsys/ansible/role/memcached.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/metricbeat.git
+  scm: git
+  version: v0.9.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/mongodb.git
+  scm: git
+  version: v1.5.5
+
+- src: git@git.smile.ci:adminsys/ansible/role/mule-esb.git
+  scm: git
+  version: v1.2.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/mysql-provider.git
+  scm: git
+  version: v1.4.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/neo4j.git
+  scm: git
+  version: master
+
+- src: git@git.smile.ci:adminsys/ansible/role/newrelic-daemon.git
+  scm: git
+  version: master
+
+- src: git@git.smile.ci:adminsys/ansible/role/newrelic-php-agent.git
+  scm: git
+  version: master
+
+- src: git@git.smile.ci:adminsys/ansible/role/nextcloud.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/nfs-client.git
+  scm: git
+  version: v1.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/nfs-server.git
+  scm: git
+  version: v1.1.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/nginx.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/nodejs.git
+  scm: git
+  version: v1.2.10
+
+- src: git@git.smile.ci:adminsys/ansible/role/ntp.git
+  scm: git
+  version: v1.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/odoo.git
+  scm: git
+  version: v1.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/ogo-proxy.git
+  scm: git
+  version: v2.0.7
+
+- src: git@git.smile.ci:adminsys/ansible/role/openjdk.git
+  scm: git
+  version: v1.1.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/openldap.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/openstreetmap.git
+  scm: git
+  version: v0.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/oracle-java.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/owncloud.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/pacemaker.git
+  scm: git
+  version: v1.3.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/packetbeat.git
+  scm: git
+  version: v1.3.5
+
+- src: git@git.smile.ci:adminsys/ansible/role/php.git
+  scm: git
+  version: v2.2.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/php-fpm.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/phpipam.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/phpmyadmin.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/pmm-client.git
+  scm: git
+  version: v0.3.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/podman.git
+  scm: git
+  version: v0.3.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/postfix.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/postgresql.git
+  scm: git
+  version: v1.3.16
+
+- src: git@git.smile.ci:adminsys/ansible/role/postgresql-provider.git
+  scm: git
+  version: v1.0.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/postgresql-server.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/privacy-idea.git
+  scm: git
+  version: master
+
+- src: git@git.smile.ci:adminsys/ansible/role/proftpd.git
+  scm: git
+  version: v1.1.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/prosody.git
+  scm: git
+  version: v1.1.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/python.git
+  scm: git
+  version: v2.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/rabbitmq.git
+  scm: git
+  version: v1.2.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/rancid.git
+  scm: git
+  version: v1.0.6
+
+- src: git@git.smile.ci:adminsys/ansible/role/redis.git
+  scm: git
+  version: v3.4.8
+
+- src: git@git.smile.ci:adminsys/ansible/role/rocketchat.git
+  scm: git
+  version: v1.0.5
+
+- src: git@git.smile.ci:adminsys/ansible/role/rspamd.git
+  scm: git
+  version: v2.1.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/ruby.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/rundeck.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/scala.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/security.git
+  scm: git
+  version: v1.3.22
+
+- src: git@git.smile.ci:adminsys/ansible/role/security-apache.git
+  scm: git
+  version: v1.3.11
+
+- src: git@git.smile.ci:adminsys/ansible/role/security-mariadb.git
+  scm: git
+  version: v1.2.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/security-php.git
+  scm: git
+  version: v1.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/skeleton.git
+  scm: git
+  version: v1.2.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/smokeping.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/snmp.git
+  scm: git
+  version: v1.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/solr.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/sonarqube.git
+  scm: git
+  version: v1.3.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/spagobi.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/spark.git
+  scm: git
+  version: v2.3.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/ssl-certs.git
+  scm: git
+  version: v1.3.7
+
+- src: git@git.smile.ci:adminsys/ansible/role/symfony.git
+  scm: git
+  version: v1.0.5
+
+- src: git@git.smile.ci:adminsys/ansible/role/tomcat.git
+  scm: git
+  version: v1.3.11
+
+- src: git@git.smile.ci:adminsys/ansible/role/traefik.git
+  scm: git
+  version: v1.3.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/trafficserver.git
+  scm: git
+  version: v0.9.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/vagrant.git
+  scm: git
+  version: v2.3.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/varnish.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/webacula.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/webmin.git
+  scm: git
+  version: v0.9.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/wekan.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/whmcs.git
+  scm: git
+  version: v1.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/wso2am.git
+  scm: git
+  version: v2.2.11
+
+- src: git@git.smile.ci:adminsys/ansible/role/wso2as.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/wso2bp.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/wso2ei.git
+  scm: git
+  version: v2.2.10
+
+- src: git@git.smile.ci:adminsys/ansible/role/wso2-generic.git
+  scm: git
+  version: v2.3.11
+
+- src: git@git.smile.ci:adminsys/ansible/role/wso2iot.git
+  scm: git
+  version: master
+
+- src: git@git.smile.ci:adminsys/ansible/role/wso2is.git
+  scm: git
+  version: v2.2.8
+
+- src: git@git.smile.ci:adminsys/ansible/role/wso2sp.git
+  scm: git
+  version: v1.3.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/zeppelin.git
+  scm: git
+  version: v1.1.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/zimbra.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/zookeeper.git
+  scm: git
+  version: v1.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/zpush.git
+  scm: git
+  version: v1.0.0
+

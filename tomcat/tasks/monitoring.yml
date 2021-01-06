@@ -1,0 +1,19 @@
+---
+
+- name: monitoring | Get jolokia WAR
+  get_url:
+    url: "https://search.maven.org/remotecontent?filepath=org/jolokia/jolokia-war/{{ tomcat_jolokia_version }}/jolokia-war-{{ tomcat_jolokia_version }}.war"
+    dest: "{{ tomcat_root_dir }}/webapps/jolokia.war"
+
+- name: monitoring | Add tomcat configuration files - templates
+  tags:
+    - monitoring
+    - config
+  template:
+    src:  "tomcat/conf/{{ item }}"
+    dest: "{{ tomcat_root_dir }}/conf/{{ item }}"
+  with_items:
+    - server.xml
+    - tomcat-users.xml
+  notify:
+    - Restart tomcat

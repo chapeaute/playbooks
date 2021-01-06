@@ -1,0 +1,10 @@
+# v1.0
+---
+
+- hosts: rocketchat
+  vars:
+    rocketchat_root_dir: "/var/lib"
+    rocketchat_version: 3.6.1
+    rocketchat_sit_url: "http://chat.monsite.org"
+  roles:
+    - role: rocketchat

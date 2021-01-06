@@ -1,0 +1,51 @@
+---
+
+# Jolokia
+jolokia_port: 8779
+jolokia_version: 1.6.2
+
+# Global jitsi variables
+jitsi_domain: "{{ ansible_fqdn }}"
+jitsi_xmpp_domain: "{{ jitsi_domain }}"
+jitsi_xmpp_server: "{{ jitsi_domain }}"
+jitsi_xmpp_auth_domain: auth.{{ jitsi_xmpp_domain }}
+jitsi_stun_servers: []
+jitsi_turn_secret: "{{ lookup('password', 'credential/jitsi_turn_secret chars=ascii_letters,digits') }}"
+jitsi_xmpp_jicofo_user: focus
+jitsi_xmpp_jvb_user: jvb
+jitsi_auth: false
+jitsi_xmpp_internal_muc: "internal.{{ jitsi_xmpp_auth_domain }}"
+jitsi_use_jigasi: false
+jitsi_use_jibri: false
+jitsi_turn_servers: []
+jitsi_use_turn_server: "{% if jitsi_turn_servers|length > 0 %}true{% else %}false{% endif %}"
+jitsi_turn_credentials_port: 4443
+
+# JVB vars
+#jvb_version: 2.1-376-g9f12bfe2-1
+jvb_version: 2.1-273-g072dd44b-1
+#jvb_version: 2.1-304-g8488f77d-1
+
+jvb_deb_url: "http://download.jitsi.org/stable/jitsi-videobridge2_{{ jvb_version }}_all.deb"
+jvb_disable_tcp_harverster:  "{{ jitsi_use_turn_server }}"
+
+jvb_harvester_port: 10000
+jvb_xmpp_server: "{{ jitsi_xmpp_server }}"
+# Account for videobridge
+jvb_xmpp_user: jvb
+jvb_xmpp_domain: "{{ jitsi_xmpp_auth_domain }}"
+jvb_xmpp_secret: "{{ lookup('password', 'credential/{{ jitsi_xmpp_domain }}-jvb_xmpp_secret chars=ascii_letters,digits') }}"
+jvb_xmpp_pass: "{{ lookup('password', 'credential/{{ jitsi_xmpp_domain }}-jvb_xmpp_pass chars=ascii_letters,digits') }}"
+jvb_xmpp_auth_domain: "{{ jitsi_xmpp_auth_domain }}"
+
+# Disable certificate check
+jvb_disable_cert_check: true
+
+# Statistics
+jvb_statistics_interval: 3000
+jvb_statistics_enable: true
+jvb_statistics_port: 8080
+
+# Jigasi Memory
+jvb_memory_size_prct: 0.7
+jvb_memory_size: "{{ (ansible_memtotal_mb*jvb_memory_size_prct)|int }}m"

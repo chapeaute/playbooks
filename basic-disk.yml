@@ -1,0 +1,19 @@
+---
+
+- hosts: all
+  vars:
+    volume_group: data
+    logical_volume: srv
+    mount_point: /srv 
+    disk: /dev/vdb
+  roles:
+    - role: basic-disk
+      vgs_lists:
+        - name: "{{ volume_group }}"
+          pvs: "{{ disk }}"
+      lvs_lists:
+        - name: "{{ logical_volume }}"
+          vg: "{{ volume_group }}"
+          size: 100%FREE
+          mount_point: "{{ mount_point }}"
+          fstype: ext4 

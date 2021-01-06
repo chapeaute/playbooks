@@ -1,0 +1,73 @@
+---
+# defaults file for wso2
+
+wso2is_version: 5.8.0
+wso2is_patch_version: #1565611561899
+wso2is_offset: 0
+wso2is_ports:
+  - 4000/tcp  # Clustering port
+  - 7611/tcp  # Thrift TCP port
+  - 7711/tcp  # Thrift SSL port for secure transport,
+  - 8243/tcp  # HTTPS access for  Webservices
+  - 8280/tcp  # HTTP access for Webservices
+  - 9443/tcp  # Carbon management interfaace
+  - 9763/tcp  # HTTP servlet Web Service
+  # - 9999/tcp  # RMI registry
+  # - 11111/tcp # RMI server
+wso2is_java_version: 11
+wso2is_java_impl: "openjdk"
+wso2is_hostname: "{{ ansible_hostname }}"
+wso2is_remote_hostname: "{{ wso2is_hostname }}"
+wso2is_memory_size_prct: 0.6
+wso2is_memory_size: "{{ (ansible_memtotal_mb*wso2is_memory_size_prct)|int }}M"
+wso2is_root_dir: "/var/lib"
+wso2is_install_dir: "{{ wso2is_root_dir }}/{{ wso2is_service_name }}"
+wso2is_data_root_dir: "{{ wso2is_root_dir }}"
+wso2is_env_vars: {}
+wso2is_repl_method: lsyncd
+
+# Admin Access
+wso2is_admin_create: "true"
+wso2is_admin_user: admin
+wso2is_admin_pass: changeme  # defines wso2am admin password
+wso2is_keystore_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-wso2is_keystore_pass chars=ascii_letters,digits') }}"
+wso2is_truststore_pass: "{{ wso2is_keystore_pass }}"
+
+# Clustering
+wso2is_cluster_enable: "{% if wso2is_nodes|length > 1 %}true{% else %}false{% endif %}"
+wso2is_cluster_domain: wso2.is.domain
+wso2is_nodes: []
+wso2am_repl_method: lsyncd # One of lsyncd, nfs, none
+
+# User store ldap
+wso2is_store_type: "rw_ldap"
+
+# Database configuration
+wso2is_db_driver: mysql
+wso2is_db_port: 3306
+wso2is_db_user: "{% if wso2is_db_host is defined %}wso2is{% else %}wso2carbon{% endif %}"
+wso2is_db_pass: "{% if wso2is_db_host is defined %}{{ lookup('password', 'credential/wso2is_db_pass chars=ascii_letters,digits') }}{% else %}wso2carbon{% endif %}"
+wso2is_db_enable: "{% if wso2is_db_host is defined %}true{% else %}false{% endif %}"
+wso2is_db_type:  "{% if wso2is_db_host is defined %}mysql{% else %}h2{% endif %}"
+wso2is_db_remote_host: "{{ wso2is_db_host }}"
+wso2is_db_app_name: WSO2_IDENTITY
+wso2is_db_shared_name: WSO2_SHARED
+wso2is_db_user_name: WSO2_USER
+
+
+# LDAP configuration
+wso2is_ldap_server: localhost
+wso2is_ldap_embbeded: "{% if wso2is_ldap_server == 'localhost' %}true{% else %}false{% endif %}"
+wso2is_ldap_port: "${Ports.EmbeddedLDAP.LDAPServerPort}"
+wso2is_ldap_url: "ldap://{{ wso2is_ldap_server }}:{{ wso2is_ldap_port }}"
+wso2is_ldap_timeout: 5000
+wso2is_ldap_binddn: "uid=admin,ou=system"
+wso2is_ldap_user_search: "ou=Users,dc=wso2,dc=org"
+wso2is_ldap_user_object_class: "person"
+wso2is_ldap_user_attribute: uid
+wso2is_ldap_pass: admin
+
+# Configs
+
+wso2is_deployment_conf: {}
+wso2is_configs: {}

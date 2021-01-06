@@ -1,0 +1,6 @@
+---
+# handlers file for activemq
+- name: "Restart Activemq"
+  service:
+    name: "activemq"
+    state: restarted

@@ -1,0 +1,20 @@
+{
+{% if docker_log_driver == "json-file" %}
+  "log-driver": "json-file",
+{% if docker_log_opts %}
+  "log-opts": {
+{% for (key,value) in docker_log_opts.iteritems() %}
+    "{{ key }}": "{{ value }}"{% if not loop.last %},
+{% endif %}
+{% endfor %}
+
+  },
+{% endif %}
+{% elif docker_log_driver == "journald" %}
+  "log-driver": "journald",
+{% endif %}
+  "storage-driver": "{{ docker_storage_driver }}"{% if docker_metric_bind_interface is defined and hostvars[inventory_hostname]['ansible_'+docker_metric_bind_interface] is defined %},
+  "metrics-addr" : "{{ hostvars[inventory_hostname]['ansible_'+docker_metric_bind_interface]['ipv4']['address'] }}:9323",
+  "experimental" : true
+{% endif %}
+}

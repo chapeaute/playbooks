@@ -1,0 +1,31 @@
+---
+# Default settings for kafka
+# Scala Version (2.10.5 or 2.11.7 available)
+zk_scala_version: "2.11"
+
+# Confluent package version
+confluent_pkg_version: "3.1"
+
+# ZooKeeper network configuration properties
+zk_client_port: 2181
+zk_follower_port: 2888
+zk_election_port: 3888
+zk_max_client_connexions: 0
+zk_autopurge_snapRetainCount: 3
+zk_autopurge_purgeInterval: 24
+
+# Zookeeper data storage path
+zk_etc_dir: "/etc/kafka"
+zk_data_dir: "/var/lib/zookeeper"
+zk_log_dir: "/var/log/zookeeper"
+
+# Zookeeper tuning properties
+zk_tickTime: 3000
+zk_initLimit: 10
+zk_syncLimit: 5
+
+# Zookeeper cluster members
+zk_hosts: "{{ play_hosts }}"
+
+# Firewall setting
+firewall_setup: True

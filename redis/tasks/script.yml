@@ -1,0 +1,45 @@
+---
+- name: script | Export bash redis REDISCLI_AUTH variables 
+  tags: script
+  template:
+    src:   root/.bashrc.d/redis.j2
+    dest:  /root/.bashrc.d/redis
+    owner: root
+    group: root
+    mode:  0600
+  when: redis_enable_password
+
+- name: script | Deploy bash HA prompt
+  tags: script
+  copy:
+    src:   root/.bashrc.d/ha
+    dest:  /root/.bashrc.d
+    owner: root
+    group: root
+    mode:  0500
+  when: redis_hosts|length > 2
+
+- name: script | Deploy admin script
+  tags: script
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0755
+  with_items:
+    - redis-status
+
+- name: script | Deploy cluster admin script
+  tags: script
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0755
+  with_items:
+    - redis-cluster-state
+    - redis-cluster-status
+  when: redis_hosts|length > 2
+

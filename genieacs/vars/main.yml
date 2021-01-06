@@ -1,0 +1,18 @@
+---
+# vars file for genieacs
+
+genieacs_dependencies: []
+  # - gcc
+  # - gcc-c++
+  # - make
+
+genieacs_services:
+    - genieacs-nbi
+    - genieacs-fs
+    - genieacs-cwmp
+    - genieacs-ui
+
+genieacs_default_root_dir: /var/lib
+genieacs_install_dir: "{{ genieacs_root_dir }}/genieacs"
+genieacs_full_dir: "{{ genieacs_root_dir }}/genieacs-{{ genieacs_version }}"
+genieacs_log_dir: "{{ genieacs_install_dir }}/log"

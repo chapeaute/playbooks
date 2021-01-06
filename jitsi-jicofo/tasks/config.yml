@@ -1,0 +1,57 @@
+---
+
+- name: Config | Generate logrotate file
+  template:
+    src: etc/logrotate.d/jicofo.j2
+    dest: /etc/logrotate.d/jicofo
+    owner: "{{ jicofo_user }}"
+    group: "{{ jicofo_group }}"
+    mode: 0640
+
+- name: Config | Deploy jicofo configuration
+  tags: config
+  template:
+    src:   etc/jicofo/{{ item }}.j2
+    dest:  "{{ jicofo_etc_dir }}/{{ item }}"
+    owner: "{{ jicofo_user }}"
+    group: "{{ jicofo_group }}"
+    mode: 0640
+  with_items:
+    - jicofo.conf
+    - sip-communicator.properties
+    - logging.properties
+  notify:
+    - Restart jicofo
+
+# name: Config | Synchronize prosody modules
+# tags: config
+# synchronize:
+#   src: prosody-plugins
+#   dest: "{{ jicofo_prosody_plugins | dirname }}"
+# notify:
+#   - Restart prosody
+# delegate_to: "{{ jicofo_xmpp_server }}"
+
+- name: Config | Synchronize prosody modules
+  copy:
+    directory_mode: true
+    src: prosody-plugins
+    dest: "{{ jicofo_prosody_plugins | dirname }}"
+  notify:
+    - Restart prosody
+  delegate_to: "{{ jicofo_xmpp_server }}"
+
+
+
+- name: Config | Deploy prosody configuration
+  template:
+    src: etc/prosody/conf.d/prosody.cfg.lua.j2
+    dest: "/etc/prosody/conf.d/{{ jicofo_xmpp_domain }}.cfg.lua"
+    owner: prosody
+    group: prosody
+    mode: 0640
+  notify:
+    - Restart prosody
+    - Register Jicofo XMPP users
+    - Restart jicofo
+  delegate_to: "{{ jicofo_xmpp_server }}"

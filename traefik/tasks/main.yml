@@ -1,0 +1,43 @@
+---
+# tasks file for traefik
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- set_fact:
+    traefik_major_version: "{{ traefik_version.split('.')[0] }}"
+
+- include: "{{ ansible_os_family }}.yml"
+
+- include: install.yml
+
+- include: config.yml
+  tags: config
+
+- include: dashboard.yml
+  tags:
+    - config
+    - dashboard
+  when:
+    - traefik_dashboard_enable
+    - traefik_version is version_compare('2.0.0', '>=')
+
+- name: main | Enable and Start traefik service
+  service:
+    name:    "{{ traefik_service }}"
+    state:   started
+    enabled: yes
+
+- include: script.yml
+  tags: script
+
+- include: logrotate.yml
+  tags: logrotate

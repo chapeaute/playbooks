@@ -1,0 +1,87 @@
+#!/bin/bash
+
+AUTH_FILE="/root/.mongorc.js"
+AUTH_LINE=$(grep "^db.getSiblingDB" ${AUTH_FILE} | sed 's/.*"\(.*\)".*"\(.*\)".*"\(.*\)".*/\1:\2:\3/')
+MONGO_ADB=$(echo ${AUTH_LINE} | cut -d: -f1)
+MONGO_USER=$(echo ${AUTH_LINE} | cut -d: -f2)
+MONGO_PASS=$(echo ${AUTH_LINE} | cut -d: -f3)
+MONGO_AUTH_OPTS="--username ${MONGO_USER} --password ${MONGO_PASS} --authenticationDatabase ${MONGO_ADB}"
+
+function syntax() {
+    cat <<EOF
+Script to restore MongoDB from directory. By default, database is created if it doesn't exist, otiherwise dump is restore on existing database.
+
+Usage: ${0##*/} [-h|-d <dumpdir>] [-n dbname]
+    -h            Display this message
+    -d <dumpdir>  Dump directory containing DB to restore
+    -n <dbname>   DB name to restore (if not specified, all db in directory will be restore)
+EOF
+}
+
+function exec_cmd() {
+    local cmd="$@"
+
+    # Backup must be done with mongodb admin user, if not try to switch to this user
+    if [ "$UID" -eq 0 ]; then
+        ${cmd}
+        return $?
+    else
+        >&2
+        echo "Script must be run with root privileges. Abording backup..."
+        exit 1
+    fi
+}
+
+function restore_db() {
+    local dumpdir=$1
+    local dbname=$2
+
+    for colfile in `ls ${dumpdir}/${dbname}/*.bson.gz`
+    do
+        exec_cmd "mongorestore ${MONGO_AUTH_OPTS} --nsInclude ${dbname} --gzip --objcheck --drop ${colfile}"
+    done
+}
+
+function restore_all_db() {
+    local dumpdir=$1
+
+    exec_cmd "mongorestore ${MONGO_AUTH_OPTS} --gzip --objcheck --drop ${dumpdir}"
+}
+
+if [ $# -eq 0 ]; then
+    syntax
+    exit 1
+fi
+
+while getopts "hd:n:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        d)
+            DIRNAME="${OPTARG}"
+            ;;
+        n)
+            DBNAME="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+if [ ! -r "${DIRNAME}" ]; then
+    >&2
+    echo "Could not access dump directory: ${DIRNAME}"
+    syntax
+    exit 1
+fi
+
+if [[ -n $DBNAME ]]; then
+        restore_db ${DIRNAME} ${DBNAME}
+    else
+        restore_all_db ${DIRNAME}
+fi

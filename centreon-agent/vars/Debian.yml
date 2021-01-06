@@ -1,0 +1,22 @@
+---
+nrpe_packages:
+  - nagios-nrpe-server
+  - nagios-plugins
+  - nrpe-plugins-smile
+
+nrpe_service: nagios-nrpe-server
+
+nrpe_pid_file: /var/run/nagios/nrpe.pid
+nrpe_user: nagios
+nrpe_group: nagios
+
+centreon_extra_packages:
+  - libdigest-perl-md5-perl
+  - libdbd-mysql-perl
+  - libwww-perl
+  - liblocale-gettext-perl
+  - libnagios-object-perl
+  - socat
+  - libjson-perl
+  - libxml-libxml-perl
+  - libxml-xpath-perl

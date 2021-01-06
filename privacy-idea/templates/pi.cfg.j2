@@ -1,0 +1,20 @@
+import logging
+# The realm, where users are allowed to login as administrators
+SUPERUSER_REALM = ['super']
+# Your database
+SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://{{privacy_db_user}}:{{privacy_db_pass}}@{{privacy_db_host}}/{{privacy_db_name}}'
+# This is used to encrypt the auth_token
+SECRET_KEY = '{{ privacy_secret }}'
+# This is used to encrypt the admin passwords
+PI_PEPPER = '{{ privacy_pepper }}'
+# This is used to encrypt the token data and token passwords
+PI_ENCFILE = '/etc/privacyidea/enckey'
+# This is used to sign the audit log
+PI_AUDIT_KEY_PRIVATE = '/etc/privacyidea/private.pem'
+PI_AUDIT_KEY_PUBLIC = '/etc/privacyidea/public.pem'
+PI_AUDIT_SQL_TRUNCATE = True
+# The Class for managing the SQL connection pool
+PI_ENGINE_REGISTRY_CLASS = "shared"
+PI_AUDIT_POOL_SIZE = 20
+PI_LOGFILE = '/var/log/privacyidea/privacyidea.log'
+PI_LOGLEVEL = logging.INFO

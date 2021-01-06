@@ -1,0 +1,16 @@
+---
+# defaults file for phpipam
+phpipam_vhost_name: phpipam
+phpipam_version: "1.3"
+phpipam_timezone: 'Africa/Abidjan'
+phpipam_install_dir: "{{ apache2_data_dir }}/{{ phpipam_vhost_name }}/htdocs"
+# phpipam database configuration
+phpipam_db_driver: mysql
+phpipam_db_host: "127.0.0.1"
+phpipam_db_port: 3306
+phpipam_db_user: phpipam
+phpipam_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-phpipam_db_pass chars=ascii_letters,digits') }}"
+phpipam_db_name: phpipam
+phpipam_db_remote_host: "{{ inventory_hostname }}"
+phpipam_db_admin_user: admin
+phpipam_db_admin_pass: changeme

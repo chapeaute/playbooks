@@ -1,0 +1,10 @@
+---
+# handlers file for ipsec
+
+- name: restart ipsec service
+  service:
+    name: "{{ ipsec_service }}"
+    state: restarted
+
+- name: reload sysctl
+  shell: sysctl -p /etc/sysctl.d/98-ipsec.conf

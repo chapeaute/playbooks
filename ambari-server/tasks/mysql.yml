@@ -1,0 +1,15 @@
+---
+
+
+- import_role:
+    name: mysql-provider
+  vars:
+    mysql_host: "{{ ambari_db_remote_host }}"
+    mysql_databases:
+      ambari:
+        db_name: "{{ ambari_db_name }}"
+        user: "{{ ambari_db_user }}"
+        password:  "{{ ambari_db_pass }}"
+        sync_source:
+          target: /var/lib/ambari-server/resources/Ambari-DDL-MySQL-CREATE.sql
+

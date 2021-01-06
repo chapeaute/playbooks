@@ -1,0 +1,10 @@
+---
+- name: service | Enable and start centreon
+  service:
+    name:    "{{ item }}"
+    state:   started
+    enabled: yes
+  with_items:
+    - centreon
+    - cbd
+    - centcore

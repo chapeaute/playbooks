@@ -1,0 +1,16 @@
+bind_service_name: named
+bind_user: named
+bind_group: named
+
+bind_packages:
+  - bind
+  - bind-utils
+
+bind_packages_extra:
+  - GeoIP
+  - policycoreutils-python
+
+bind_conf_dir:  /etc/named
+bind_cache_dir: /var/named
+bind_log_dir:   /var/log/named
+bind_run_dir:   /run/named

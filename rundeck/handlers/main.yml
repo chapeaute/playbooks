@@ -1,0 +1,7 @@
+---
+# handlers file for rundeck
+- name: "Restart Rundeck"
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items: "{{ rundeck_services }}"

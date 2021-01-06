@@ -1,0 +1,54 @@
+#!/bin/bash
+#
+# Event handler to call when a service change to no-OK state
+#
+
+LOG_FILE=/var/tmp/centreon_handler
+
+case "$1" in
+  WARNING|CRITICAL)
+      # The service appears to have a problem - perhaps we should restart the server...
+      # Is this a "soft" or a "hard" state?
+      case "$2" in
+        # We're in a "soft" state, meaning that Centreon Engine is in the middle of retrying the
+        # check before it turns into a "hard" state and contacts get notified...
+        SOFT)
+          # What check attempt are we on? We don't want to restart the service on the first
+          # check, because it may just be a fluke!
+          case "$3" in
+            # Wait until the check has been tried 3 times before restarting the service.
+            # If the check fails on the 4th time (after we restart the service), the state
+            # type will turn to "hard" and contacts will be notified of the problem.
+            # Hopefully this will restart the service successfully, so the 4th check will
+            # result in a "soft" recovery. If that happens no one gets notified because we
+            # fixed the problem!
+            3)
+              echo `date` "Restarting $4 service (3rd soft critical state) (STATE: $1, TYPE: $2, RETRY: $3)..." | tee -a $LOG_FILE
+              # Call the init script to restart the service
+              sudo /bin/systemctl restart $4
+              ;;
+            *)
+              # The service just came back up, so don't do anything...
+              echo `date` "Call handler script. Doing nothing (STATE: $1, TYPE: $2, RETRY: $3)..." | tee -a  $LOG_FILE
+              ;;
+          esac
+        ;;
+        # The service somehow managed to turn into a hard error without getting fixed.
+          # It should have been restarted by the code above, but for some reason it didn't.
+          # Let's give it one last try, shall we?
+          # Note: Contacts have already been notified of a problem with the service at this
+          # point (unless you disabled notifications for this service)
+      HARD)
+        echo `date` "Restarting $4 service (STATE: $1, TYPE: $2, RETRY: $3)..." | tee -a  $LOG_FILE
+        # Call the init script to restart the service
+        sudo /bin/systemctl restart $4
+        ;;
+      esac
+      ;;
+  *)
+    # The service just came back up, so don't do anything...
+    echo `date` "Call handler script. Doing nothing (STATE: $1, TYPE: $2, RETRY: $3)..." | tee -a  $LOG_FILE
+    ;;
+esac
+exit 0
+

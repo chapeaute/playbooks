@@ -1,0 +1,6 @@
+---
+# vars file for generic-service
+spark_default_root_dir: /var/lib
+spark_logs_dir: "{{ spark_root_dir }}/spark/logs"
+spark_install_dir: "{{ spark_root_dir }}/spark"
+spark_tmp_dir: "{{ spark_install_dir }}/tmp"

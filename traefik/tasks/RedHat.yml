@@ -1,0 +1,56 @@
+---
+- name: RedHat | Setting firewall rules for dashboard
+  firewalld:
+    port:      "{{ item }}/tcp"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - "{{ traefik_dashboard_port }}"
+  when:
+    - manage_firewalld
+    - traefik_dashboard_enable
+
+- name: RedHat | Setting firewall rules for metrics
+  firewalld:
+    port:      "{{ item }}/tcp"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - "{{ traefik_metrics_port }}"
+  when:
+    - manage_firewalld
+    - traefik_metrics_enable
+
+- name: RedHat | Deploy syconfig configuration
+  template:
+    src:   "etc/sysconfig/traefik-v{{ traefik_major_version }}.j2"
+    dest:  /etc/sysconfig/traefik
+
+- name: RedHat | Deploy systemd script
+  template:
+    src:   etc/systemd/system/traefik.service.j2
+    dest:  /etc/systemd/system/traefik.service
+  notify:
+    - Reload Systemd
+
+- name: RedHat | Add auto-restart on-failure - create directory
+  file:
+    path:  /etc/systemd/system/traefik.service.d/
+    state: directory
+    owner: root
+    group: root
+    mode:  0755
+
+- name: RedHat | Add auto-restart on-failure - deploy systemd config for traefik
+  copy:
+    src:  etc/systemd/system/traefik.service.d/override.conf
+    dest: /etc/systemd/system/traefik.service.d/override.conf
+    owner: root
+    group: root
+    mode:  0644
+  notify:
+    - Reload Systemd
+
+- meta: flush_handlers

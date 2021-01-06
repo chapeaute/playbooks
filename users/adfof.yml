@@ -1,0 +1,9 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: adfof
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDoebymsmICi+FHexyAP1OGmKsQBOFXP/Dp2g+kUV0SHn8P8oyCbnKyuGR2fZtJllhIrzex8KvnGiH6hPQNwiQM8/9KnZRXpTmWBw86IcfgPw+wxKKes6rMAsUTO3Uopil4pEFZ6xKuAvVwAMEVP2SbZ6qtsMUjVDdCgXjlTUpKTc4/DM38kNN57fIA+bPX8GwMyT8CWKyTdchWLJD9N9K4wlAAiYdO/0+oeCIK5oG9OsQEnD1gHvpyluuy7Vjax8X2wUGFQAdDe3BSv4AssWe7wp+vXl1gFDLwZ9wT3b4sWHnV4n9t8r3EV5owhfIb6z9Q/QOxs4HYqPqdyKA7m8Oj adjamassara@icloud.com

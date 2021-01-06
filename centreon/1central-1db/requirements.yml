@@ -1,0 +1,44 @@
+- src: git@git.smile.ci:adminsys/ansible/role/apache.git
+  scm: git
+  version: v1.1.8
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-user.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-server.git
+  scm: git
+  version: v1.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/centreon-agent.git
+  scm: git
+  version: v1.0.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/centreon-poller.git
+  scm: git
+  version: v1.1.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/centreon-prov.git
+  scm: git
+  version: v1.2.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/centreon-server.git
+  scm: git
+  version: v1.0.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/ldap-user.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/mariadb-server.git
+  scm: git
+  version: v1.1.6
+
+- src: git@git.smile.ci:adminsys/ansible/role/php.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/snmp.git
+  scm: git
+  version: v1.0.0
+

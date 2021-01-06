@@ -1,0 +1,16 @@
+---
+
+mongodb_dependencies:
+  - logrotate
+  - python3-pip
+  - tuned
+  - pwgen
+  - jq
+
+
+mongodb_repo_gpg_key: "https://www.mongodb.org/static/pgp/server-{{ mongodb_version }}.asc"
+mongodb_user: mongod
+mongodb_group: mongod
+mongodb_selinux_packages:
+  - python3-policycoreutils
+  - python3-libselinux

@@ -1,0 +1,22 @@
+---
+# defaults file for glassfish
+glf_version: 5.0
+glf_java_impl: 'oraclejdk'
+glf_java_version: 8
+glf_root_dir: '/var/lib'
+glf_service_name: glassfish
+glf_memory_size_prct: 0.6
+glf_memory_size: "{{ (ansible_memtotal_mb*glf_memory_size_prct)|int }}M"
+glf_install_dir: "{{ glf_root_dir }}/{{ glf_service_name }}"
+glf:
+  subpath: "glassfish{{glf_version|int}}"
+  source_url: "http://download.oracle.com/glassfish/{{glf_version}}/release/glassfish-{{glf_version}}.zip"
+
+# logging
+glf_use_rsyslog: false
+
+# Monitoring
+glf_monitoring_user: glassfish
+glf_monitoring_password: "{{ lookup('password', 'credential/{{ inventory_hostname }}-glf_monitoring_pass chars=ascii_letters,digits') }}"
+glf_jmx_server_port: 8686
+glf_jmx_registry_port: 8686

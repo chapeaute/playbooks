@@ -1,0 +1,7 @@
+---
+
+# defaults file for newrelic-php-agent
+newrelic_php_logdir: "/var/log/newrelic"
+newrelic_php_logfile: "{{newrelic_php_logdir}}/php_agent.log"
+newrelic_php_daemon_logfile: "{{newrelic_php_logdir}}/newrelic-daemon.log"
+newrelic_php_appname: "PHP APPLICATION"

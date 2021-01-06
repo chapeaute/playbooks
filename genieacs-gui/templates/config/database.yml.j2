@@ -1,0 +1,30 @@
+# SQLite version 3.x
+#   gem install sqlite3
+#
+#   Ensure the SQLite 3 gem is defined in your Gemfile
+#   gem 'sqlite3'
+development:
+  adapter: sqlite3
+  database: db/development.sqlite3
+  pool: 5
+  timeout: 5000
+
+{% if genieacs_gui_adapter == 'sqlite' %}
+production:
+  adapter: sqlite3
+  database: db/production.sqlite3
+  pool: 5
+  timeout: 5000
+{% endif %}
+
+{% if genieacs_gui_adapter == 'mongodb' %}
+
+# NOTE: DOESN'T WORK YET
+production:
+  adapter:
+  clients:
+    default:
+      database: genieacs_gui
+      hosts:
+        - {{genieacs_gui_mongodb_host}}:27017
+{% endif %}

@@ -1,0 +1,36 @@
+galaxy_info:
+  author: Ronald D. Kurr
+  description: MongoDB document database.
+  company: jvmguy.com
+
+  license: Apache 2
+
+  min_ansible_version: 2.1
+
+  github_branch: master
+
+  platforms:
+  - name: EL
+    versions:
+    - 7
+  - name: Fedora
+    versions:
+    - 24
+  - name: Ubuntu
+    versions:
+  #  - all
+  #  - lucid
+  #  - maverick
+  #  - natty
+  #  - oneiric
+  #  - precise
+  #  - quantal
+  #  - raring
+  #  - saucy
+  #  - trusty
+  #  - utopic
+  #  - vivid
+  #  - wily
+    - xenial
+
+dependencies: []

@@ -1,0 +1,61 @@
+---
+
+- name: config | Create loopback config
+  template:
+    src: etc/modprobe.d/alsa-loopback.conf.j2
+    dest: /etc/modprobe.d/alsa-loopback.conf
+  notify:
+    - 'Unload snd-aloop module'
+    - 'Load snd-aloop module'
+
+- name:  config | Load snd-aloop at start
+  lineinfile:
+    dest: /etc/modules-load.d/snd_aloop.conf
+    regexp: '^snd_aloop'
+    line: snd_aloop
+    create: yes
+  notify:
+    - 'Unload snd-aloop module'
+    - 'Load snd-aloop module'
+
+- name: config | Load snd-aloop module
+  modprobe:
+    name: snd-aloop
+    state: present
+
+- name: config | Create jibri folder
+  file:
+    name: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ jibri_log_dir }}"
+    - "{{ jitsi_config_file | dirname }}"
+    - "{{ jitsi_recording_dir }}"
+
+- name: config | deploy jitsi script and config
+  template:
+    src: "{{ item }}.j2"
+    dest: "/{{ item }}"
+    mode: 0755
+  with_items:
+    - "{{ jitsi_config_file | regex_replace('^\\/', '') }}"
+    - usr/local/sbin/jibri-start
+    - usr/local/sbin/jibri-start-post
+  notify:
+   - "Restart jibri"
+   - "Register jibri on XMPP Server"
+   - "Register recorder on XMPP Server"
+
+- name: config | deploy jitsi script and config
+  tags:
+    - script
+    - config
+  template:
+    src: "{{ jitsi_finalize_script | regex_replace('^\\/', '')  }}.j2"
+    dest: "{{ jitsi_finalize_script }}"
+    mode: 0755
+    force: no
+  notify:
+   - "Restart jibri"
+   - "Register jibri on XMPP Server"
+   - "Register recorder on XMPP Server"

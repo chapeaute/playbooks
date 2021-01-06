@@ -1,0 +1,17 @@
+---
+
+- name: Download jolokia to lib dir
+  get_url:
+    url: "https://repo1.maven.org/maven2/org/jolokia/jolokia-jvm/{{ jolokia_version }}/jolokia-jvm-{{ jolokia_version }}-agent.jar"
+    dest: "{{ jigasi_install_dir }}/lib/jolokia-jvm-{{ jolokia_version }}-agent.jar"
+    owner: "{{ jigasi_user }}"
+    group: "{{ jigasi_group }}"
+    mode: 0644
+
+- name: Deploy jolokia.properties
+  template:
+    src:   "{{ jigasi_etc_dir | regex_replace('^\\/', '') }}/jolokia.properties.j2"
+    dest:  "{{ jigasi_etc_dir }}/jolokia.properties"
+    owner: "{{ jigasi_user }}"
+    group: "{{ jigasi_group }}"
+    mode: 0644

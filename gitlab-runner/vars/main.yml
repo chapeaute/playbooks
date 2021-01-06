@@ -1,0 +1,10 @@
+---
+# vars file for gitlab-runner
+gitlab_runner_package: gitlab-ci-multi-runner
+gitlab_runner_service: gitlab-runner
+gitlab_runner_conf_file: /etc/gitlab-runner/config.toml
+
+# Variables used to gathering token
+psql_exec: /opt/gitlab/embedded/bin/psql
+gitlab_db_name: gitlabhq_production
+gitlab_sql_token_query: "SELECT runners_registration_token FROM application_settings ORDER BY id DESC LIMIT 1"

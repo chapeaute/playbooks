@@ -1,0 +1,23 @@
+---
+- name: install_nrpe | Install NRPE
+  package:
+    name:  "{{ item }}"
+    state: installed
+  with_items:
+    - "{{ nrpe_packages }}"
+
+- include: selinux.yml
+  when: ansible_selinux.status == "enabled" and ansible_os_family == 'RedHat'
+
+- name: install_nrpe | Configure NRPE
+  template:
+    src:  etc/nagios/nrpe.cfg.j2
+    dest: /etc/nagios/nrpe.cfg
+  notify: Restart NRPE
+
+- name: install_nrpe | Start NRPE
+  service:
+    name:  "{{ nrpe_service }}"
+    state:   started
+    enabled: yes
+

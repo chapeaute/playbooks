@@ -1,0 +1,6 @@
+---
+postfix_packages:
+  - postfix
+  - ca-certificates
+  - mailutils
+  - postfix-pcre

@@ -1,0 +1,56 @@
+#!/bin/bash
+
+USER="wso2ei"
+GROUP="wso2ei"
+CAPP_DIR="/var/lib/wso2ei/repository/deployment/server/carbonapps"
+WAPP_DIR="/var/lib/wso2ei/repository/deployment/server/webapps"
+
+APP_NAME=""
+
+function syntax() {
+    cat <<EOF
+Script to deploy new wso2ei application
+
+Usage: ${0##*/} [-h|-f <archive_file>]
+    -h                Display this message
+    -n <app_name>     Application name
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Abording..."
+    exit 1
+fi
+
+while getopts "hn:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        n)
+            APP_NAME="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+
+if [[ -z $APP_NAME ]]; then
+    syntax
+    exit 1
+fi
+
+echo -n "Waiting while removing application"
+rm -f $CAPP_DIR/${APP_NAME}.car
+rm -f $WAPP_DIR/${APP_NAME}.car
+
+echo done
+
+echo $APP_NAME successfully undeployed.
+

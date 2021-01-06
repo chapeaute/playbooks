@@ -1,0 +1,35 @@
+---
+
+- name: flush all handlers
+  meta: flush_handlers
+
+- name: users | Ensure that database is up
+  tags:
+    - create_users
+    - setup
+  wait_for:
+    host: "{{ cassandra_bind_addr }}"
+    port: 9042
+
+- name: users | Create users
+  cassandra_user:
+    user: "{{ item.user }}"
+    password: "{{ item.password }}"
+    protocol_version: 3
+    login_host: "{{ cassandra_bind_addr }}"
+    login_user: "{{ cassandra_root_user }}"
+    login_password: "{{ cassandra_root_password }}"
+  with_items:
+    - "{{ cassandra_users }}"
+
+- name: users | Create users
+  cassandra_user:
+    user: "{{ item.value.user }}"
+    password: "{{ item.value.password }}"
+    state: "present"
+    protocol_version: 3
+    login_host: "{{ cassandra_bind_addr }}"
+    login_user: "{{ cassandra_root_user }}"
+    login_password: "{{ cassandra_root_password }}"
+  with_dict: "{{ cassandra_keyspaces }}"
+  run_once: true

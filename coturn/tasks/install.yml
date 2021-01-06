@@ -1,0 +1,12 @@
+---
+
+- name: Install coturn
+  package:
+    name: coturn
+    state: present
+
+- name: start and enable coturn
+  service:
+    name: coturn
+    state: started
+    enabled: yes

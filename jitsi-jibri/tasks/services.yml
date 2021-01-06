@@ -1,0 +1,13 @@
+---
+
+- name: main | create jitsi-jibri service
+  tags: config
+  template:
+    src: etc/systemd/system/jitsi-jibri.service.j2
+    dest: /etc/systemd/system/jitsi-jibri@.service
+  notify: 
+    - 'Reload systemd'
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: yes

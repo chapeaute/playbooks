@@ -1,0 +1,4 @@
+password = "{{ rspamd_hash_password.stdout }}"
+{% for server in rspamd_nodes %}
+secure_ip = "{{ server }}";
+{% endfor %}

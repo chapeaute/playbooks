@@ -1,0 +1,15 @@
+---
+
+# Create mysql users
+- name: users | Create mysql user
+  delegate_to: "{{ mysql_host }}"
+  mysql_user:
+    login_unix_socket: /var/lib/mysql/mysql.sock
+    name: "{{ user.user }}"
+    password: "{{ user.password }}"
+    host: "{{ host }}"
+    priv: "{{ user.priv|default(omit) }}"
+    state: "{{ user.state | default('present') }}"
+  loop: "{{ user.hosts|default([user.host|default(['%', 'localhost'])]) | flatten }}"
+  loop_control:
+    loop_var: host

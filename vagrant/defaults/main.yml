@@ -1,0 +1,28 @@
+---
+# Vagrant default parameter
+vagrant_version: 2.2.10
+vagrant_home: "{{ vagrant_default_home }}"
+vagrant_deploy_template: false
+vagrant_box_image: SMILE_CI/centos7
+vagrant_group_owner: root
+vagrant_plugins: []
+#  - vagrant-libvirt
+#  - vagrant-triggers
+
+# Libvirt default parameter
+vagrant_libvirt_hostname: 127.0.0.1
+vagrant_libvirt_ssh_port: 22
+vagrant_libvirt_dft_pool: default
+vagrant_libvirt_dft_net: virbr0
+
+# Vagrant DNS parameter
+vagrant_manage_dns: false
+vagrant_dns_domain: dev.smile.lan
+vagrant_dns_server: 127.0.0.1
+vagrant_dns_ddnskey: /etc/named/Knsupdate.key
+
+# Vagrant ansible
+vagrant_ansible_deploy: True
+vagrant_ansible_deploy_role: True
+vagrant_ansible_autodeploy: "false"
+vagrant_ansible_git_roles: git.smile.ci/adminsys/ansible/roles.git

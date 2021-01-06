@@ -1,0 +1,20 @@
+---
+- stat:
+    path: "{{ redis_data_dir }}"
+  register: data_dir
+
+- name: datadir | Create data directory {{ redis_data_dir }}
+  file:
+    state:   directory
+    path:    "{{ redis_data_dir }}"
+    recurse: yes
+    setype:  redis_var_lib_t
+  when: not data_dir.stat.exists and redis_data_dir != redis_default_data_dir
+
+- name: datadir | Create symlink from {{ redis_default_data_dir }} to data directory {{ redis_data_dir }}
+  file:
+    state: link
+    src:   "{{ redis_data_dir }}"
+    dest:  "{{ redis_default_data_dir }}"
+  when: redis_data_dir != redis_default_data_dir
+

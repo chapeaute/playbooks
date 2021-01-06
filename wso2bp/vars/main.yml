@@ -1,0 +1,10 @@
+---
+# vars file for wso2bp
+
+wso2bp_service_name: "wso2bp"
+wso2bp_default_root_dir: "/var/lib"
+wso2bp_data_dir_list:
+  - repository/deployment/server/bpel
+  - repository/deployment/server/bpmn
+  - repository/deployment/server/humantasks
+wso2bp_configs: []

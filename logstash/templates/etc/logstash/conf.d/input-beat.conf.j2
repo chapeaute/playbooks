@@ -1,0 +1,7 @@
+input {
+  beats {
+    port => 5044
+    type => "logs"
+    tags => [{% for tag in ls_input_beat_tags -%}"{{ tag }}"{%- if not loop.last -%},{% endif -%}{%- endfor %}]
+  }
+}

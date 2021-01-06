@@ -1,0 +1,10 @@
+# v1.0
+---
+- hosts: tomcat
+  vars:
+    tomcat_install_dir: /var/lib
+    tomcat_heap_size_prct: 0.75
+  roles:
+    - role: tomcat
+      tomcat_admin_user: admin
+      tomcat_admin_pass: "romaricPass"

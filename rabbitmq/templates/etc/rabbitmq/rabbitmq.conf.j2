@@ -1,0 +1,7 @@
+# Global parameters
+listeners.tcp.default = {{ rabbitmq_port }}
+log.file.level = {{ rabbitmq_log_level }}
+
+# Tuning parameters
+vm_memory_high_watermark.absolute = {{ rabbitmq_vm_memory_high_watermark }}
+disk_free_limit.absolute = {{ rabbitmq_disk_free_limit_absolute }}

@@ -1,0 +1,13 @@
+---
+
+- import_role:
+    name: postgresql-provider
+  vars:
+    postgresql_host: "{{ ambari_db_remote_host }}"
+    postgresql_databases:
+      ambari:
+        db_name: "{{ ambari_db_name }}"
+        user: "{{ ambari_db_user }}"
+        password:  "{{ ambari_db_pass }}"
+        sync_source:
+          target: /var/lib/ambari-server/resources/Ambari-DDL-Postgres-CREATE.sql

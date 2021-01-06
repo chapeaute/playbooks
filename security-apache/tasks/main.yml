@@ -1,0 +1,43 @@
+---
+# tasks file for security-apache
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../../apache/vars'
+  tags: config
+
+- import_tasks: module.yml
+  when: security_apache_module
+  tags:
+    - module
+    - config_security
+
+- import_tasks: ssl.yml
+  when: security_apache_ssl
+  tags:
+    - ssl
+    - module
+    - config_security
+
+- name: main | Add custom security enforcment rules
+  tags:
+    - config
+    - config_security
+  template:
+    src:   etc/httpd/conf.d/{{ item }}.j2
+    dest:  "{{ apache2_confd_dir }}/{{ item }}"
+    owner: "{{ apache2_user }}"
+    group: "{{ apache2_group }}"
+    mode:  0640
+  with_items:
+    - security-enforcement.conf
+  notify:
+    - Restart Apache
+  when: security_level >= 2

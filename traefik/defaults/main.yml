@@ -1,0 +1,24 @@
+---
+traefik_version: 2.3.0
+traefik_download_url: "{% if traefik_version is version_compare('2.0.0', '<') %}https://github.com/traefik/traefik/releases/download/v{{ traefik_version }}/traefik_linux-amd64{% else %}https://github.com/containous/traefik/releases/download/v{{ traefik_version }}/traefik_v{{ traefik_version }}_linux_amd64.tar.gz{% endif %}"
+traefik_force_version: no
+
+traefik_override_conf: True
+manage_firewalld: true
+
+# defaults file for traefik
+# Enable traefik dashboard
+traefik_dashboard_enable: True
+traefik_dashboard_port: 8080
+traefik_dashboard_username: admin
+traefik_dashboard_password: changeme
+
+# Enable prometheus metrics
+traefik_metrics_enable: False
+traefik_metrics_port: 7979
+
+# Etcd providers
+traefik_etcd_enable: "{% if traefik_etcd_hosts|length > 0 %}True{% else %}False{% endif %}"
+traefik_etcd_hosts: []
+traefik_etcd_port: 2379
+

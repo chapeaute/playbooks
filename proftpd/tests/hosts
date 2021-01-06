@@ -1,0 +1,5 @@
+[all]
+proftpd ansible_connection=docker
+
+[group1]
+proftpd

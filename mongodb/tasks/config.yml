@@ -1,0 +1,47 @@
+---
+
+- name: config | stat {{ mongodb_backup_dir }}
+  stat:
+    path: "{{ mongodb_backup_dir }}"
+  register: backup_dir
+
+- name: config | Create default backup directory
+  file:
+    state:   directory
+    path:    "{{ mongodb_default_backup_dir | dirname }}"
+    recurse: yes
+  when: not backup_dir.stat.exists
+
+- name: config | Create backup directory
+  file:
+    state:   directory
+    path:    "{{ mongodb_backup_dir }}"
+    recurse: yes
+  when: not backup_dir.stat.exists
+
+- name: config | Create symlink from {{ mongodb_default_backup_dir }} to backup directory
+  file:
+    state: link
+    src:   "{{ mongodb_backup_dir }}"
+    dest:  "{{ mongodb_default_backup_dir }}"
+  when: mongodb_backup_dir != mongodb_default_backup_dir
+
+- name: config | stat {{ mongodb_data_dir }}
+  stat:
+    path: "{{ mongodb_data_dir }}"
+  register: data_dir
+
+- name: config | Create data directory
+  file:
+    state:   directory
+    path:    "{{ mongodb_data_dir }}"
+    setype:  "mongod_var_lib_t"
+    recurse: yes
+  when: not data_dir.stat.exists
+
+- name: config | Create symlink from {{ mongodb_default_data_dir }} to data directory
+  file:
+    state: link
+    src:   "{{ mongodb_data_dir }}"
+    dest:  "{{ mongodb_default_data_dir }}"
+  when: mongodb_data_dir != mongodb_default_data_dir

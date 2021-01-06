@@ -1,0 +1,22 @@
+---
+- name: RedHat | Install firewalld
+  package:
+    name: firewalld
+    state: present
+  when: genericservice.firewall_port is defined
+
+- name: RedHat | Start and enable firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+  when: genericservice.firewall_port is defined
+
+- name: RedHat | Setting firewall rules
+  firewalld:
+    port:      "{{ item }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - "{{ genericservice.firewall_port | default([]) }}"

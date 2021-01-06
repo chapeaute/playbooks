@@ -1,0 +1,10 @@
+---
+redis_package_name: redis
+redis_service_name: redis
+redis_sentinel_service_name: redis-sentinel
+redis_default_file: /etc/sysconfig/redis-server
+redis_config_dir: /etc
+redis_extra_packages: []
+redis_dependencies:
+  - epel-release
+redis_monitoring_packages: ['perl-Redis']

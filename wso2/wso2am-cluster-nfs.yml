@@ -1,0 +1,25 @@
+---
+- hosts: wso2am
+  vars:
+    # WSO2 Version
+    wso2am_version: 3.2.0
+    # WSO2 Password
+    wso2am_admin_pass: changeme
+    # Address of MySQL host
+    wso2am_db_host: "db_host_address"
+    # NFS server host
+    wso2am_nfs_host: "nfs_host_address"
+    # Percentage of total memory dedicated to jvm
+    wso2am_memory_size_prct: 0.6
+    # WSO2 data directory
+    # wso2am_root_dir: "/srv/wso2"
+    wso2am_data_root_dir: "/srv/nfs/wso2"
+    wso2am_nodes: "{{ groups['wso2am'] }}"
+  roles:
+    - role: nfs-client
+      nfs_mounts:
+        - server: "{{ wso2am_nfs_host }}"
+          remotedir: /srv
+          localdir: /srv/nfs
+    - role: wso2am
+      wso2am_repl_method: nfs

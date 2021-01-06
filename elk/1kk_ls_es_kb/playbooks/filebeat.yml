@@ -1,0 +1,8 @@
+---
+- hosts: filebeat
+  vars:
+    fb_version: "{{ _elk_version }}"
+    fb_kafka_hosts: "{{ _kafka_hosts }}"
+    fb_kafka_topic: "{{ _kafka_topic }}"
+  roles:
+    - role: filebeat

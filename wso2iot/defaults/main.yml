@@ -1,0 +1,70 @@
+---
+# defaults file for wso2
+
+wso2iot_version: 3.1.0
+wso2iot_ports:
+ - 8243/tcp # HTTPS gateway port.
+ - 9443/tcp # HTTPS port for the core profile.
+ - 8280/tcp # HTTP gateway port.
+ - 9763/tcp # HTTP port for the core profile.
+ - 1886/tcp # Default MQTT port.
+ - 9445/tcp # HTTPS port for the analytics profile.
+ - 9765/tcp # HTTP port for the analytics profile.
+ - 7713/tcp # HTTPS port to publish thrift data in the analytics profile
+ - 7613/tcp # HTTP port to publish thrift data in the analytics profile
+ - 9446/tcp # HTTPS port for the broker profile.
+ - 9766/tcp # HTTP port for the broker profile.
+ - 5228/tcp # Android ports
+ - 5229/tcp
+ - 5230/tcp
+ - 5223/tcp # IOS Ports
+ - 2195/tcp
+ - 2196/tcp
+ - 443/tcp
+
+wso2iot_java_version: 8
+wso2iot_java_impl: openjdk
+wso2iot_memory_size_prct: 0.6
+wso2iot_memory_size: "{{ (ansible_memtotal_mb*wso2iot_memory_size_prct)|int }}M"
+wso2iot_root_dir: "/var/lib"
+wso2iot_install_dir: "{{wso2iot_root_dir}}/{{ wso2iot.subpath }}"
+
+# WSO2 Configs
+wso2iot_hostname: "{{ ansible_default_ipv4.address }}"
+wso2iot_remote_hostname: "{{ wso2iot_hostname }}"
+wso2iot_url: "https://{{ wso2iot_hostname }}:9443"
+
+wso2iot_admin_create: "{% if wso2iot_sso_server is defined %}false{% else %}true{% endif %}"
+wso2iot_admin_user: admin
+wso2iot_admin_pass: "{{ lookup('password', 'credential/wso2 chars=ascii_letters,digit') }}"  # defines xtrabackup password
+
+
+# Clustering
+wso2iot_cluster_enable: "{% if wso2iot_nodes|length > 1 %}true{% else %}false{% endif %}"
+wso2iot_cluster_domain: wso2.am.domain
+wso2iot_manager_nodes: "{{ play_hosts }}"
+wso2iot_worker_nodes: []
+wso2iot_nodes: "{{ wso2iot_manager_nodes  + wso2iot_worker_nodes }}"
+
+# Analytics
+wso2iot_analytics_enable: "{% if wso2iot_analytics_server is defined %}true{% else %}false{% endif %}"
+#wso2iot_analytics_server: localhost
+wso2iot_analytics_user: admin
+wso2iot_analytics_pass: admin
+
+# Logger http output
+#wso2iot_logger_http_server:
+wso2iot_logger_http_port: 8080
+
+# Database configuration
+wso2iot_db_driver: mysql
+wso2iot_db_port: 3306
+wso2iot_db_user: wso2iot
+wso2iot_db_pass: "{{ lookup('password', 'credential/wso2iot_db_pass chars=ascii_letters,digits') }}"
+wso2iot_db_name: wso2iot
+wso2iot_db_remote_host: "{{ wso2iot_db_host }}"
+
+# SSO
+#wso2iot_sso_server: localhost
+wso2iot_sso_enable: "{% if wso2iot_sso_server is defined %}true{% else %}false{% endif %}"
+wso2iot_sso_url: "https://{{ wso2iot_sso_server|default('localhost') }}:9443"

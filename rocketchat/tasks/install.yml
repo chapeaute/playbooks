@@ -1,0 +1,21 @@
+---
+
+- name: main | Install rocketchat dependencies
+  package:
+    name: "{{ rocketchat_dependencies }}"
+
+- name: main | install npm dependencies
+  become: true
+  become_user: "{{ rocketchat_service_name }}"
+  command: npm install
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+  args:
+    creates:  "{{ rocketchat_npm_root_dir }}/node_modules"
+    chdir: "{{ rocketchat_npm_root_dir }}"
+
+- name: main | start rocketchat service
+  service:
+    name: rocketchat
+    state: started
+    enabled: yes

@@ -1,0 +1,454 @@
+---
+- name: docker | Create docker swarm configuration directory
+  file:
+    path:  "{{ docker_swarm_conf_dir }}"
+    state: directory
+    owner: root
+    group: root
+    mode:  0750
+  when: inventory_hostname in ogo_node_manager
+  tags:
+    - config
+
+- name: docker | Create docker swarm configuration subdirectory
+  file:
+    path:  "{{ docker_swarm_conf_dir }}/{{ item }}"
+    state: directory
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - configs
+    - secrets
+  when: inventory_hostname in ogo_node_manager
+  tags:
+    - config
+
+#
+# Prometheus configuration
+#
+- name: docker | Deploy Prometheus configuration file - prometheus.yml
+  include: "docker_prov.yml config_file=prometheus.yml svc=prometheus"
+  when: inventory_hostname in ogo_node_manager
+  tags:
+    - config
+    - version
+
+- name: docker | Create Prometheus local volume directory
+  file:
+    path: "{{ docker_swarm_data_dir }}/prometheus"
+    state: directory
+    owner: "65534"
+    group: "65534"
+    mode:  0750
+  when: inventory_hostname in ogo_node_manager
+
+#
+# Traefikv1 configuration
+#
+- name: docker | Deploy Traefikv1 Manager configuration file - traefik.toml-mgr
+  include: "docker_prov.yml config_file=traefik.toml-mgr svc=traefikmgr"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - traefikv1_enable
+  tags:
+    - config
+    - version
+
+- name: docker | Deploy Traefikv1 Worker configuration file - traefik.toml-wrk
+  include: "docker_prov.yml config_file=traefik.toml-wrk svc=traefikwrk"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - traefikv1_enable
+  tags:
+    - config
+    - version
+
+#
+# Traefikv2 configuration
+#
+- name: docker | Deploy Traefikv2 Manager configuration file - traefikv2.yml-mgr
+  include: "docker_prov.yml config_file=traefikv2.yml-mgr svc=traefikv2mgr"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - traefikv2_enable
+  tags:
+    - config
+    - version
+
+
+- name: docker | Deploy Traefikv2 Worker configuration file - traefikv2.yml-wrk
+  include: "docker_prov.yml config_file=traefikv2.yml-wrk svc=traefikv2wrk"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - traefikv2_enable
+  tags:
+    - config
+    - version
+
+#
+# Traefikv2 admin ogo services (Traefik, Grafana, RabbitMQ, OGO API, Prometheus)
+#
+- name: docker | Deploy Traefikv2 configuration for Ogo admin services
+  include: "docker_prov.yml config_file=traefikv2-svc.yml-mgr svc=traefikv2svcmgr"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - traefikv2_enable
+  tags:
+    - config
+    - version
+
+#
+# Traefikv2 manager tls options
+#
+- name: docker | Deploy Traefikv2 configuration for manager TLS options
+  include: "docker_prov.yml config_file=traefikv2-tls.yml-mgr svc=traefikv2tlsmgr"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - traefikv2_enable
+  tags:
+    - config
+    - version
+
+#
+# Traefikv2 worker tls options
+#
+- name: docker | Deploy Traefikv2 configuration for worker TLS options
+  include: "docker_prov.yml config_file=traefikv2-tls.yml-wrk svc=traefikv2tlswrk"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - traefikv2_enable
+  tags:
+    - config
+    - version
+
+#
+# Traefikv2 server certificat
+#
+- name: docker | Manage Traefikv2 server certificat file
+  include: "docker_prov.yml config_file=traefikv2-cert-file svc=traefikv2certfile ogo_crt_file_content={{ ogo_api_crt_content }}"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - traefikv2_enable
+    - ogo_api_crt_content != ""
+    - ogo_api_key_content != ""
+  tags:
+    - config
+    - version
+
+- name: docker | Manage Traefikv2 server certificat file
+  include: "docker_prov.yml config_file=traefikv2-key-file svc=traefikv2keyfile ogo_key_file_content={{ ogo_api_key_content }}"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - traefikv2_enable
+    - ogo_api_crt_content != ""
+    - ogo_api_key_content != ""
+  tags:
+    - config
+    - version
+
+#
+# Traefik client certificat
+#
+- name: docker | Manage Traefik clients certificats
+  include: "docker_prov.yml config_file=traefik-cli-cert svc=traefikclicert idx=idx ogo_cli_crt_content={{ lookup('file', item | default('/dev/null')) }}"
+  with_items:
+    - "{{ ogo_cli_crt_files }}"
+  loop_control:
+    index_var: idx
+  when:
+    - inventory_hostname in ogo_node_manager
+  tags:
+    - config
+    - version
+
+#
+# RabbitMQ configuration
+#
+- name: docker | Deploy RabbitMQ configuration file - rabbitmq.enabledplugins
+  include: "docker_prov.yml config_file=rabbitmq.enabledplugins svc=rabbitmqplugins"
+  when:
+    - rabbitmq_enable
+    - inventory_hostname in ogo_node_manager
+  tags:
+    - config
+    - version
+
+#
+# Redis configuration
+#
+- name: docker | Deploy Redis configuration file - redis.conf
+  include: "docker_prov.yml config_file=redis.conf svc=redis"
+  when:
+    - redis_enable
+    - inventory_hostname in ogo_node_manager
+  tags:
+    - config
+
+- name: docker | Create Redis local volume directory
+  file:
+    path: "{{ docker_swarm_data_dir }}/redis"
+    state: directory
+    owner: "999"
+    group: "999"
+    mode:  0750
+
+#
+# Grafana configuration
+#
+- name: docker | Deploy Grafana configuration file - grafana.ini
+  include: "docker_prov.yml config_file=grafana.ini svc=grafana"
+  when: inventory_hostname in ogo_node_manager
+  tags:
+    - config
+
+- name: docker | Create Grafana local volume directory
+  file:
+    path:  "{{ docker_swarm_data_dir }}/grafana"
+    state: directory
+    owner: "472"
+    group: "472"
+    mode:  0750
+  when: inventory_hostname in ogo_node_manager
+
+#
+# ModSecurity configuration
+#
+- name: docker | Create ModSecurity local volume directory
+  file:
+    path:  "{{ docker_swarm_data_dir}}/modsecurity/rules"
+    state: directory
+    owner: root
+    group: root
+    mode:  0750
+  when: modsecurity_enable
+
+- name: docker | Copy ModSecurity rules files
+  synchronize:
+    src:       var/lib/docker-volumes/modsecurity/rules/
+    dest:      "{{ docker_swarm_data_dir }}/modsecurity/rules/"
+    recursive: yes
+    archive:   no
+    times:     yes
+    use_ssh_args: yes
+  when: modsecurity_enable
+  tags:
+    - modsecurity
+
+- name: docker | Deploy ModSecurity Apache proxy configuration file - httpd-proxy.conf
+  include: "docker_prov.yml config_file=httpd-proxy.conf svc=modsec"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - modsecurity_enable
+  tags:
+    - config
+
+#
+# Etcd configuration
+#
+- name: docker | Create Etcd local volume directory
+  file:
+    path:  "{{ docker_swarm_data_dir}}/etcd"
+    state: directory
+    owner: root
+    group: root
+    mode:  0750
+
+#
+# Ogo Proxy configuration file
+# 
+- name: docker | Deploy Ogo Manager environement file - setenv.sh-mgr
+  include: "docker_prov.yml config_file=setenv.sh-mgr svc=ogoproxymgr"
+  when: inventory_hostname in ogo_node_manager
+  tags:
+    - config
+
+- name: docker | Deploy Ogo Worker environement file - setenv.sh-wrk
+  include: "docker_prov.yml config_file=setenv.sh-wrk svc=ogoproxywrk"
+  when: inventory_hostname in ogo_node_manager
+  tags:
+    - config
+
+- name: docker | Deploy Ogo Manager properties file - proxy_ogo.prop-mgr
+  include: "docker_prov.yml config_file=proxy_ogo.prop-mgr svc=ogoproxypropmgr"
+  when: inventory_hostname in ogo_node_manager
+  tags:
+    - config
+
+- name: docker | Deploy Ogo Worker properties file - proxy_ogo.prop-wrk
+  include: "docker_prov.yml config_file=proxy_ogo.prop-wrk svc=ogoproxypropwrk"
+  when: inventory_hostname in ogo_node_manager
+  tags:
+    - config
+
+- name: docker | Deploy Logstash certificat file - logstash.crt
+  include: "docker_prov.yml config_file=logstash.crt svc=logstash_crt"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - logstash_crt_content != "" and logstash_key_content != ""
+  tags:
+    - config
+
+- name: docker | Deploy Logstash key file - logstash.key
+  include: "docker_prov.yml config_file=logstash.key svc=logstash_key"
+  when:
+    - inventory_hostname in ogo_node_manager
+    - logstash_crt_content != "" and logstash_key_content != ""
+  tags:
+    - config
+
+#
+# Docker compose configuration
+#
+- name: docker | Generate docker-compose.yml
+  template:
+    src:  "etc/docker-swarm/{{ item }}.j2"
+    dest: "{{ docker_swarm_conf_dir }}/{{ item }}"
+    owner: root
+    group: root
+    mode:  0640
+  with_items:
+    - docker-compose.yml
+  when: inventory_hostname in ogo_node_manager
+  tags:
+    - config
+    - version
+
+#
+# Login to docker registry
+#
+- name: docker | Login to docker registry
+  docker_login:
+    registry: "{{ docker_registry_host }}"
+    username: "{{ docker_registry_user }}"
+    password: "{{ docker_registry_pass }}"
+    email:    "{{ docker_registry_mail | default() }}"
+    reauthorize: yes
+  changed_when: False
+  when: docker_registry_user is defined
+  tags:
+    - always
+    - docker_registry
+    - version
+
+#
+# Pull docker images
+#
+- name: docker | Pull common docker images
+  docker_image:
+    name: "{{ item }}"
+    source: pull
+  with_items:
+    - "{{ etcd_opts.image }}"
+    - "{{ traefik_opts.image }}"
+    - "{{ traefikv2_opts.image }}"
+    - "{{ redis_opts.image }}"
+    - "{{ rabbitmq_opts.image }}"
+    - "{{ prometheus_opts.image }}"
+    - "{{ grafana_opts.image }}"
+    - "{{ nodeexporter_opts.image }}"
+    - "{{ dockerexporter_opts.image }}"
+  tags:
+    - config
+    - version
+    - image
+
+- name: docker | Pull modsecurity docker image
+  docker_image:
+    name: "{{ item }}"
+    source: pull
+  with_items:
+    - "{{ modsecurity_opts.image }}"
+  when:
+    - modsecurity_enable
+  tags:
+    - config
+    - version
+    - image
+
+- name: docker | Pull manager ogo docker images
+  docker_image:
+    name: "{{ proxy_mgr_opts.image }}"
+    source: pull
+  delegate_to: "{{ item }}"
+  with_items: "{{ ogo_node_manager }}"
+  run_once: true
+  tags:
+    - config
+    - version
+    - image
+
+- name: docker | Pull worker ogo docker images
+  docker_image:
+    name: "{{ proxy_wrk_opts.image }}"
+    source: pull
+  delegate_to: "{{ item }}"
+  with_items: "{{ ogo_node_worker }}"
+  run_once: true
+  tags:
+    - config
+    - version
+    - image
+
+- name: "Docker Swarm Deploy"
+  command: "docker stack deploy --prune --with-registry-auth -c {{ docker_swarm_conf_dir }}/docker-compose.yml {{ docker_swarm_stack_name }}"
+  when:
+    - docker_compose_auto_deploy
+    - inventory_hostname == ogo_node_manager[0]
+
+#
+# Waiting all node are update to last version
+#
+- name: docker | Waiting all node are update to version {{ ogo_proxy_version }}
+  command: "/usr/local/sbin/swarm-update-remaining {{ ogo_proxy_version }}"
+  register: update_version
+  check_mode: no
+  when: inventory_hostname in ogo_node_manager
+
+- name: docker | Print ogo instance version
+  debug:
+    msg: "{{ update_version.stdout }}"
+  when: inventory_hostname in ogo_node_manager
+
+
+#
+# Node manager expose port
+#
+- name: docker | Expose port to public on Manager
+  firewalld:
+    port:      "{{ item }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items: "{{ node_manager_expose_port }}"
+  when: inventory_hostname in ogo_node_manager
+
+#
+# Node worker expose port
+#
+- name: docker | Expose port to public on Worker
+  firewalld:
+    port:      "{{ item }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items: "{{ node_worker_expose_port }}"
+  when: inventory_hostname in ogo_node_worker
+
+#
+# Crontab to prune unused containers and volumes
+#
+- name: docker | Install chronic package
+  package:
+    name: moreutils
+
+- name: docker | Crontab to prune unused containers and volumes
+  cron:
+    name:   "Prune unused containers and volumes "
+    hour:   "7"
+    minute: "0"
+    job:    "chronic /usr/local/sbin/swarm-images-purge ; chronic docker container prune -f ; chronic docker volume prune -f"
+  when: docker_crontab_prune
+  tags:
+    - crontab
+    - script

@@ -1,0 +1,9 @@
+# v1.0
+---
+- hosts: etcd
+  vars:
+    etcd_hosts: "{{ play_hosts }}"
+    etcd_data_dir: /var/lib/etcd
+    etcd_bind_interface: eth0
+  roles:
+  - role: etcd

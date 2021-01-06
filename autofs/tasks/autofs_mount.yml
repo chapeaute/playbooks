@@ -1,0 +1,28 @@
+---
+
+- name: Autofs mount | Create auto mount
+  file:
+    path: "{{autofs_masters_dir}}/{{map}}.autofs"
+    state: "{{ params.state|default('touch') }}"
+
+- name: Autofs mount | Create auto mount
+  file:
+    path: "{{autofs_maps_dir}}/{{map}}.autofs"
+    state: "{{ params.state|default('touch') }}"
+
+- name: Autofs mount | Create map file "{{map}}.autofs""
+  lineinfile:
+    line: "{{ params.mount_point }} {{ params.mount_options|default(autofs_default_mount_options) }} {{ params.url }}"
+    path: "{{autofs_maps_dir}}/{{map}}.autofs"
+    state: "{{ params.state|default('present') }}"
+    regexp: "^{{ params.mount_point }}"
+  notify: restart autofs
+  when: params.state|default('present') != "absent"
+
+- name: Autofs mount | Create master file
+  lineinfile:
+    line: "/- {{autofs_maps_dir}}/{{map}}.autofs {{ params.master_options|default(autofs_default_master_options) }}"
+    path: "{{autofs_masters_dir}}/{{map}}.autofs"
+    state: "{{ params.state|default('present') }}"
+  notify: restart autofs
+  when: params.state|default('present') != "absent"

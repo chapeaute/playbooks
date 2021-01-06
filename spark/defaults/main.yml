@@ -1,0 +1,37 @@
+---
+
+java_home: /usr/lib/jvm/jre-openjdk'
+# Global vars
+jolokia_port: 8778
+jolokia_version: 1.6.2
+
+# defaults file for spark
+spark_service_name: spark
+spark_version: 2.4.7
+spark_hadoop_version: 2.7
+
+spark:
+  source_url: "http://archive.apache.org/dist/spark/spark-{{spark_version}}/spark-{{spark_version}}-bin-hadoop{{spark_hadoop_version}}.tgz"
+  subpath: "spark-{{spark_version}}-bin-hadoop{{spark_hadoop_version}}"
+spark_java_version: 8
+spark_java_impl: openjdk
+spark_root_dir: "{{ spark_default_root_dir }}"
+spark_hostname: "{{ ansible_fqdn }}"
+
+# defaults
+spark_masters: ["{{ ansible_fqdn }}"]
+spark_worker_cleanup_interval: 1800
+spark_worker_cleanup_appdata_ttl: 86400
+spark_use_hadoop: false
+spark_master_port: 8081
+spark_worker_port: 8082
+
+# Zookeeper
+# spark_zk_hosts: "{{ spark_masters }}"
+spark_zk_port: 2181
+spark_zk_dir: /spark
+
+# Monitoring
+spark_enable_monitoring: false
+spark_jolokia_version: "{{ jolokia_version }}"
+spark_jolokia_port: "{{ jolokia_port }}"

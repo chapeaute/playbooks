@@ -1,0 +1,18 @@
+---
+
+# Name of the file where the server monitor will store its log messages.
+newrelic_daemon_logfile: /var/log/newrelic/nrsysmond.log
+# Level of detail you want in the log file
+newrelic_daemon_loglevel: info
+# use default hostname, set a value to override the default hostname
+newrelic_daemon_override_hostname:
+# proxy server to use (i.e. proxy-host:8080)
+newrelic_daemon_proxy:
+# start on boot
+newrelic_service_enabled: false
+# current state: started, stopped
+newrelic_service_state: stopped
+# start on boot
+newrelic_daemon_service_enabled: true
+# current state: started, stopped
+newrelic_daemon_service_state: started

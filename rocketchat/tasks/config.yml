@@ -1,0 +1,46 @@
+---
+
+
+- name: config | Create mongodb rocketchat user and database
+  mongodb_user:
+    login_user: "{{ mongodb_admin_user }}"
+    login_password: "{{ mongodb_admin_pass }}"
+    login_database: admin
+    database: "{{ rocketchat_db_name }}"
+    name: "{{ rocketchat_db_user }}"
+    password: "{{ rocketchat_db_pass }}"
+    roles: readWrite
+    state: present
+    update_password: on_create
+
+- name: config | Configure proxy WebSockket
+  template:
+    src:  etc/httpd/conf.d/custom/rocketchat.conf.j2
+    dest: "{{ apache2_confd_custom_dir }}/rocketchat.conf"
+  notify: "Reload Apache"
+
+- name: main | Check if bundle directory exists
+  stat:
+    path: "{{ rocketchat_root_dir }}/bundle"
+  register: data_dir
+
+- name: main | "Move bundle to rocket.chat-{{ rocketchat_version }}"
+  shell: "mv {{ rocketchat_root_dir }}/bundle {{ rocketchat_full_dir }}"
+  when:
+  - data_dir.stat is defined
+  - data_dir.stat.isdir is defined
+  - data_dir.stat.isdir
+
+- name: main | Create a symbolic link to not break generic-service
+  file:
+    src: "{{ rocketchat_full_dir }}"
+    dest:  "{{ rocketchat_root_dir }}/bundle"
+    state: link
+    force: true
+
+- name: config | Create symlink from {{ rocketchat_defaut_root_dir }}/rocketchat to {{ rocketchat_root_dir }}/rocketchat
+  file:
+    state: link
+    src:   "{{ rocketchat_root_dir }}/rocketchat"
+    dest:  "{{ rocketchat_defaut_root_dir }}/rocketchat"
+  when: rocketchat_root_dir != rocketchat_default_root_dir

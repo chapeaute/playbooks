@@ -1,0 +1,34 @@
+---
+
+# Include per-environment variables
+- name: Include per-environment variables
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: "main | Launch {{ ansible_os_family }} tasks"
+  include_tasks: "{{ ansible_os_family }}.yml"
+
+- import_tasks: install.yml
+  tags: install
+
+- import_tasks: config.yml
+  tags: config
+
+- import_tasks: facts.yml
+
+- import_tasks: firewall.yml
+  tags:
+    - config
+    - firewall
+
+- import_tasks: service.yml
+  tags: service

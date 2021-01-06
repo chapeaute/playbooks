@@ -1,0 +1,18 @@
+# v1.0
+---
+- hosts: redis-cluster
+  vars:
+    net_itf:  "eth0"
+    vip_cidr: "10.2.7.44/24"
+    redis_memory_prct: 0.8
+  roles:
+    - role: redis
+      tags: redis
+      redis_setting_maxmemory_prct: "{{ redis_memory_prct }}"
+    - role: pacemaker
+      tags: pacemaker
+      pcmk_hosts: "{{ play_hosts }}"
+      pcmk_vip_rsc:
+        - interface: "{{ net_itf }}"
+          address: "{{ vip_cidr.split('/')[0] }}"
+          netmask: "{{ vip_cidr.split('/')[1] }}"

@@ -1,0 +1,17 @@
+---
+- name : redhat | Set INPUT firewalld rules
+  shell: "firewall-cmd --direct --permanent --add-rule ipv4 filter INPUT 0 --in-interface {{ item.value.interface }} --destination 224.0.0.18 --protocol vrrp -j ACCEPT"
+  with_dict: "{{ keepalived_vrrp_instance }}"
+  changed_when: true
+  notify:
+    - restart firewalld
+
+- name : redhat | Set OUTPUT firewalld rules
+  shell: "firewall-cmd --direct --permanent --add-rule ipv4 filter OUTPUT 0 --out-interface {{ item.value.interface }} --destination 224.0.0.18 --protocol vrrp -j ACCEPT"
+  with_dict: "{{ keepalived_vrrp_instance }}"
+  changed_when: true
+  notify:
+    - restart firewalld
+
+- include: selinux.yml
+  when: ansible_selinux is defined and ansible_selinux.status == "enabled"

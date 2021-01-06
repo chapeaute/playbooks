@@ -1,0 +1,21 @@
+---
+- name: playbook | Create user
+  hosts: all
+  tasks:
+   - name: playbook | Create groups
+     group:
+      name: dev
+      state: present
+
+   - name: playbook | Create user 
+     user: 
+      name: "{{ user_name }}"  
+      shell: /bin/bash
+      groups: dev
+      append: yes
+
+   - name: playbook | Deploy user key 
+     authorized_key:
+      user:  "{{ user_name }}"
+      state: present
+      key: "{{ lookup('file', '/home/{{ user_name }}/.ssh/authorized_keys') }}"

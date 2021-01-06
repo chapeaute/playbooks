@@ -1,0 +1,23 @@
+conn {{ tunnel.name }}:
+{% set params = ipsec_default_params|combine(tunnel.params| default({}))  %}
+{% for key,value in params.iteritems() %}
+  {{ key }}={{ value }}
+{% endfor %}
+{% for host in ipsec_hosts %}
+{% if host == ansible_fqdn %}
+{% if  hostvars[host]['ipify_public_ip'] not in ansible_all_ipv4_addresses  %}
+  leftid={{ hostvars[host]['ipify_public_ip'] }}
+{% endif %}
+{% else %}
+  right={{ hostvars[host]['ipify_public_ip'] }}
+{% endif %}
+{% endfor %}
+{% for subnet in tunnel.subnets %}
+{% if ansible_all_ipv4_addresses | ipaddr(subnet) %}
+  leftsubnet={{ subnet }}
+  left={{ ansible_default_ipv4.address }}
+  leftsourceip={{  ansible_all_ipv4_addresses | ipaddr(subnet) | first }}
+{% else %}
+  rightsubnet={{ subnet }}
+{% endif %}
+{% endfor %}

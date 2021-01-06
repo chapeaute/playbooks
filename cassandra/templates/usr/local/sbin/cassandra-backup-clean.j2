@@ -1,0 +1,44 @@
+#!/bin/bash
+
+# Append custom script to path
+PATH=$PATH:/usr/local/sbin:/usr/bin:/usr/sbin
+
+
+BACKUP_DIR={{ cassandra_path_backup }}
+BACKUP_AGE="{{ cassandra_backup_age }}"
+# Backup max retention (1200 = 20h)
+ROTATE_MIN=1200
+
+function syntax() {
+    cat <<EOF
+Script to purge Cassandra dump.
+
+Usage: ${0##*/} [-h|-o <days>]
+    -h           Display this message
+    -o <days>    Purge dump older than n days. If not specified, purge all dump.
+EOF
+}
+
+while getopts "ho:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        o)
+            BACKUP_AGE="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+# Deleting old backups and keeping 1 log
+echo "Removing following backup:"
+rm -f $BACKUP_DIR/backupdb-*.tar.gz
+find $BACKUP_DIR/ -regex "${BACKUP_DIR}/backupdb-.*.log" -type f -mmin +$ROTATE_MIN -print -exec rm -f {} \; 2>&1
+
+exit $?

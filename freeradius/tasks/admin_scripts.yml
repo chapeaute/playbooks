@@ -1,0 +1,56 @@
+---
+- name: admin_scripts | Deploy admin scripts
+  copy:
+    src:  "usr/local/sbin/{{ item }}"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - freeradius-auth
+    - freeradius-checklog
+    - freeradius-debug
+    - freeradius-acct-start
+    - freeradius-acct-stop
+    - freeradius-acct-update
+  tags:
+    - script
+
+- name: admin_scripts | Deploy exemple acct and auth file
+  copy:
+    src:  "usr/local/sbin/{{ item }}"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0640
+    force: no
+  with_items:
+    - auth.txt
+    - acct_start.txt
+    - acct_stop.txt
+    - acct_update.txt
+
+- name: admin_scripts | Install multitail
+  package:
+    name:  multitail
+    state: installed
+  tags:
+    - script
+
+- name: admin_scripts | Deploy multitail configuration
+  copy:
+    src:  etc/multitail/freeradius.conf
+    dest: /etc/multitail/freeradius.conf
+    owner: root
+    group: root
+    mode: 0640
+  tags:
+    - script
+
+- name: admin_scripts | Add include config file in multitail
+  lineinfile:
+    dest:   /etc/multitail.conf
+    regexp: include:/etc/multitail/freeradius.conf
+    line:   include:/etc/multitail/freeradius.conf
+  tags:
+    - script

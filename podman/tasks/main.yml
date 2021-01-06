@@ -1,0 +1,33 @@
+---
+
+- name: Include per-environment variables
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"           # CentOS-6.5
+        - "{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml"              # RedHat-6.5
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"     # CentOS-6
+        - "{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"        # RedHat-6
+        - "{{ ansible_distribution }}.yml"                                              # CentOS
+        - "{{ ansible_os_family }}.yml"                                                 # RedHat
+        - "main.yml"
+      paths: "../vars"
+
+
+- name: main | Install podman
+  package:
+    name: podman
+
+- name: main | set containers storage directory
+  lineinfile:
+    path: /etc/containers/storage.conf
+    regexp: '^graphroot'
+    line: "graphroot = '{{ podman_data_dir }}'"
+
+- name: main | pull container image
+  tags: image
+  podman_image:
+    name: "{{ item }}"
+  with_items:
+    - "{{ podman_images }}"
+

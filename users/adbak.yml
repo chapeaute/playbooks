@@ -1,0 +1,13 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users_groups: 
+        - name: tomcat
+        - name: dev
+      users:
+        - login: adbak
+          groups: ['tomcat','dev']
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDVI9LS2slP4shCL20PmxmT3DEAiNf/qsFMkjbOwQKF6INjFnTx+xeYg0o1OcpXj6FObHMbA7eXkdgjrVPYzNRhFdH8OiMDZvc3/traCzPnWzK9Z9t4WKsShjGXCTfRfbEjNj7S0eXaBa7kukij8S1FDbWefeT5kcwo4admmM8MS1VxPymBOT8ExYMGL7FrIXZjaUQ5HJOQaFMdZHtJsI54clBTrwlft7sphjWye9MkquuWuGB3Y7dE9b47dH5cityUeehtWB9c31fnmenf+T0452KmQnj6pDGoLvWbTdD5o0Pb4NUz0iPBGvwmI3m8euBJZALun6FiE+2d5eY6Z8ftGPGd2iRVIsX7syySnDUS3TcYfgTCm4bBJM9q98yIOwaMXtk9Jr1YubHlYIFBYahK2rJeG9bTD3gp6sMNQLQTuCaGO2vRxxKcA1Oxte9gtPxDgajU5VMPybXDTD/jb+04nJXnwIxmJ38Slt/71XiX/ml6Ctz57mc6F5jEPQL2Kk/KEJ7roURiScuV/bCkDOqkzhFCLfnfgFWfX891/C++/ZWeIxCzTA0U/vIfOcKfQzz8xPy0VDRfp+ywT3Q1l+ZD6+jeBakF/ojCG1iq9ahGb6ewNS4Geozf5Hp5BReMGc8dPhdD9swdsFIRxq7ybbjQZG1R+tD7pFCz1RHv1dUHHQ== adama.bakayoko@smile.ci

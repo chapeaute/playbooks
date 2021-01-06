@@ -1,0 +1,14 @@
+---
+
+- name: monitoring | Adding monitoring db user to access databases stats
+  mongodb_user:
+    login_user: "{{ mongodb_admin_user }}"
+    login_password: "{{ mongodb_admin_pass }}"
+    login_database: admin
+    database: admin
+    name: "{{ mongodb_nagios_user }}"
+    password: "{{ mongodb_nagios_pass }}"
+    roles: [ { role: "backup", db: "admin" },  { role: "clusterMonitor", db: "admin" }, { role: "read", db: "admin" }, { role: "read", db: "local" } ]
+    state: present
+    update_password: always
+  changed_when: false

@@ -1,0 +1,8 @@
+---
+- hosts: all
+  roles:
+    - role: packetbeat
+      pb_version: "7.0"
+      #pb_kafka_hosts: "{{ groups['kafka'] }}"
+      #pb_logstash_hosts: "{{ groups['logstash'] }}"
+      #pb_es_hosts: "{{ groups['elasticsearch'] }}"

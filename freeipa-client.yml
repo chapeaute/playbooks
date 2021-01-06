@@ -1,0 +1,10 @@
+# v1.0
+---
+- hosts: freeipa-client
+  vars:
+    main_interface: eth1
+    freeipa_domain: labs.lan
+    freeipa_admin_pass: sigipsr.
+    freeipa_hosts: "{{ groups['freeipa-server'] }}"
+  roles:
+    - freeipa-client

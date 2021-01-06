@@ -1,0 +1,81 @@
+---
+
+- name: config | Create CIS configuration file
+  copy:
+    content: "[mysqld]"
+    dest:    "{{ mysql_conf_cis }}"
+    owner:   root
+    group:   root
+    mode:    0644
+    force:   no
+  when: security_level >= 1
+
+- name: config | Force skip-grant-tables to False
+  lineinfile:
+    dest:   "{{ mysql_conf_cis }}"
+    regexp: '{{ item.key }}.*=.*'
+    line:   '{{ item.key }} = {{ item.value }}'
+  with_items:
+    - key:   skip-grant-tables
+      value: FALSE
+  when: security_level >= 1
+
+- name: config | Force local-infile to 0
+  lineinfile:
+    dest:   "{{ mysql_conf_cis }}"
+    regexp: '{{ item.key }}.*=.*'
+    line:   '{{ item.key }} = {{ item.value }}'
+  with_items:
+    - key:   local-infile
+      value: 0
+  when: security_level >= 1
+
+- name: config | Force skip_symbolic_links to TRUE
+  lineinfile:
+    dest:   "{{ mysql_conf_cis }}"
+    regexp: '{{ item.key }}.*=.*'
+    line:   '{{ item.key }} = {{ item.value }}'
+  with_items:
+    - key:   skip_symbolic_links
+      value: TRUE
+  when: security_level >= 1
+
+- name: config | Enforce password policy
+  lineinfile:
+    dest:   "{{ mysql_conf_cis }}"
+    regexp: '{{ item.key }}.*=.*'
+    line:   '{{ item.key }} = {{ item.value }}'
+    state: "{{ security_mariadb_password_check | ternary('present', 'absent')  }}"
+  with_items:
+    - key: plugin_load_add
+      value: simple_password_check
+    - key: simple_password_check_digits
+      value: "{{ security_mariadb_password_minimal_digits }}"
+    - key: simple_password_check_letters_same_case
+      value: "{{ security_mariadb_password_minimal_same_case }}"
+    - key:  simple_password_check_other_characters
+      value: "{{ security_mariadb_password_minimal_special_chars }}"
+    - key: simple_password_check_minimal_length
+      value: "{{ security_mariadb_password_minimal_length }}"
+    - key: strict_password_validation
+      value: "{{ security_mariadb_password_strict }}"
+  when: security_level >= 2
+  notify: "Restart MariaDB"
+
+- name: config | Enforce ssl policy
+  lineinfile:
+    dest:   "{{ mysql_conf_cis }}"
+    regexp: '{{ item.key }}.*=.*'
+    line:   '{{ item.key }} = {{ item.value }}'
+    state: "{{ security_mariadb_ssl | ternary('present', 'absent')  }}"
+  with_items:
+    - key: ssl
+      value: "{{ security_mariadb_ssl }}"
+    - key: ssl-cert
+      value: "{{ security_mariadb_ssl_cert_path | default(ssl_certs_cert_path) }}"
+    - key: ssl-key
+      value: "{{ security_mariadb_ssl_key_path | default(ssl_certs_privkey_path) }}"
+    - key : require_secure_transport
+      value: "{{ security_mariadb_ssl_require | bool | ternary('ON', 'OFF') }}"
+  when: security_level >= 2
+  notify: "Restart MariaDB"

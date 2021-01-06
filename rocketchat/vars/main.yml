@@ -1,0 +1,3 @@
+---
+# vars file for rocketchat
+rocketchat_default_root_dir: /var/lib

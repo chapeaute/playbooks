@@ -1,0 +1,113 @@
+---
+- name: deploy | Create new cluster and Register monitor node
+  shell: "ceph-deploy new {{ ceph_mon_hosts | join(' ') }} && touch ~{{ ceph_user }}/deploy_new_success"
+  become:      yes
+  become_user: "{{ ceph_user }}"
+  args:
+    chdir:     "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster"
+    creates:   "~{{ ceph_user }}/deploy_new_success"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+
+- name: deploy | Declare public and cluster network in ceph.conf
+  ini_file:
+    path:    "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster/ceph.conf"
+    section: global
+    option:  "{{ item.key }}"
+    value:   "{{ item.value }}"
+  with_items:
+    - key:   "public network"
+      value: "{{ (hostvars[inventory_hostname]['ansible_' + ceph_public_itf]['ipv4']['network'] +'/'+ hostvars[inventory_hostname]['ansible_' + ceph_public_itf]['ipv4']['netmask']) | ipaddr('net') }}"
+    - key:   "cluster network"
+      value: "{{ (hostvars[inventory_hostname]['ansible_' + ceph_cluster_itf]['ipv4']['network'] +'/'+ hostvars[inventory_hostname]['ansible_' + ceph_cluster_itf]['ipv4']['netmask']) | ipaddr('net') }}"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+
+- name: deploy | Deploy ceph {{ ceph_version }} on Controller, Monitor and OSD nodes
+  shell: "ceph-deploy install --release {{ ceph_version }} {{ (ceph_ctl_hosts + ceph_mon_hosts + ceph_osd_hosts) | join(' ') }} && touch ~{{ ceph_user }}/deploy_install_success"
+  become:      yes
+  become_user: "{{ ceph_user }}"
+  args:
+    chdir:     "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster"
+    creates:   "~{{ ceph_user }}/deploy_install_success"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+
+- name: deploy | Initialize Monitor nodes
+  shell: "ceph-deploy mon create-initial && touch ~{{ ceph_user }}/deploy_moninit_success"
+  become:      yes
+  become_user: "{{ ceph_user }}"
+  args:
+    chdir:     "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster"
+    creates:   "~{{ ceph_user }}/deploy_moninit_success"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+
+- name: deploy | Copy configuration files and admin key on Controller, Monitor and OSD nodes
+  shell: "ceph-deploy admin {{ (ceph_ctl_hosts + ceph_mon_hosts + ceph_osd_hosts) | join(' ') }} && touch ~{{ ceph_user }}/deploy_admin_success"
+  become:      yes
+  become_user: "{{ ceph_user }}"
+  args:
+    chdir:     "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster"
+    creates:   "~{{ ceph_user }}/deploy_admin_success"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+
+- name: deploy | Deploy manager service on Monitor nodes
+  shell: "ceph-deploy mgr create {{ ceph_mon_hosts | join(' ') }} && touch ~{{ ceph_user }}/deploy_mgr_success"
+  become:      yes
+  become_user: "{{ ceph_user }}"
+  args:
+    chdir:     "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster"
+    creates:   "~{{ ceph_user }}/deploy_mgr_success"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+
+- name: deploy | Destroy existing data and filesystem on LV or partition on ceph disk device on OSD nodes
+  include: "osd.yml device={{ dev }} osd_hosts={{ ceph_osd_hosts }}"
+  loop_control:
+    loop_var: dev
+  with_items:
+    - "{{ ceph_osd_devices }}"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+
+- name: deploy | Deploy metadata service on OSD nodes (required by CephFS)
+  shell: "ceph-deploy mds create {{ ceph_osd_hosts | join(' ') }} && touch ~{{ ceph_user }}/deploy_mds_success"
+  become:      yes
+  become_user: "{{ ceph_user }}"
+  args:
+    chdir:     "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster"
+    creates:   "~{{ ceph_user }}/deploy_mds_success"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+    - ceph_fs_enable
+
+- name: deploy | Deploy rados gateway service on OSD nodes (required by Ceph Object Store)
+  shell: "ceph-deploy install --release {{ ceph_version }} --rgw {{ ceph_osd_hosts | join(' ') }} && touch ~{{ ceph_user }}/deploy_rgwinstall_success"
+  become:      yes
+  become_user: "{{ ceph_user }}"
+  args:
+    chdir:     "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster"
+    creates:   "~{{ ceph_user }}/deploy_rgwinstall_success"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+    - ceph_radgw_enable
+
+- name: deploy | Create Ceph Object Gateway instance on OSD nodes
+  shell: "ceph-deploy rgw create {{ ceph_osd_hosts | join(' ') }} && touch ~{{ ceph_user }}/deploy_rgwcreate_success"
+  become:      yes
+  become_user: "{{ ceph_user }}"
+  args:
+    chdir:     "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster"
+    creates:   "~{{ ceph_user }}/deploy_rgwcreate_success"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+    - ceph_radgw_enable
+
+- name: deploy | Create Rados Gateway admin user
+  shell: "radosgw-admin user create --uid={{ ceph_radgw_useradm }} --display-name='RADOS Gateway Admin' --system"
+  when:
+    - inventory_hostname == ceph_osd_hosts[0]
+    - ceph_radgw_enable
+

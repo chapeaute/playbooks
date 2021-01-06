@@ -1,0 +1,53 @@
+---
+- name: ssl | Verify if client store exists
+  tags:
+    - config
+    - config_ssl
+  stat:
+    path: "{{ wso2_generic_keystores_path }}/client-truststore.jks"
+  register: wso2_truststore_file
+
+- name: ssl | Copy client trust store
+  tags:
+    - config
+    - config_ssl
+    - config_truststore
+  copy:
+    src: "client-truststore.jks"
+    dest: "{{ wso2_generic_keystores_path }}/client-truststore.jks"
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+    mode: 0640
+  register: wso2_truststore_copied
+  when: wso2_truststore_file.stat.exists is defined and not wso2_truststore_file.stat.exists
+
+- name: ssl | Change client trust store password
+  tags:
+    - config
+    - config_ssl
+    - config_truststore
+  shell: "keytool -storepasswd -storepass wso2carbon -new {{ wso2_generic_truststore_pass }} -keystore {{ wso2_generic_keystores_path }}/client-truststore.jks"
+  when:
+    - wso2_truststore_copied is changed
+    - not wso2_generic_use_default_jks | bool
+
+- name: ssl | Import wso2carbon.jks into client-truststore
+  tags: config_ssl
+  shell: "keytool -importkeystore -srckeystore {{ wso2_generic_keystores_path }}/wso2carbon.jks  -destkeystore {{ wso2_generic_keystores_path }}/client-truststore.jks -srcstoretype jks -deststoretype jks -srcstorepass {{ wso2_generic_keystore_pass }} -deststorepass {{ wso2_generic_truststore_pass }} -noprompt"
+  when:
+    - wso2_truststore_copied is changed
+    - not wso2_generic_use_default_jks | bool
+
+- name: ssl | link old store to new
+  tags:
+    - config
+    - config_ssl
+  file:
+    src: "{{ wso2_generic_keystores_path }}/{{ item }}"
+    dest: "{{ wso2_generic_install_dir }}/repository/resources/security/{{ item }}"
+    state: link
+    force: yes
+  with_items:
+    - wso2carbon.jks
+    - client-truststore.jks
+  when: not wso2_generic_use_default_jks | bool

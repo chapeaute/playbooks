@@ -1,0 +1,9 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+        echo "This scripts delete backups older than ( now - time)"
+        echo "Example: ${0##*/} 4m"
+        exit 1
+fi
+
+su - zimbra -c "zmbkpose -d ${1}"

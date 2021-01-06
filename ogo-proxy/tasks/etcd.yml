@@ -1,0 +1,120 @@
+---
+- name: etcd | Deploy pip requirements
+  package:
+    name: jq
+
+#- name: etcd | Deploy etcd librairie
+#  pip:
+#    name: etcd3
+
+#- name: etcd | Wait for Etcd service to start
+#  wait_for:
+#    host: 127.0.0.1
+#    port: 2379
+
+- name: etcd | Filebeat - provision Etcd clustername
+  include: "etcd_prov.yml key={{ filebeat_clustername_key }} val={{ ogo_cluster_name }}"
+
+- name: etcd | Filebeat - provision Etcd log files
+  include: "etcd_prov.yml key={{ filebeat_logfiles_key }}/{{ item | regex_replace('/','_') }} val={{ item }}"
+  with_items:
+    - "{{ filebeat_logfiles }}"
+
+- name: etcd | Filebeat - remove Etcd log files
+  include: "etcd_prov.yml key={{ filebeat_logfiles_key }}/{{ item | regex_replace('/','_') }} val='' state=absent"
+  with_items:
+    - "{{ filebeat_logfiles_del }}"
+
+- name: etcd | Filebeat - provision Etcd log exceptions
+  include: "etcd_prov.yml key={{ filebeat_logexceptions_key }}/{{ item | regex_replace('/','_') }} val={{ item }}"
+  with_items:
+    - "{{ filebeat_logexceptions }}"
+
+- name: etcd | Filebeat - remove Etcd log exceptions
+  include: "etcd_prov.yml key={{ filebeat_logexceptions_key }}/{{ item | regex_replace('/','_') }} val='' state=absent"
+  with_items:
+    - "{{ filebeat_logexceptions_del }}"
+
+- name: etcd | Filebeat - provision Etcd log hosts
+  include: "etcd_prov.yml key={{ filebeat_loghosts_key }}/{{ item }} val={{ item }}"
+  with_items:
+    - "{{ filebeat_loghosts }}"
+
+- name: etcd | Filebeat - remove Etcd log hosts
+  include: "etcd_prov.yml key={{ filebeat_loghosts_key }}/{{ item }} val={{ item }} state=absent"
+  with_items:
+    - "{{ filebeat_loghosts_del }}"
+
+- name: etcd | Filebeat - set Etcd certificat and key path
+  include: "etcd_prov.yml key={{ item.k }} val={{ item.v }}"
+  with_items:
+    - k: "{{ filebeat_ssl_key }}/crt"
+      v: "{{ logstash_crt_path }}"
+    - k: "{{ filebeat_ssl_key }}/key"
+      v: "{{ logstash_key_path }}"
+  when: logstash_crt_content != "" and logstash_key_content != ""
+
+- name: etcd | Set ogo proxy backend
+  set_fact:
+    ogo_proxy_backend_url: "{%if modsecurity_enable %}{{ modsecurity_opts.dns }}{% else %}{{ proxy_mgr_opts.dns }}:8080{% endif %}"
+    ogo_proxy_backend_port: "{%if modsecurity_enable %}80{% else %}8080{% endif %}"
+    ogo_proxy_backend_healthcheck: "{%if modsecurity_enable %}/{% else %}/test_all{% endif %}"
+  tags:
+    - always
+
+- name: etcd | Traefikv1 - declare ogo proxy backend
+  include: "etcd_prov.yml key={{ item.k }} val={{ item.v }}"
+  with_items:
+    - k: "/traefik/backends/proxy-ogo/healthcheck/interval"
+      v: "5s"
+    - k: "/traefik/backends/proxy-ogo/healthcheck/path"
+      v: "{{ ogo_proxy_backend_healthcheck }}"
+    - k: "/traefik/backends/proxy-ogo/healthcheck/port"
+      v: "{{ ogo_proxy_backend_port }}"
+    - k: "/traefik/backends/proxy-ogo/servers/server/url"
+      v: "http://{{ ogo_proxy_backend_url }}"
+  when:
+    - traefikv1_enable
+
+- name: etcd | Traefikv2 - declare ogo proxy services (ie backend)
+  include: "etcd_prov.yml key={{ item.k }} val={{ item.v }}"
+  with_items:
+    - k: "traefikv2/http/services/proxy-ogo/loadbalancer/servers/0/url"
+      v: "http://{{ ogo_proxy_backend_url }}"
+  when:
+    - traefikv2_enable
+
+- name: etcd | Traefikv1 - declare acme proxy backend
+  include: "etcd_prov.yml key={{ item.k }} val={{ item.v }}"
+  with_items:
+    - k: "/traefik/backends/proxy-acme/servers/server/url"
+      v: "http://{{ traefik_acme_backend }}"
+  when:
+    - traefikv1_enable
+    - traefik_acme_backend is defined
+
+- name: etcd | Traefikv2 - declare acme proxy services (ie backend)
+  include: "etcd_prov.yml key={{ item.k }} val={{ item.v }}"
+  with_items:
+    - k: "traefikv2/http/services/proxy-acme/loadbalancer/servers/0/url"
+      v: "http://{{ traefik_acme_backend }}"
+  when:
+    - traefikv2_enable
+    - traefik_acme_backend is defined
+
+- name: etcd | Traefikv2 - declare http -> https redirection middleware
+  include: "etcd_prov.yml key={{ item.k }} val={{ item.v }}"
+  with_items:
+    - k: "traefikv2/http/middlewares/redirect-https/redirectscheme/scheme"
+      v: "https"
+    - k: "traefikv2/http/middlewares/redirect-https/redirectscheme/permanent"
+      v: "true"
+  when:
+    - traefikv2_enable
+
+- include: etcd_backup.yml
+  when:
+    - etcd_backup_enable
+    - inventory_hostname in ogo_node_manager
+  tags:
+    - etcd_backup

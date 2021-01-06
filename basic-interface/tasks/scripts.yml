@@ -1,0 +1,11 @@
+---
+
+- name: scripts | Copy scripts
+  copy:
+    src: "usr/local/sbin/{{ item }}"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - interface-rename

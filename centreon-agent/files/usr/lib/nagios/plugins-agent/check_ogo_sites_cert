@@ -1,0 +1,39 @@
+#!/bin/bash
+
+export PATH=$PATH:/usr/local/bin:/usr/local/sbin
+ETCD_PREFIX=/traefik/tls/
+rc=0
+
+TMP_FILE=$(mktemp)
+chmod 600 $TMP_FILE
+
+etcd-ctl --write-out=json get --prefix $ETCD_PREFIX > $TMP_FILE
+
+SITE_LIST=$(for site64 in $(cat $TMP_FILE | jq ".kvs[].key" 2>/dev/null | sed 's/"//')
+do
+	site=$(echo $site64 | base64 -di | awk -F'/' '{print $4}')
+	echo $site
+done | sort -n | uniq)
+
+for site in $SITE_LIST
+do
+	etcd_crt=$(echo -n "/traefik/tls/$site/certificate/certfile" | base64 -w0)
+	etcd_key=$(echo -n "/traefik/tls/$site/certificate/keyfile" | base64 -w0)
+	
+	sha_crt=$(cat $TMP_FILE | jq ".kvs[] | select (.key == \"${etcd_crt}\")" | jq .value | base64 -di | openssl x509 -pubkey -noout | sha256sum)
+	sha_key=$(cat $TMP_FILE | jq ".kvs[] | select (.key == \"${etcd_key}\")" | jq .value | base64 -di | openssl pkey -pubout | sha256sum)
+
+	if [ "$sha_crt" != "$sha_key" ]; then
+		echo "CRITICAL: $site: tls private key does not match public key"
+		rc=2
+	fi
+done
+
+rm -f $TMP_FILE
+
+if [ "$rc" -eq "0" ]; then
+	echo "OK: All certificat seems to be valid."
+fi
+
+exit $rc
+

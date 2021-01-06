@@ -1,0 +1,38 @@
+---
+# defaults file for bacula_server
+# Bacula director variables
+bacula_dir_name: "bacula-dir"
+bacula_dir_host: "{{ ansible_fqdn }}"
+bacula_dir_password: "{{ lookup('password', 'credential/{{ inventory_hostname }}-bacula_dir_password chars=ascii_letters,digits') }}"
+bacula_dir_address: "{{ bacula_dir_host }}"
+bacula_dir_port: 9101
+bacula_dir_restore: /var/lib/bacula-restores
+bacula_dir_max_concurrent_jobs: 10
+
+bacula_daily_default_retention: 14
+bacula_daily_job_retention: "{{ bacula_daily_default_retention }}"
+bacula_daily_file_retention: "{{ bacula_daily_default_retention }}"
+bacula_daily_volume_retention: "{{ bacula_daily_default_retention }}"
+bacula_daily_volume_use_duration: 23 hours
+
+bacula_weekly_default_retention: 21
+bacula_weekly_job_retention: "{{ bacula_weekly_default_retention }}"
+bacula_weekly_file_retention: "{{ bacula_weekly_default_retention }}"
+bacula_weekly_volume_retention: "{{ bacula_weekly_default_retention }}"
+bacula_weekly_volume_use_duration: 23 hours
+bacula_schedule_full: "sun at 00:05"
+bacula_schedule_diff: "mon-sat at 00:05"
+
+# Bacula database configuration
+bacula_db_driver: mysql
+bacula_db_host: "127.0.0.1"
+bacula_db_port: 3306
+bacula_db_user: bacula
+bacula_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-bacula_db_pass chars=ascii_letters,digits') }}"
+bacula_db_name: bacula
+bacula_db_remote_host: "{{ inventory_hostname }}"
+bacula_db_admin_user: root
+bacula_db_admin_pass: changeme
+
+# Bacula storage daemon variables
+bacula_sd_hosts: ["{{ bacula_dir_host }}"]

@@ -1,0 +1,17 @@
+---
+
+- name: Debian | Add RabbitMQ key
+  apt_key:
+    url: https://www.rabbitmq.com/rabbitmq-release-signing-key.asc state=present id=6026DFCA
+
+- name: Debian | Install dependencies
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "{{ rabbitmq_dependencies }}"
+
+- name: Debian | Add RabbitMQ repository
+  apt_repository:
+    repo: https://packagecloud.io/rabbitmq/rabbitmq-server/debian/ {{ ansible_distribution_release }} main"
+    update_cache: yes

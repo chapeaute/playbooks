@@ -1,0 +1,23 @@
+---
+# tasks file for basic-route
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | Add route
+  include: "route.yml int={{ itm.key }} rt={{ itm.value }}"
+  with_dict: "{{ route|default({}) }}"
+  loop_control:
+    loop_var: itm
+
+- name: main | Define default gateway
+  include: "gateway.yml"
+  when: gateway_itf is defined and gateway_addr is defined

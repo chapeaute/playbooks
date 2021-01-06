@@ -1,0 +1,10 @@
+---
+
+- hosts: all
+  vars:
+    apache2_data_dir: /var/www
+  roles:
+    - role: mariadb-server
+    - role: redis
+    - role: owncloud
+

@@ -1,0 +1,37 @@
+---
+# handlers file for postgresql-provider
+
+- name: "Ensure dump download directory exists"
+  file:
+    name: "/var/tmp/{{ item.value.db_name }}"
+    state: directory
+  when: item.value.sync_source is defined
+  with_dict: "{{ postgresql_databases }}"
+
+- name: "Retrieve PostgreSQL dump (from SSH)"
+  shell: "{% set db = item.db %}{% set sync_source=item.item.value.sync_source %}scp {{ ssh_args|default('') }} {{ sync_source.user }}@{{ sync_source.host }}:{{ sync_source.path }}/{{ sync_source.file }} /var/tmp/{{ db }}/"
+  when: item.item.value.sync_source is defined and item.item.value.sync_source.host is defined
+  with_items: "{{ created_dbs.results }}"
+
+- name: "Retrieve PostgreSQL dump (from URL)"
+  get_url:
+    dest: "/var/tmp/{{ item.db }}/{{ item.item.value.sync_source.file }}"
+    url: "{{ item.item.value.sync_source.url }}"
+  when: item.item.value.sync_source is defined and item.item.value.sync_source.url is defined
+  with_items: "{{ created_dbs.results }}"
+
+- name: "Retrieve PostgreSQL dump (from local copy)"
+  copy: src="{{ item.item.value.sync_source.src }}" dest="/var/tmp/{{ item.db }}/{{ item.item.value.sync_source.file }}"
+  when: item.item.value.sync_source is defined and item.item.value.sync_source.src is defined
+  with_items: "{{ created_dbs.results }}"
+
+- name: "Import PostgreSQL dump"
+  delegate_to: "{{ postgresql_host }}"
+  become: true
+  become_user: postgres
+  postgresql_db:
+    name: "{{ item.db }}"
+    state: restore
+    target: "/var/tmp/{{ item.db }}/{{ item.item.value.sync_source.file }}"
+  when: item.item.value.sync_source is defined
+  with_items: "{{ created_dbs.results }}"

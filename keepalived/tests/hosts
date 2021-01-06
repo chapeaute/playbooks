@@ -1,0 +1,7 @@
+[all]
+keepalived-1 ansible_connection=docker
+keepalived-2 ansible_connection=docker
+
+[keepalived]
+keepalived-1
+keepalived-2

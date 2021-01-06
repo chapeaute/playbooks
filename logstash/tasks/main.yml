@@ -1,0 +1,90 @@
+---
+# tasks file for logstash
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family }}.yml"
+
+- name: main | Install package
+  package:
+    name: "logstash-{{ ls_full_version|default(ls_major_version + '*') }}"
+
+- name: main | Deploy configuration file
+  copy:
+    src:   "{{ item.src }}"
+    dest:  "{{ item.dest }}"
+    owner: root
+    group: logstash
+    mode:  0640
+    force: no
+  with_items:
+    - src: etc/logstash/logstash.conf
+      dest: "{{ ls_path_conf }}/conf.d/logstash.conf"
+  notify:
+    - "Restart Logstash"
+
+- name: main | Install plugins
+  shell: "{{ ls_path_bin }}/plugin install {{item}}"
+  with_items: '{{ ls_plugins }}'
+  notify:
+    - "Restart Logstash"
+
+- name: main | Create custom pattern directoy
+  file:
+    path:  "{{ ls_path_conf }}/{{ item }}"
+    owner: root
+    group: logstash
+    state: directory
+    mode:  0750
+  with_items:
+    - patterns
+    - mapping
+
+- name: main | Create default directory
+  file:
+    path:  "{{ item }}"
+    state: directory
+    owner: logstash
+    group: logstash
+    mode:  0755
+  with_items:
+    - '{{ ls_path_data }}'
+    - '{{ ls_path_logs }}'
+
+- name: main | Create link to log directory
+  tags:
+    - config
+    - config_log
+  file:
+    src: "{{ ls_path_logs }}"
+    dest: "{{ ls_default_path_logs }}"
+    state: link
+    force: yes
+  when: ls_default_path_logs != ls_path_logs
+
+- include: config.yml
+  tags:
+    - config
+
+- include: firewall.yml
+  when: firewall_setup == True
+
+- include: script.yml
+  tags:
+    - script
+
+- name: main | Start and enable service
+  service:
+    name:    logstash
+    state:   started
+    enabled: yes

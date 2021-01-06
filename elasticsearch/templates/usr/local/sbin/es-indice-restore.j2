@@ -1,0 +1,114 @@
+#!/bin/bash
+
+# scripts de restauration d'index
+
+ES=http://localhost:{{ es_port }}
+ED=elasticdump
+
+
+# You must change it
+BACKUP_DIR="{{ es_default_backup_dir }}"
+FORCE_RESTORE=0
+ED_LIMIT=10000
+
+
+# jq package must be installed
+getmaster() {
+    nodeid=$(curl -s $ES/_nodes/_local | jq --raw-output '.nodes|keys[]')
+    masternode=$(curl -s $ES/_cluster/state/master_node | jq --raw-output '.master_node')
+    if [ "$nodeid" == "$masternode" ]; then
+        return 0
+    else
+        return 1
+    fi
+}
+
+exist_index() {
+    local index=$1
+
+    curl -s $ES/_cat/indices?h=i | egrep -q "^${index}\$"
+
+    return $?
+}
+
+restore_index() {
+    local index=$1
+    local compress_file=0
+
+    index_name=$(echo $index | sed 's/.json.*//')
+
+    exist_index $index_name
+
+    if [ $? -eq 1 ]; then
+        echo -n "Restoring index $index_name: "
+        file -bi $BACKUP_DIR/$index | grep -q "^application/x-gzip;" && compress_file=1
+
+        if [ "$compress_file" -eq 1 ]; then
+            gunzip -nf $BACKUP_DIR/$index
+        fi
+
+        output=$($ED --input=$BACKUP_DIR/$index_name.json --output=$ES/$index_name --limit=$ED_LIMIT 2>&1)
+        echo $output | grep -qi error && {
+            echo '[FAILED]'
+            echo "Failed to import index file $index"
+            echo $output
+        } || {
+            echo "[OK]"
+        }
+
+        if [ "$compress_file" -eq 1 ]; then
+            rm $BACKUP_DIR/$index_name.json
+        fi
+    else
+        echo "Warning: index $index_name already exist"
+        echo "Warning: choose option -f for delete index existed and restore new index"
+    fi
+
+}
+
+syntax() {
+    echo "Usage: ${0##*/} [-n index1,index|-a] [-r repository] [-f]"
+    echo
+    echo "Options:"
+    echo "  -n index1,index2,...,indexN  	index list to restore"
+    echo "  -r repository   Name of repository (default: $BACKUP_DIR)"
+    echo "  -f              Force remove exiting index before restore"
+    echo "  -a              All index restore of $BACKUP_DIR"
+
+    exit 1
+}
+
+getmaster || {
+    echo "You must run this script on master node"
+    exit 1
+}
+
+while getopts "an:r:f" opt
+do
+    case $opt in
+        n) index_list=$(echo $OPTARG | sed -e 's/,/ /g')
+        ;;
+        r) BACKUP_DIR=$OPTARG
+        ;;
+        f) FORCE_RESTORE=1
+        ;;
+        a) index_list=$(ls $BACKUP_DIR)
+        ;;
+        *) syntax
+        ;;
+    esac
+done
+
+if [ -z "$index_list" ]; then
+    syntax
+fi  
+
+for index in $index_list
+do
+    index_name=$(echo $index | sed 's/.json.*//')
+
+    if [ "$FORCE_RESTORE" -eq 1 ]; then
+        curl -s -XDELETE $ES/"$index_name" > /dev/null
+    fi
+    restore_index $index
+done

@@ -1,0 +1,18 @@
+---
+
+- name: RedHat | Install CentOR 7 extras Repo
+  command: yum-config-manager --enable extras
+  when: ansible_os_family == "RedHat" and ansible_distribution_major_version == "7"
+  ignore_errors: True
+
+- name: RedHat | Install Foreman Relases Repo
+  package:
+    name: "http://yum.theforeman.org/releases/{{ foreman_version }}/el{{ ansible_distribution_major_version }}/x86_64/foreman-release.rpm"
+
+- name: RedHat | Install Foreman Client Repo
+  package:
+    name: "http://yum.theforeman.org/client/{{ foreman_version }}/el{{ ansible_distribution_major_version }}/x86_64/foreman-client-release.rpm"
+
+- name: RedHat | install Puppet Repo
+  package:
+    name: "https://yum.puppet.com/puppet{{ foreman_puppet_version }}-release-el-{{ ansible_distribution_major_version }}.noarch.rpm"

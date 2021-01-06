@@ -1,0 +1,7 @@
+---
+vagrant_packages:
+  - "https://releases.hashicorp.com/vagrant/{{ vagrant_version }}/vagrant_{{ vagrant_version }}_x86_64.rpm"
+
+vagrant_packages_extra:
+  - gcc
+  - libvirt-devel

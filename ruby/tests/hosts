@@ -1,0 +1,5 @@
+[all]
+ruby ansible_connection=docker
+
+[ruby]
+ruby

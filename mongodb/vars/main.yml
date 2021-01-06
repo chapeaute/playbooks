@@ -1,0 +1,18 @@
+---
+
+mongodb_packages:
+  - "mongodb-org-{{ mongodb_version }}*"
+
+mongodb_services:
+  - mongod
+
+mongodb_dependencies:
+  - logrotate
+  - tuned
+
+mongodb_user: mongod
+mongodb_group: mongod
+
+mongodb_default_data_dir: /var/lib/mongo
+mongodb_default_backup_dir: /var/backup/mongo
+mongodb_default_log_dir: /var/log/mongodb

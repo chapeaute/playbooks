@@ -1,0 +1,11 @@
+---
+
+- name: proxy | Create proxy conf for {{ proxy_name }}
+  tags:
+    - config
+    - config_create_proxy
+  template:
+    src: "etc/httpd/conf.d/proxy.conf.j2"
+    dest: "{{ apache2_confd_dir }}/{{ proxy_params.proxy_name| default(proxy_name) }}.conf"
+  notify: "Restart Apache"
+  register: apache_restarted

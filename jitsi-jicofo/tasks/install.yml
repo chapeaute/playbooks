@@ -1,0 +1,71 @@
+---
+
+- name: Install | install dependencies
+  package:
+    name: "{{ jicofo_dependencies }}"
+
+- name: install | install lua packages
+  import_role:
+    name: lua
+  vars:
+    lua_luarocks_packages: "{{ jicofo_luarocks_packages }}"
+
+- name: Install | Create jicofo user account
+  user:
+    name: "{{ jicofo_user }}"
+    home: "{{ jicofo_install_dir }}"
+    system: true
+
+- name: Install | Create install dir
+  file:
+    name:  "{{ item }}"
+    state: directory
+    owner: "{{ jicofo_user }}"
+    group: "{{ jicofo_group }}"
+    recurse: false
+  with_items:
+    - "{{ jicofo_install_tmp_dir }}"
+    - "{{ jicofo_etc_dir }}"
+    - "{{ jicofo_log_dir }}"
+
+- name: Install | stats jicofo deb archive
+  stat:
+    path:   "{{ jicofo_install_tmp_dir }}/jicofo_{{ jicofo_version }}_all.deb"
+  register: jicofo_deb
+
+- name: Install | Download jicofo deb archive
+  get_url:
+    url: "{{ jicofo_deb_url }}"
+    dest: "{{ jicofo_install_tmp_dir }}"
+  when: jicofo_deb.stat.exists is defined and not jicofo_deb.stat.exists
+
+- name: Install | Decompress archive to temporary directory
+  shell: ar x {{ jicofo_install_tmp_dir }}/*.deb
+  args:
+    creates: "{{ jicofo_install_tmp_dir }}/data.tar.xz"
+    chdir: "{{ jicofo_install_tmp_dir }}"
+
+- name: Install | Extract data archive
+  unarchive:
+    src: "{{ jicofo_install_tmp_dir }}/data.tar.xz"
+    dest: "{{ jicofo_install_tmp_dir }}"
+    owner: "{{ jicofo_user }}"
+    group: "{{ jicofo_group }}"
+    remote_src: true
+    creates: "{{ jicofo_install_tmp_dir }}/usr"
+  register: jicofo_decompress
+
+- name: Install | Sychronize build with install dir
+  copy:
+    src: "{{ jicofo_install_tmp_dir }}/usr/share/jicofo/"
+    dest: "{{ jicofo_install_dir }}/"
+    owner: "{{ jicofo_user }}"
+    group: "{{ jicofo_group }}"
+    remote_src: true
+    directory_mode: true
+  when: jicofo_decompress is changed
+
+- name: Install | Set jicofo.sh to executable
+  file:
+    name: "{{ jicofo_install_dir }}/jicofo.sh"
+    mode: 0750

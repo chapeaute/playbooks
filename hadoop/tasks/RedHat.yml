@@ -1,0 +1,21 @@
+---
+
+- name: RedHat | Open HDFS ports
+  firewalld:
+    port: "{{ item }}/tcp"
+    state: enabled
+    permanent: yes
+    immediate: yes
+  with_items:
+    - "{{ hadoop_hdfs_ports }}"
+  when: hadoop_enable_yarn
+
+- name: RedHat | Open ports yarn ports
+  firewalld:
+    port: "{{ item }}/tcp"
+    state: enabled
+    permanent: yes
+    immediate: yes
+  with_items:
+    - "{{ hadoop_yarn_ports }}"
+  when: hadoop_enable_yarn

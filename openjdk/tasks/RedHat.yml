@@ -1,0 +1,12 @@
+---
+
+- name: RedHat | Install EPEL for haveged
+  package:
+    name: "{{ item }}"
+  with_items:
+    - epel-release
+
+- name: RedHat | Install openjdk {{ openjdk_version }}
+  package:
+    name:  "{{ openjdk_package_name }}"
+    state: present

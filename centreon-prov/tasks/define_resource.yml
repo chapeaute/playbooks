@@ -1,0 +1,61 @@
+---
+# Check if resource exist
+- name: define_resource | Check if ${{ rsc_name }}$ resource is already declare on centreon server {{ centreon_server }}
+  shell: '{{ centreon_clapi_bin }} -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o RESOURCECFG -a show | grep ";\${{ rsc_name }}\$;" || :'
+  delegate_to: "{{ centreon_server }}"
+  delegate_facts: True
+  changed_when: false
+  run_once: true
+  check_mode: no
+  register: rsc_properties
+
+# Define resource if not exist
+- name: define_resource | Declare resource ${{ rsc_name }}$ on {{ centreon_server }}
+  command: '{{ centreon_clapi_bin }} -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o RESOURCECFG -a add -v "{{ rsc_name }};{{ rsc_value }};{{ centreon_poller_list }};Plugins directory on Agent" 2>&1 | grep -v "Resource is already tied to instance"'
+  notify:
+    - Reload configuration
+  delegate_to: "{{ centreon_server }}"
+  delegate_facts: True
+  run_once: true
+  when: rsc_properties.stdout|length == 0
+
+- name: define_resource | Get resource ${{ rsc_name }}$ ID
+  set_fact:
+    rsc_id: "{{ rsc_properties.stdout.split(';')[0] }}"
+  run_once: true
+  check_mode: no
+  when: rsc_properties.stdout|length != 0
+
+# Set resource value
+- name: define_resource | Set value to resource ${{ rsc_name }}$ on {{ centreon_server }}
+  command: '{{ centreon_clapi_bin }} -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o RESOURCECFG -a setparam -v "{{ rsc_id }};value;{{ rsc_value }}"'
+  notify:
+    - Reload configuration
+  delegate_to: "{{ centreon_server }}"
+  delegate_facts: True
+  run_once: true
+  when: rsc_properties.stdout|length != 0 and rsc_properties.stdout.split(';')[2] != rsc_value
+
+# Set resource poller list
+- name: define_resource | Get missing poller
+  set_fact:
+    centreon_poller_miss: "{{ centreon_poller | difference(rsc_properties.stdout.split(';')[5].split('|')) }}"
+  run_once: true
+  check_mode: no
+  when: rsc_properties.stdout|length != 0
+
+- name: define_resource | Get full list of poller
+  set_fact:
+    centreon_poller_all: "{{ centreon_poller|union(rsc_properties.stdout.split(';')[5].split('|'))|join('|') }}"
+  run_once: true
+  check_mode: no
+  when: rsc_properties.stdout|length != 0
+
+- name: define_resource | Set poller list to resource ${{ rsc_name }}$ on {{ centreon_server }}
+  command: '{{ centreon_clapi_bin }} -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o RESOURCECFG -a setparam -v "{{ rsc_id }};instance;{{ centreon_poller_all }}"'
+  notify:
+    - Reload configuration
+  delegate_to: "{{ centreon_server }}"
+  delegate_facts: True
+  run_once: true
+  when: rsc_properties.stdout|length != 0 and centreon_poller_miss|length != 0

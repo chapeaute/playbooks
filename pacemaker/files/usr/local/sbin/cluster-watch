@@ -1,0 +1,2 @@
+#!/bin/bash
+watch -c -n1 --differences "[[ -f /proc/drbd ]] && cat /proc/drbd; echo ; crm_mon -fn -1"

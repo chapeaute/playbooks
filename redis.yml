@@ -1,0 +1,8 @@
+# v1.0
+---
+- hosts: redis
+  vars:
+    redis_memory_prct: 0.8
+  roles:
+    - role: redis
+      redis_setting_maxmemory_prct: "{{ redis_memory_prct }}"

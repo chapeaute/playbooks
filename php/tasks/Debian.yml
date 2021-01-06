@@ -1,0 +1,13 @@
+---
+
+- name: "PHP Configuration override"
+  template:
+    src: configuration-{{ item }}.ini.j2
+    dest: "{{ php_conf_dir }}/80-ansible-{{ item }}.ini"
+  notify: "Reload Apache"
+  with_items:
+      - apache2
+      - cli
+  tags:
+    - install
+    - update_config

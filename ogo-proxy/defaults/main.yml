@@ -1,0 +1,294 @@
+---
+# Defaults file for ogo-proxy
+# Use same node role as those in docker-swarm
+ogo_manager_hostname: localhost
+ogo_node_manager: "{{ docker_node_manager }}"
+ogo_node_worker: "{{ docker_node_worker }}"
+ogo_mgr_expose_port:
+  - '7007:7007'
+ogo_wrk_expose_port: []
+ogo_cluster_name: "p-default"
+
+ogo_traefik_user: admin-ogo
+ogo_traefik_pass: "$2y$05$fdcKEAqoYOJL33Tfwckd1ue0atCJfVlst2lo0nBlwnSxdxDTBFCpq" # htpasswd -nB admin-ogo
+
+ogo_grafana_user: admin-ogo
+ogo_grafana_pass: changeme
+ogo_grafana_dashboard_dir: "{{ docker_swarm_conf_dir }}/configs/grafana-dashboards"
+
+ogo_proxy_version: latest
+ogo_proxy_image: git.smile.ci:5005/ogo/waf/proxy
+ogo_proxy_image_ret: 4
+# Proxy type : manager, worker, both
+#ogo_proxy_instance_type:
+ogo_proxy_memory_prct: 0.75
+ogo_proxy_memory_min: 1024
+ogo_proxy_mgr_memory_min: 1024
+# Loglevel : prod, test
+ogo_proxy_log_level: prod
+ogo_proxy_etcd_key: "/ogo-proxy-java"
+ogo_proxy_connection_timeout_ms: 60000
+ogo_proxy_wrk_memory_min: "{{ ogo_proxy_memory_min }}"
+ogo_proxy_start_period: 600s
+ogo_proxy_cpp_debug: False
+ogo_proxy_ca_keystore: /etc/pki/java/cacerts
+ogo_proxy_strip_header: "X-ModSecurity*"
+ogo_proxy_jmx_enable: False
+ogo_proxy_jmx_port: 8088
+
+# GeoIP update
+geoipupdate_version: "4.3.0"
+geoipupdate_get_url: "https://github.com/maxmind/geoipupdate/releases/download/v{{ geoipupdate_version  }}/geoipupdate_{{ geoipupdate_version }}_linux_amd64.rpm"
+geoipupdate_enable: True
+
+# Cluster memory
+ogo_cmem_enable: True
+
+# Navigation
+ogo_nav_enable: False
+
+ogo_api_crt_content: ""
+ogo_api_key_content: ""
+ogo_cli_crt_files: []
+
+# Docker configuration variables
+docker_swarm_conf_dir: /etc/docker-swarm
+docker_swarm_data_dir: /var/lib/docker-volumes
+docker_swarm_stack_name: ogo
+docker_crontab_prune: True
+docker_compose_auto_deploy: False
+docker_deploy:
+  parallelism: 1
+  delay: 30s
+
+# Filebeat configuration variables
+filebeat_root_key: /filebeat
+filebeat_clustername_key: "{{ filebeat_root_key }}/field/clustername"
+filebeat_logfiles_key: "{{ filebeat_root_key }}/logfile"
+filebeat_logfiles:
+  - /var/log/ogo/requests-valid.log.0
+  - /var/log/ogo/requests-invalid.log.0
+filebeat_logfiles_del: []
+filebeat_logexceptions_key: "{{ filebeat_root_key }}/logexception"
+filebeat_logexceptions:
+  - /var/log/ogo/exceptions.log.0
+filebeat_logexceptions_del: []
+filebeat_loghosts_key: "{{ filebeat_root_key }}/server"
+filebeat_loghosts:
+  - "158.69.241.138:5044"
+filebeat_loghosts_del: []
+filebeat_ssl_key: "{{ filebeat_root_key }}/ssl"
+logstash_crt_content:
+logstash_crt_path: /etc/filebeat/ssl/logstash.crt
+logstash_key_content:
+logstash_key_path: /etc/filebeat/ssl/logstash.key
+
+# Traefik
+traefik_expose_port: ['80:80', '443:443']
+traefikv1_enable: True
+traefikv2_expose_port: "{% if traefikv1_enable %}['81:80', '444:443']{% else %}['80:80', '443:443']{% endif %}"
+traefikv2_enable: False
+traefik_redirect_https: False
+traefik_acme_enable: False
+traefik_acme_key: "/traefik/acme"
+traefik_acme_caserver: "https://acme-staging-v02.api.letsencrypt.org/directory"
+traefik_acme_mail: "adminsys@smile.ci"
+traefik_cipher_list: []
+traefik_sni_strict: "true"
+#  - TLS_ECDHE_RSA_WITH_AES_128_GCM_SHA256
+#  - TLS_ECDHE_RSA_WITH_AES_256_GCM_SHA384
+#  - TLS_ECDHE_RSA_WITH_CHACHA20_POLY1305_SHA256
+#traefik_acme_backend:
+
+# Mod Security
+modsecurity_enable: False
+modsecurity_paranoia_level: 2
+
+# Redis
+redis_enable: "{{ ogo_cmem_enable }}"
+redis_port: 6379
+redis_memory_prct: 0.2
+
+# RabbitMQ
+rabbitmq_enable: "{{ ogo_cmem_enable }}"
+rabbitmq_port: 5672
+rabbitmq_expose_port: [] #['15672:15672']
+rabbitmq_admin_user: admin
+rabbitmq_admin_pass: admin
+rabbitmq_plugins:
+  - rabbitmq_management
+  - prometheus_rabbitmq_exporter
+rabbitmq_hipe_compile: 1
+rabbitmq_memory_high_watermark: 0.1
+rabbitmq_disk_free_limit_mem_relative: 2.0
+
+# Grafana expose port
+grafana_expose_port: [] # ['3000', '3000']
+grafana_import_hostname: localhost
+grafana_db_time_period: "1h"
+grafana_db_refresh_interval: "30s"
+
+# Prometheus configuration variables
+prometheus_storage_retention: 15d
+prometheus_expose_port: [] #['9090:9090']
+
+# When using no SSL Offloading load balancer in TCP mode in front of Traefik cluster (using Proxy Protocol)
+#dumb_proxy_hosts:
+#  - 127.0.0.1/32
+#  - 192.168.254.0/24
+
+# ETCD tuning options
+etcd_backup_enable: true
+etcd_backup_git_srv: "git.smile.ci"
+etcd_backup_git_prj: "ogo/waf/proxy-backup-etcd"
+etcd_backup_git_url: "git@{{ etcd_backup_git_srv }}:{{ etcd_backup_git_prj }}.git"
+etcd_backup_git_pubkey: "{{ etcd_backup_git_srv }} ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfnW3q3LhCSUO66qmGR65BfPGNhK5DZP+1dAFzLa9gvDb6H2C0l4L6tJYKB3qDzYsBdnGMFOOUaIhqdSSkdUjhxd0ok8Gjo810idK6H552fCeuOkkDNFY6rGMhCBqgnYDpkeFVJdWrbSS74q1ypJVw+RHw/xl1VU7NDp3idZD9nkSXWZo6arTfQFDivfHsGt36Y2wrFHmV3S8r4zRXYYGsB2yVJ3ijCsjeBb2OKd0vk0Sgr+EqZMrgYFiZJuqvUSGt1bAONBACVo3DPMg0bAoUCwqvhN9WG0kfCcPPCCAJEik6wCas31jewFnLZiBP8drM6JEQD+3mtjiSHIUcmJhr"
+etcd_backup_prefix: "/ogo-proxy-java/set_brain"
+etcd_backup_clustername: "{{ filebeat_clustername_key }}"
+etcd_port: 2379
+etcd_expose_port: [] #['{{ etcd_port }}:{{ etcd_port }}']
+etcd_snapshot_count: 20
+etcd_election_timeout: 30000
+etcd_heartbeat_interval: 500
+etcd_auto_compaction_retention: 12h
+
+node_manager_expose_port:
+  - 443/tcp
+
+node_worker_expose_port:
+  - 80/tcp
+  - 443/tcp
+
+network_common_list:
+  - common
+  - monitor
+  - rabbitmq
+
+# Etcd
+etcd_opts:
+  image: quay.io/coreos/etcd:v3.3.8
+  dns: etcd
+  volumes:
+    - "{{ docker_swarm_data_dir }}/etcd:/var/lib/etcd"
+  ports: []
+  ports_mgr:  "{{ etcd_expose_port }}"
+  networks:
+    - common
+
+# Traefik
+traefik_opts:
+  image: traefik:1.7.26
+  dns: traefik
+  loglevel: INFO
+  volumes: []
+  admin_user: "{{ ogo_traefik_user }}"
+  admin_pass: "{{ ogo_traefik_pass }}"
+  ports: "{{ traefik_expose_port }}"
+  ports_mgr: []
+  networks: []
+
+traefikv2_opts:
+  image: traefik:2.3.2
+  dns: traefikv2
+  loglevel: INFO
+  volumes: []
+  admin_user: "{{ ogo_traefik_user }}"
+  admin_pass: "{{ ogo_traefik_pass }}"
+  ports: "{{ traefikv2_expose_port }}"
+  ports_mgr: []
+  networks: []
+
+# Mod Security
+modsecurity_opts:
+  image: owasp/modsecurity-crs:3.3-apache
+  dns: modsec
+  volumes:
+    - "{{ docker_swarm_data_dir }}/modsecurity/rules:/etc/modsecurity.d/owasp-crs/rules"
+  ports: []
+  ports_mgr: []
+  networks: []
+
+# Redis
+redis_opts:
+  image: docker.io/smileci/redis:5.0.3.1
+  dns: redis
+  volumes:
+    - "{{ docker_swarm_data_dir }}/redis:/data"
+  ports: []
+  ports_mgr: []
+  networks:
+    - common
+
+# RabbitMQ
+rabbitmq_opts:
+  image: docker.io/smileci/rabbitmq:3.7.13.2
+  dns: rabbitmq
+  volumes: []
+  ports: []
+  ports_mgr: "{{ rabbitmq_expose_port }}"
+  networks:
+    - rabbitmq
+
+# Ogo Manager
+proxy_mgr_opts:
+  image: "{{ ogo_proxy_image }}:{{ ogo_proxy_version }}"
+  dns: proxy
+  volumes:
+    - "{{ docker_swarm_data_dir }}/ogo/GeoIP:/etc/ogo/GeoIP"
+  cpu: 1
+  memory: "{{ (ogo_proxy_mgr_memory_min * 1.1) | int }}m"
+  ports: "{{ ogo_mgr_expose_port + ['8008'] if ogo_proxy_jmx_enable else ogo_mgr_expose_port }}"
+  networks:
+    - rabbitmq
+
+# Ogo Worker
+proxy_wrk_opts:
+  image: "{{ ogo_proxy_image }}:{{ ogo_proxy_version }}"
+  dns: proxy
+  volumes:
+    - "{{ docker_swarm_data_dir }}/ogo/GeoIP:/etc/ogo/GeoIP"
+  cpu: 1
+  memory: "{{ (ogo_proxy_wrk_memory_min * 1.1) | int }}m"
+  ports: "{{ ogo_wrk_expose_port + ['8008'] if ogo_proxy_jmx_enable else ogo_wrk_expose_port }}"
+  networks:
+    - rabbitmq
+
+# Prometheus
+prometheus_opts:
+  image: prom/prometheus:v2.15.2
+  dns: prometheus
+  volumes:
+    - "{{ docker_swarm_data_dir }}/prometheus:/prometheus"
+  ports: "{{ prometheus_expose_port }}"
+  networks: []
+
+# Grafana
+grafana_opts:
+  image: grafana/grafana:5.2.2
+  dns: grafana
+  volumes:
+    - "{{ docker_swarm_data_dir }}/grafana:/var/lib/grafana"
+  admin_user: "{{ ogo_grafana_user }}"
+  admin_pass: "{{ ogo_grafana_pass }}"
+  ports: "{{ grafana_expose_port }}"
+  plugins:
+    - grafana-clock-panel
+    - grafana-piechart-panel
+  networks: []
+
+# Prometheus Agent
+nodeexporter_opts:
+  image: prom/node-exporter:v0.16.0
+  dns: nodeexporter
+  volumes:
+    - /proc:/host/proc:ro
+    - /sys:/host/sys:ro
+    - /:/rootfs:ro
+  ports: []
+  networks: []
+
+dockerexporter_opts:
+  image: basi/socat
+  dns: dockerexporter
+  ports: []
+  networks: []

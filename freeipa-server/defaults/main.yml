@@ -1,0 +1,25 @@
+---
+# Global settings
+firewall_setup: true
+firewall_zone: public
+main_interface: eth0
+
+# Defaults file for freeipa-server
+freeipa_domain: example.lan
+freeipa_realm: "{{ freeipa_domain | upper }}"
+#freeipa_hosts: ["{{ ansible_hostname }}.{{ freeipa_domain }}"]
+freeipa_hosts: ["{{ inventory_hostname }}"]
+freeipa_cluster_name: "freeipa_cluster"
+
+freeipa_admin_user: admin
+freeipa_admin_pass: changeme
+freeipa_dm_pass: "{{ lookup('password', 'credential/{{ freeipa_cluster_name }}-freeipa_dm_password chars=ascii_letters,digits') }}"
+
+freeipa_dns_enable: false
+freeipa_dns_reverse: ""
+freeipa_dns_forwarder: ""
+
+freeipa_userid_start: 2000
+freeipa_userid_max: 65535
+
+freeipa_ansible_groups: []

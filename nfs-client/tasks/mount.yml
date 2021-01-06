@@ -1,0 +1,16 @@
+---
+# tasks file for nfs-client
+
+- name: mount | Create {{ mount.localdir }}
+  file:
+    name: "{{ mount.localdir }}"
+    state: directory
+    recurse: True
+
+- name: mount | Mount "{{ mount.remotedir }}" to "{{ mount.localdir }}"
+  mount:
+    name:   "{{ mount.localdir }}"
+    src:    "{{ mount.server }}:{{ mount.remotedir }}"
+    fstype: nfs
+    state:  "{{ mount.mounted | default(True) | ternary('mounted', 'unmounted') }}"
+    opts:   "{{ mount.options | default('noatime,soft') }}"

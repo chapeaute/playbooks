@@ -1,0 +1,87 @@
+---
+
+- name: Deploy | Verify composer site dir exists dir
+  stat:
+    path: "{{ composer_site_dir }}"
+  register: composer_site
+
+- name: Deploy | Ensure composer directory exists
+  file:
+    path: "{{ composer_site_dir }}"
+    owner: "{{ composer_site_owner }}"
+    group: "{{ composer_site_group }}"
+    recurse: true
+    state: directory
+  when: not composer_site.stat.exists
+
+- name: Deploy | Ensure composer directory exists.
+  file:
+    path: "{{ composer_site_dir }}/"
+    owner: "{{ composer_site_owner }}"
+    group: "{{ composer_site_group }}"
+    recurse: True
+  when: composer_site.stat.exists
+
+- name: Deploy | Verify if composer.json exist
+  stat:
+    path: "{{ composer_site_dir }}/composer.json"
+  register: composer_json
+
+- name: Deploy parameters
+  template:
+    src: "parameters.yml.j2"
+    dest: "{{ composer_site_dir }}/app/config/parameters.yml"
+    owner: "{{ composer_site_owner }}"
+    group: "{{ composer_site_group }}"
+
+- name: Deploy | Symlink vendor dir
+  file:
+    state: link
+    force: yes
+    src: "{{ composer_vendor_dir }}"
+    dest: "{{ composer_site_dir }}/vendor"
+  when: composer_vendor_dir is defined
+
+- name: Deploy | Symlink logs dir
+  file:
+    state: link
+    force: yes
+    src: "{{ composer_logs_dir }}"
+    dest: "{{ composer_site_dir }}/app/logs"
+  when: composer_logs_dir is defined
+
+- name: Deploy | Symlink cache dir
+  file:
+    state: link
+    force: yes
+    src: "{{ composer_cache_dir }}"
+    dest: "{{ composer_site_dir }}/app/cache"
+  when: composer_cache_dir is defined
+
+- name: Deploy | Install composer dependencies
+  become_user: "{{composer_site_owner}}"
+  environment:
+    PATH: "{{ composer_site_dir }}/bin:{{ ansible_env.PATH }}"
+  shell: /usr/local/bin/composer install -n --no-dev -o
+  args:
+    chdir: "{{ composer_site_dir }}"
+  when: composer_json.stat.exists
+
+- name: Deploy | Fix Selinux
+  file:
+    path: "{{composer_site_dir}}/app/cache"
+    setype: httpd_sys_rw_content_t
+    recurse: true
+  when: composer_vendor_dir is not defined
+
+- name: Deploy | Fix Selinux
+  file:
+    path: "{{composer_site_dir}}/app/logs"
+    setype: httpd_sys_rw_content_t
+    recurse: true
+  when: composer_logs_dir is not defined
+
+
+
+
+

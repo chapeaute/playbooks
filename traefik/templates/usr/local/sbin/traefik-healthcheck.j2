@@ -1,0 +1,4 @@
+#!/bin/bash
+
+curl -s "http://localhost:{{ traefik_dashboard_port }}/health" | jq .
+/usr/bin/traefik healthcheck

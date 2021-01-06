@@ -1,0 +1,33 @@
+---
+
+# defaults file for wekan
+wekan_root_dir: "{{ wekan_default_root_dir  }}"
+
+wekan_service_name: wekan
+wekan:
+  #source_url: "https://github.com/wekan/Rocket.Chat/archive/{{ wekan_version }}.zip"
+  source_url: https://releases.wekan.team/wekan-{{ wekan_version }}.zip
+  subpath: "bundle"
+  subnewpath: "wekan-{{ wekan_version }}"
+wekan_version: 4.22
+wekan_nodejs_version:  12.14.0
+
+wekan_install_dir: "{{ wekan_root_dir }}/wekan"
+wekan_full_dir: "{{ wekan_root_dir }}/wekan-{{ wekan_version }}"
+wekan_port: 3000
+wekan_site_url: "http://{{ ansible_fqdn }}"
+
+# MONGO
+
+wekan_mongo_host: localhost
+wekan_mongo_db: wekan
+wekan_mongo_url: "mongodb://{{ wekan_mongo_host }}:27017/{{ wekan_mongo_db }}"
+wekan_npm_root_dir: "{{ wekan_install_dir }}/programs/server"
+
+
+# SMTP 
+
+wekan_smtp_host: localhost
+wekan_smtp_port: 25
+wekan_smtp_url: "smtp://{{ wekan_smtp_host }}:{{ wekan_smtp_port }}"
+wekan_smtp_from: "no-reply@{{ ansible_domain }}"

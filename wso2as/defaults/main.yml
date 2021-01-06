@@ -1,0 +1,31 @@
+---
+# defaults file for wso2
+
+wso2as_version: 5.3.0
+wso2as_service_name: wso2as
+wso2:
+  source_url: "http://archive.smile.ci/wso2/wso2as-{{ wso2as_version }}.zip"
+  subpath: "wso2as-{{ wso2as_version }}"
+wso2as_ports:
+  - 9443/tcp
+  - 9763/tcp
+  - 10389/tcp
+  - 9999/tcp
+  - 9763/tcp
+  - 11111/tcp
+  - 41097/tcp
+wso2as_java_version: 8
+wso2as_java_impl: openjdk
+wso2as_memory_size_prct: 0.6
+wso2as_memory_size: "{{ (ansible_memtotal_mb*wso2as_memory_size_prct)|int }}M"
+wso2as_root_dir: "/var/lib"
+wso2as_install_dir: "{{ wso2as_root_dir }}/{{ wso2.subpath }}"
+
+# Database configuration
+wso2as_db_driver: mysql
+wso2as_db_host: "{{ ansible_fqdn }}"
+wso2as_db_port: 3306
+wso2as_db_user: wso2as
+wso2as_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-wso2as_db_pass chars=ascii_letters,digits') }}"
+wso2as_db_name: wso2as
+wso2as_db_remote_host: "{{ wso2as_db_host }}"

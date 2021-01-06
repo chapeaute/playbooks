@@ -1,0 +1,41 @@
+---
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+
+- name: Download IONCUBE archive
+  get_url:
+    url: https://downloads.ioncube.com/loader_downloads/ioncube_loaders_lin_x86-64.zip
+    dest: /tmp/ioncube.zip
+
+
+- name: Extract ioncube.zip
+  unarchive:
+    src: /tmp/ioncube.zip
+    dest: /tmp/
+    extra_opts: ["-qq"]
+    remote_src: yes
+
+- name: Copy ioncube extension to php extension module
+  copy:
+    src: "/tmp/ioncube/ioncube_loader_lin_{{ioncube_default_loader}}.so"
+    dest: "{{ ioncube_default_extension_dir }}"
+    remote_src: yes
+
+- name: Add attribute zend_extension on php.ini
+  lineinfile:
+    path: /etc/php.ini
+    regexp: '^zend_extension'
+    insertafter: '^\[PHP\]$'
+    line: "zend_extension = {{ ioncube_default_extension_dir }}ioncube_loader_lin_{{ioncube_default_loader}}.so"
+    mode: 0755

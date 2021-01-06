@@ -1,0 +1,37 @@
+---
+
+- name: "init | Delete default organization "
+  foreman_organization:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "https://{{ foreman_host }}"
+    validate_certs: no
+    name: "Default Organization"
+    state: absent
+
+- name: "init | Delete default Location "
+  foreman_location:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "https://{{ foreman_host }}"
+    validate_certs: no
+    name: "Default Location"
+    state: absent
+
+- name: "init | Create {{ client_name }} Organization"
+  foreman_organization:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "https://{{ foreman_host }}"
+    validate_certs: no
+    name: "{{ client_name }}"
+    state: present
+
+- name: "init | Create {{ client_location }} Location "
+  foreman_location:
+    username: "{{ foreman_admin_username }}"
+    password: "{{ foreman_admin_password }}"
+    server_url: "https://{{ foreman_host }}"
+    validate_certs: no
+    name: "{{ client_location }}"
+    state: present

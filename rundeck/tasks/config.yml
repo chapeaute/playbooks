@@ -1,0 +1,45 @@
+---
+- name: main | Set parameter in rundeck-config.properties configuration file
+  lineinfile:
+    dest:   "{{ rundeck_config_dir }}/rundeck-config.properties"
+    regexp: "^{{ item.key }}.*=.*"
+    line:   "{{ item.key }}={{ item.value }}"
+  with_items:
+    - key:   "grails.serverURL"
+      value: "http://{{ rundeck_apache_vhostname }}{% if not rundeck_apache_proxy_enable %}:{{ rundeck_port }}{% endif %}"
+  notify:
+    - Restart Rundeck
+  tags:
+    - config
+
+- name: main | Set parameter in framework.properties configuration file
+  lineinfile:
+    dest:   "{{ rundeck_config_dir }}/framework.properties"
+    regexp: "^{{ item.key }}.*=.*"
+    line:   "{{ item.key }} = {{ item.value }}"
+  with_items:
+    - key:   "framework.server.name"
+      value: "{{ ansible_fqdn }}"
+    - key:   "framework.server.hostname"
+      value: "{{ rundeck_apache_vhostname }}"
+    - key:   "framework.server.port"
+      value: "{{ rundeck_port }}"
+    - key:   "framework.server.url"
+      value: "http://{{ rundeck_apache_vhostname }}{% if not rundeck_apache_proxy_enable %}:{{ rundeck_port }}{% endif %}"
+  notify:
+    - Restart Rundeck
+  tags:
+    - config
+
+- name: main | Set Rundeck listen port
+  lineinfile:
+    dest:   "{{ rundeck_config_dir }}/profile"
+    regexp: "^{{ item.key }}.*=.*"
+    line:   "{{ item.key }}={{ item.value }}"
+  with_items:
+    - key:   "RDECK_HTTP_PORT"
+      value: "${RDECK_HTTP_PORT:-{{ rundeck_port }}}"
+  notify:
+    - Restart Rundeck
+  tags:
+    - config

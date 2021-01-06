@@ -1,0 +1,15 @@
+---
+- hosts: 1apache_mariadb
+  vars:
+    mysql_data_dir:  "/var/lib/mysql"
+    site_name: "www.smile.ci"
+    site_dir:  "/var/www"
+    docs_dir:  "{{ site_dir }}/{{ site_name }}/htdocs"
+  roles:
+    - role: mariadb-server
+      mysql_config_innodb_buffer_pool_size_prct: 0.4
+    - role: apache
+      apache2_data_dir: "{{ site_dir }}"
+      apache2_vhosts:
+        "{{ site_name }}":
+    - role: php

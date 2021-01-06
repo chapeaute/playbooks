@@ -1,0 +1,8 @@
+---
+# handlers file for apache-modsecurity
+
+- name: "Restart Apache"
+  service:
+    name: "{{ apache2_service_name }}"
+    state: restarted
+  register: apache_restarted

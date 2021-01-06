@@ -1,0 +1,98 @@
+# {{ ansible_managed }}
+
+# Default room to which inbound called without a Jitsi-Conference-Room header
+org.jitsi.jigasi.DEFAULT_JVB_ROOM_NAME={{ jigasi_default_room }}
+
+net.java.sip.communicator.impl.protocol.SingleCallInProgressPolicy.enabled=false
+
+# Disable packet capture
+net.java.sip.communicator.packetlogging.PACKET_LOGGING_ENABLED=false
+
+# Adjust opus encoder complexity
+net.java.sip.communicator.impl.neomedia.codec.audio.opus.encoder.COMPLEXITY=10
+
+# Enable brewery
+org.jitsi.jigasi.BREWERY_ENABLED=true
+org.jitsi.jigasi.MUC_SERVICE_ADDRESS=conference.{{ jigasi_xmpp_domain }}
+
+{% if jigasi_sip_user is defined %}
+# SIP acount
+net.java.sip.communicator.impl.protocol.sip.acc1=acc1
+net.java.sip.communicator.impl.protocol.sip.acc1.ACCOUNT_UID=SIP\:{{ jigasi_sip_user }}@{{ jigasi_sip_server }}
+net.java.sip.communicator.impl.protocol.sip.acc1.PASSWORD={{ jigasi_sip_secret | b64encode }}
+net.java.sip.communicator.impl.protocol.sip.acc1.PROTOCOL_NAME=SIP
+net.java.sip.communicator.impl.protocol.sip.acc1.SERVER_ADDRESS={{ jigasi_sip_server }}
+net.java.sip.communicator.impl.protocol.sip.acc1.USER_ID={{ jigasi_sip_user }}@{{ jigasi_sip_server }}
+net.java.sip.communicator.impl.protocol.sip.acc1.KEEP_ALIVE_INTERVAL=25
+net.java.sip.communicator.impl.protocol.sip.acc1.KEEP_ALIVE_METHOD=OPTIONS
+net.java.sip.communicator.impl.protocol.sip.acc1.VOICEMAIL_ENABLED=false
+net.java.sip.communicator.impl.protocol.sip.acc1.OVERRIDE_ENCODINGS=false
+net.java.sip.communicator.impl.protocol.sip.acc1.DOMAIN_BASE={{ jigasi_xmpp_domain }}
+net.java.sip.communicator.impl.protocol.sip.acc1.PROXY_ADDRESS={{ jigasi_sip_server }}
+net.java.sip.communicator.impl.protocol.sip.acc1.PROXY_AUTO_CONFIG=false
+net.java.sip.communicator.impl.protocol.sip.acc1.PROXY_PORT={{ jigasi_sip_port }}
+net.java.sip.communicator.impl.protocol.sip.acc1.PREFERRED_TRANSPORT={{ jigasi_sip_transport }}
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.AMR-WB/16000=750
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.G722/8000=700
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.GSM/8000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.H263-1998/90000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.H264/90000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.PCMA/8000=600
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.PCMU/8000=650
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.SILK/12000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.SILK/16000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.SILK/24000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.SILK/8000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.VP8/90000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.iLBC/8000=10
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.opus/48000=1000
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.red/90000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.speex/16000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.speex/32000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.speex/8000=0
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.telephone-event/8000=1
+net.java.sip.communicator.impl.protocol.sip.acc1.Encodings.ulpfec/90000=0
+{% else %}
+# No SIP acc configured, jigasi will be disabled
+{% endif %}
+
+# XMPP account
+net.java.sip.communicator.impl.protocol.jabber.acc1=acc1
+net.java.sip.communicator.impl.protocol.jabber.acc1.ACCOUNT_UID=Jabber:{{ jigasi_xmpp_user }}@{{ jigasi_xmpp_auth_domain }}
+net.java.sip.communicator.impl.protocol.jabber.acc1.USER_ID={{ jigasi_xmpp_user }}@{{ jigasi_xmpp_auth_domain }}
+net.java.sip.communicator.impl.protocol.jabber.acc1.IS_SERVER_OVERRIDDEN=true
+net.java.sip.communicator.impl.protocol.jabber.acc1.SERVER_ADDRESS={{ jigasi_xmpp_server }}
+net.java.sip.communicator.impl.protocol.jabber.acc1.PASSWORD={{ jigasi_xmpp_pass | b64encode }}
+net.java.sip.communicator.impl.protocol.jabber.acc1.RESOURCE_PRIORITY=30
+net.java.sip.communicator.impl.protocol.jabber.acc1.BREWERY=JigasiBrewery@internal.{{ jigasi_xmpp_auth_domain }}
+net.java.sip.communicator.impl.protocol.jabber.acc1.DOMAIN_BASE={{ jigasi_xmpp_domain }}
+
+org.jitsi.jigasi.xmpp.acc1.USER_ID=jigasi@auth.{{ jigasi_xmpp_domain }}
+org.jitsi.jigasi.xmpp.acc1.PASS={{ jigasi_xmpp_pass }}
+org.jitsi.jigasi.xmpp.acc1.SERVER_ADDRESS={{ jigasi_xmpp_server }}
+org.jitsi.jigasi.xmpp.acc1.ANONYMOUS_AUTH=false
+org.jitsi.jigasi.xmpp.acc.ALLOW_NON_SECURE=true
+org.jitsi.jigasi.xmpp.acc1.IS_SERVER_OVERRIDDEN=true
+org.jitsi.jigasi.xmpp.acc1.JINGLE_NODES_ENABLED=false
+org.jitsi.jigasi.xmpp.acc1.AUTO_DISCOVER_STUN=false
+org.jitsi.jigasi.xmpp.acc1.IM_DISABLED=true
+org.jitsi.jigasi.xmpp.acc1.VIDEO_CALLING_DISABLED=true
+org.jitsi.jigasi.xmpp.acc1.SERVER_STORED_INFO_DISABLED=true
+org.jitsi.jigasi.xmpp.acc1.IS_FILE_TRANSFER_DISABLED=true
+
+# Disable certificate check
+net.java.sip.communicator.service.gui.ALWAYS_TRUST_MODE_ENABLED={{ jigasi_disable_cert_check | bool | lower}}
+
+
+# sip health checking
+# Enables sip health checking by specifying a number/uri to call
+# the target just needs to auto-connect the call play some audio,
+# the call must be established for less than 10 seconds
+# org.jitsi.jigasi.HEALTH_CHECK_SIP_URI=healthcheck
+#
+# The interval between healthcheck calls, by default is 5 minutes
+org.jitsi.jigasi.HEALTH_CHECK_INTERVAL=300000
+#
+# The timeout of healthcheck, if there was no successful health check for
+# 10 minutes (default value) we consider jigasi unhealthy
+org.jitsi.jigasi.HEALTH_CHECK_TIMEOUT=600000

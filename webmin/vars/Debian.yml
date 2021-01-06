@@ -1,0 +1,4 @@
+---
+
+webmin_dependencies:
+  - apt-transport-https

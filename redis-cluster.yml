@@ -1,0 +1,12 @@
+# v1.0
+---
+- hosts: redis
+  vars:
+    redis_memory_prct: 0.8
+    redis_sentinel_cluster_name: "mymaster"
+    redis_data_dir: /var/lib/redis
+    redis_enable_password: false
+  roles:
+    - role: redis
+      redis_hosts: "{{ play_hosts }}"
+      redis_setting_maxmemory_prct: "{{ redis_memory_prct }}"

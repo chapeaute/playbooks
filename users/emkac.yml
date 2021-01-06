@@ -1,0 +1,13 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users_groups:
+        - name: exploit
+      users:
+        - login: emmanuel.kacou
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDRZljwLoehMryS2k+XohevioGMYjAcSWtJd7ij37NinwGli/frgO5jDch/t8bh8+1nH3Us0kUMOgq2rAGrBWx1+Hmx1RxserMUuSjekwjdqxdjzKi80xu49pwS4sPjyMKMMFgmjq/XAwUbMz2ypIBILyjfSKu+KisT8xxjfR4r5b+qjdWAja9H6mumDNrpQXOil7RZCzMOAe/oMXrYgSu/aaD0L7+72f+bMK9BkvhNLC7zFWWTI6L9QlPsv5YLdo8jBFX8NKc9NE64Vf3oNNSytebKmLRii8KbobIOClUR32cjQph6Jb5cw3dHGQV0cMjaVFmxnrq6Wt9oETx789x5mLOd/UuhRlB72hGw0r8AyKVlsYmRxmeI9UgqB5q+eriBbPMPKI2WPS9scrMNKtMHHOktfXg1zVSLXyVKWTwg38T9g8/+MuRszxJKWvYAZE1hy87QYHXGeU1FrQt5aBXmChqugXTcQcBJ5W9Q3SxOaSYjO9kqwK6UcraSaMPErooj7E8Q0UhBJBHe8EEvztnRK7sn2qej3JRLO3z6BzbGR2CYZKa4/X8WXF6GLMbAyWM2JrY2xf0s2nfQJEgjIgmoQQaOC8NzIJv7gSAnRv8mIYRQZTGZObqyu1QsghR+X4RWmWOnkNo4L49O2Hip7onSSvbf79zDvNs+fLbXxGK2zQ== emmanuel.kacou@orange.com
+

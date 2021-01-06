@@ -1,0 +1,38 @@
+---
+#
+# RabbitMQ data directory
+#
+- name: preconfig | Check if {{ rabbitmq_data_dir }} data directory exists
+  stat:
+    path: "{{ rabbitmq_data_dir }}"
+  register: data_dir
+
+- name: preconfig | Create {{ rabbitmq_data_dir }} data directory
+  file:
+    state:   directory
+    path:    "{{ rabbitmq_data_dir }}"
+    setype:  rabbitmq_var_lib_t
+    recurse: yes
+  when: not data_dir.stat.exists
+
+- name: preconfig | Create symlink from {{ rabbitmq_default_data_dir }} to {{ rabbitmq_data_dir }} data directory
+  file:
+    state: link
+    src:   "{{ rabbitmq_data_dir }}"
+    dest:  "{{ rabbitmq_default_data_dir }}"
+    force: true
+  when: rabbitmq_data_dir != rabbitmq_default_data_dir
+
+- name: preconfig | Declare SElinux file context for new data directory
+  sefcontext:
+    target: '{{ rabbitmq_data_dir }}(/.*)?'
+    setype: rabbitmq_var_lib_t
+    state:  present
+  register: selinux
+  when: rabbitmq_data_dir != rabbitmq_default_data_dir
+
+- name: preconfig | Apply new SELinux file context
+  command: "restorecon -Rv {{ rabbitmq_data_dir }}"
+  when:
+    - rabbitmq_data_dir != rabbitmq_default_data_dir
+    - selinux.changed

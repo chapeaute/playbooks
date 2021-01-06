@@ -1,0 +1,10 @@
+---
+- hosts: rundeck
+  vars:
+    rundeck_admin_pass: changeme
+    rundeck_apache_vhostname: "{{ inventory_hostname }}"
+  roles:
+    - role: mariadb-server
+    - role: rundeck
+      rundeck_apache_proxy_enable: True
+      rundeck_db_driver: mysql

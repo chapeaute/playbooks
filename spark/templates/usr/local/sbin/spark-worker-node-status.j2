@@ -1,0 +1,3 @@
+#!/bin/bash
+
+curl -s http://localhost:{{ spark_worker_port }}/json/ | jq '.'

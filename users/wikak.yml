@@ -1,0 +1,10 @@
+---
+- hosts: all
+  gather_facts: False
+  roles:
+    - role: basic-user
+      users:
+        - login: wikak
+          groups: exploit
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsNS7Spub3MnS8EV08GeZQUaeah51Dh6jTI2EubCLqA2rS4o2H0SJ8NsRQh07Zz3MyhxGXldggd/YCWSaBDu7nYlG0gi2i0EOoUYPip+m/RJVt52AzC6aK9LVnyR9X2JOm7hl0VRxOZxQNoDNtWp+ufPZFwIH2gCgHzIDm1RmK8sGxD5X/H67ZDc61OJQevfsKPnMI0nnlZ5Tmd5vQKDm44p8lMc+pptnSNeUk5H4ErUvo8yjtovRMObFTg3CQG3hhRMNNyYN1BotpKr6yGMSU4j0A1LuzU261RYd0+fStaqW2bLZoyC01kYlGvQLwWwk/DuP16HtWsewXxrsBKKx3

@@ -1,0 +1,11 @@
+---
+# vars file for traefik
+traefik_service: traefik
+traefik_package: traefik
+
+traefik_user: traefik
+traefik_group: traefik
+
+traefik_conf_dir: /etc/traefik
+traefik_data_dir: /var/lib/traefik
+traefik_log_dir: /var/log/traefik

@@ -1,0 +1,18 @@
+---
+
+image: quay.io/ansible/molecule:3.0.4
+services:
+  - docker:dind
+
+stages:
+  - tests
+
+before_script:
+  - docker -v
+  - ansible --version
+  - molecule --version
+
+molecule:
+  stage: tests
+  script:
+    - molecule test

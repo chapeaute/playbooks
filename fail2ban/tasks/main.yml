@@ -1,0 +1,47 @@
+# tasks file for fail2ban
+---
+# include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: '{{ ansible_os_family }}.yml'
+
+- name: main | Install fail2ban
+  package:
+    name: "{{ item }}"
+    state: installed
+  with_items:
+    - "{{ fail2ban_packages }}"
+
+- name: main | Enable fail2ban service on boot
+  service:
+    name:    fail2ban
+    enabled: yes
+
+- name: main | Update configuration file /etc/fail2ban/fail2ban.conf
+  template:
+    src:   etc/fail2ban/fail2ban.conf.j2
+    dest:  /etc/fail2ban/fail2ban.conf
+    owner: root
+    group: root
+    mode:  0644
+  notify: restart fail2ban
+
+- name: main | Update configuration file /etc/fail2ban/jail.conf
+  template:
+    src:   etc/fail2ban/jail.conf.j2
+    dest:  /etc/fail2ban/jail.conf
+    owner: root
+    group: root
+    mode:  0644
+  notify: restart fail2ban
+

@@ -1,0 +1,3 @@
+---
+- import_playbook: snmp-agent.yml
+- import_playbook: centreon-agent.yml

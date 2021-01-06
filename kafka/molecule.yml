@@ -1,0 +1,16 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: kafka-1
+      hostname: kafka-1
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+      ansible_groups:
+        - kafka
+verifier:
+  name: testinfra

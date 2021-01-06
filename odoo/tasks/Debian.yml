@@ -1,0 +1,16 @@
+---
+
+- name: Debian | Add apt key
+  apt_key:
+    url: "https://nightly.odoo.com/odoo.key"
+    state: present
+
+- name: Debian | Add deb repository
+  apt_repository:
+    filename: odoo
+    repo: deb http://nightly.odoo.com/{{ odoo_version }}/nightly/deb/ ./
+    state: present
+
+- name: Debian | Update cache
+  apt:
+    update_cache: yes

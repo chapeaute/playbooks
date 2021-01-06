@@ -1,0 +1,13 @@
+---
+- hosts: centreon-central
+  vars:
+    mysql_data_dir:      "{{ _monitoring_mariadb_data_dir }}"
+    mysql_backup_dir:    "{{ _monitoring_mariadb_backup_dir }}"
+    centreon_clapi_user: "{{ _monitoring_admin_user }}"
+    centreon_clapi_pass: "{{ _monitoring_admin_pass }}"
+  roles:
+    - role: mariadb-server
+      mysql_config_bind_address: 127.0.0.1
+      mysql_config_innodb_buffer_pool_size_prct: 0.4
+    - role: centreon-server
+      centreon_db_admin_pass: "{{ mysql_root_password }}"

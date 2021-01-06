@@ -1,0 +1,54 @@
+#!/bin/bash
+
+APACHE_CTL=httpd
+TMP_FILE=`mktemp`
+
+function is_my_host() {
+    ip=$(getent ahosts $host | awk '{print $1}' | uniq)
+    echo 127.0.0.1 `hostname -I` | grep -qw "$ip" > /dev/null && return 0 || return 1
+}
+
+# Ouput differ when 1 or many vhost are declared in apache configuration
+$APACHE_CTL -t -D DUMP_VHOSTS | egrep -q "port [0-9]+ namevhost" || vhost_count=1
+
+# Get vhost list
+if [ "$vhost_count" == 1 ]; then
+    vhost_list=$($APACHE_CTL -t -D DUMP_VHOSTS | egrep -v "VirtualHost configuration:" | cut -d: -f2 | awk '{print $2":"$1":"$3}' | sed -e "s/:\*:/:/" -e 's/:(/:/' -e 's/:[0-9]*)$//')
+else
+    vhost_list=$($APACHE_CTL -t -D DUMP_VHOSTS | egrep "port [0-9]+ namevhost"  | awk '{print $4":"$2":"$5}' | sed -e 's/:(/:/' -e 's/:[0-9]*)$//')
+fi
+
+# Extract vhost not proxied
+for vhost in $vhost_list
+do
+    redirect_local=false
+    vhost_name=$(echo $vhost | cut -d: -f1)
+    vhost_port=$(echo $vhost | cut -d: -f2)
+    vhost_file=$(echo $vhost | cut -d: -f3)
+
+    sed -n -e "/<VirtualHost .*\:$vhost_port>/,/<\/VirtualHost>/p" $vhost_file | grep -v "[[:space:]]*#" > $TMP_FILE
+    egrep -q "[[:space:]]*SSLEngine[[:space:]]*on" $TMP_FILE && vhost_proto=https || vhost_proto=http
+    egrep -q "[[:space:]]*DocumentRoot.*" $TMP_FILE && vhost_docroot=true || vhost_docroot=false
+    proxy_host=`egrep "[[:space:]]*ProxyPass[[:space:]]+" $TMP_FILE | awk '{print $3}' | awk -F/ '{print $1$3}'` && vhost_proxy=true || vhost_proxy=false
+
+    # If proxy, check if it's a local redirect
+    if [ -n $proxy_host ]; then
+        proto=$(echo $proxy_host | cut -d: -f1)
+        host=$(echo $proxy_host | cut -d: -f2)
+
+        if [ "$proto" == "http" -o "$proto" == "https" ]; then
+            is_my_host $host && redirect_local=true
+        elif [ "$proto" == "balancer" ]; then
+            sed -n -e "/<Proxy[[:space:]]*balancer:\/\/${host}.*>/,/<\/Proxy>/p" $TMP_FILE > ${TMP_FILE}-px
+            host=`egrep "[[:space:]]*BalancerMember[[:space:]]+" ${TMP_FILE}-px | awk '{print $2}' | awk -F/ '{print $3}' | cut -d: -f1`
+            is_my_host $host && redirect_local=true
+        fi
+    fi
+
+    if [ $vhost_docroot == "true" -o $redirect_local == "true" ]; then
+        echo "$vhost_name $vhost_port $vhost_proto"
+    fi
+done
+
+rm -f $TMP_FILE ${TMP_FILE}-px
+

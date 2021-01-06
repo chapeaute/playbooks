@@ -1,0 +1,26 @@
+---
+# handlers file for jitsi-jibri
+
+- name: Register jibri on XMPP Server
+  command: "prosodyctl register {{ jibri_xmpp_user }} {{ jibri_xmpp_auth_domain }} {{ jibri_xmpp_pass }}"
+  delegate_to: "{{ jibri_xmpp_server }}"
+
+- name: Register recorder on XMPP Server
+  command: "prosodyctl register recorder {{ jibri_xmpp_recorder_domain }} {{ jibri_xmpp_pass }}"
+  delegate_to: "{{ jibri_xmpp_server }}"
+
+- name: "Restart jibri"
+  service:
+    name: "jitsi-jibri@{{ item }}"
+    state: restarted
+  with_sequence: "count={{ jibri_workers }}"
+
+- name: Load snd-aloop module
+  modprobe:
+    name: snd-aloop
+    state: present
+
+- name: Unload snd-aloop module
+  modprobe:
+    name: snd-aloop
+    state: absent

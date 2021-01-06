@@ -1,0 +1,22 @@
+---
+
+- hosts: jitsi-all-in-one
+  vars:
+    jitsi_meet_enable_etherpad: true
+    jitsi_stun_servers: ["jitsi-turnserver.dev01.smile.lan"]
+    jitsi_turn_servers: ["jitsi-turnserver.dev01.smile.lan"]
+    jitsi_turn_secret: "Yhflkjhgziéèçà@&#çù"
+  roles:
+    - role: prosody
+    - role: jitsi-jicofo
+    - role: jitsi-jigasi
+    - role: jitsi-meet
+    - role: jitsi-videobridge
+    - role: etherpad
+
+- hosts: jitsi-turnserver
+  vars:
+    coturn_static_auth_secret: "Yhflkjhgziéèçà@&#çù"
+  roles:
+    - role: letsencrypt
+    - role: coturn

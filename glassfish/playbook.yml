@@ -1,0 +1,5 @@
+---
+- hosts: all
+  roles:
+    - role: glassfish
+      glf_memory_size_prct: 0.1

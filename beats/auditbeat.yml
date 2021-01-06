@@ -1,0 +1,8 @@
+---
+- hosts: all
+  roles:
+    - role: auditbeat
+      ab_version: "7.0"
+      #ab_kafka_hosts: "{{ groups['kafka'] }}"
+      #ab_logstash_hosts: "{{ groups['logstash'] }}"
+      #ab_es_hosts: "{{ groups['elasticsearch'] }}"

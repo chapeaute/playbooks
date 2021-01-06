@@ -1,0 +1,49 @@
+---
+
+- name: install_from_source | Install python dependencies
+  package:
+    name:  "{{ odoo_python_dependencies }}"
+    state: present
+
+- name: install_from_source | Deploy source
+  unarchive:
+    src:        "https://codeload.github.com/odoo/odoo/zip/{{ odoo_version }}"
+    dest:       "{{ odoo_home_dir }}"
+    creates:    "{{ odoo_home_dir }}/odoo-{{ odoo_version }}"
+    remote_src: true
+  become_user:  "{{ odoo_user }}"
+  become: true
+
+- name: install_from_source | link src
+  file:
+    src:   "{{ odoo_home_dir }}/odoo-{{ odoo_version }}"
+    dest:  "{{ odoo_src_dir }}"
+    force: yes
+    state: link
+
+- name: install_from_source | Install Odoo python dependencies
+  environment:
+    PATH: "/opt/rh/rh-python{{ python_version }}/root/usr/bin:{{ ansible_env.PATH|default('.') }}"
+    LD_LIBRARY_PATH: "/opt/rh/rh-python{{ python_version }}/root/usr/lib64:{{ ansible_env.LD_LIBRARY_PATH|default('.') }}"
+    MANPATH: "/opt/rh/rh-python{{ python_version }}/root/usr/share/man:{{ ansible_env.MANPATH|default('.') }}"
+    PKG_CONFIG_PATH: "/opt/rh/rh-python{{ python_version }}/root/usr/lib64/pkgconfig:{{ ansible_env.PKG_CONFIG_PATH|default('.') }}"
+    XDG_DATA_DIRS: "/opt/rh/rh-python{{ python_version }}/root/usr/share:{{ ansible_env.XDG_DATA_DIRS|default('.') }}"
+  pip:
+    requirements: "{{ odoo_src_dir }}/requirements.txt"
+    virtualenv:   "{{ odoo_home_dir }}/venv"
+  become_user: "{{ odoo_user }}"
+  become: true
+  tags:
+    - install
+    - install_requirements
+
+- name: install_from_source | Deploy Odoo systemd unit file
+  template:
+    src:  etc/systemd/system/odoo.service
+    dest: /etc/systemd/system/odoo.service
+  notify:
+   - Reload systemd
+  tags:
+    - config
+
+- meta: flush_handlers

@@ -1,0 +1,12 @@
+---
+# tasks file for RedHat
+- name: RedHat | Set firewall rules
+  firewalld:
+    service:   high-availability
+    zone:      "{{ firewall_zone }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  when:
+    - ansible_distribution_version >= '7'
+    - firewall_setup

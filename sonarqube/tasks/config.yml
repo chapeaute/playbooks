@@ -1,0 +1,51 @@
+---
+
+- name: config | Setup sysctl config
+  sysctl:
+    name: "{{ item.name }}"
+    value: "{{ item.value }}"
+    state: present
+    reload: yes
+    sysctl_set: yes
+  with_items:
+    - name: vm.max_map_count
+      value: 262144
+    - name: fs.file-max
+      value: 65536
+  notify:
+    - "Restart sonarqube"
+
+- name: config | Remove old jvm config from ES jvm.options
+  tags: config
+  lineinfile:
+    path: "{{ sonarqube_install_dir }}/elasticsearch/config/jvm.options"
+    regexp: "^{{ item }}"
+    state: absent
+  with_items:
+    - 8
+    - 9
+    - 10
+  notify:
+    - "Restart sonarqube"
+
+- name: main | Setup sonar Properties
+  tags: config
+  lineinfile:
+    path: "{{ sonarqube_install_dir }}/conf/sonar.properties"
+    regexp: "^#?{{ item.split('=')[0] }}"
+    line: "{{ item }}"
+    owner: "{{ sonarqube_user }}"
+    group: "{{ sonarqube_group }}"
+    mode: 0644
+    state: present
+  with_items:
+    - sonar.jdbc.username={{ sonarqube_db_user }}
+    - sonar.jdbc.password={{ sonarqube_db_pass }}
+    - sonar.jdbc.url=jdbc:postgresql://{{ sonarqube_db_host }}/{{ sonarqube_db_name }}
+    - sonar.web.javaOpts=-Xmx{{ sonarqube_web_memory_size }}m -Xms{{ sonarqube_web_memory_size }}m -XX:+HeapDumpOnOutOfMemoryError
+    - sonar.ce.javaOpts=-Xmx{{ sonarqube_ce_memory_size }}m -Xms{{ sonarqube_ce_memory_size }}m -XX:+HeapDumpOnOutOfMemoryError
+    - sonar.search.javaOpts=-Xmx{{ sonarqube_search_memory_size }}m -Xms{{ sonarqube_search_memory_size }}m -XX:+HeapDumpOnOutOfMemoryError
+    - sonar.path.logs=logs
+    - sonar.log.rollingPolicy=time:yyyy-MM-dd
+    - sonar.log.maxFiles={{ sonarqube_log_maxfiles }}
+  notify: "Restart sonarqube"

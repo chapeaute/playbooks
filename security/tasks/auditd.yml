@@ -1,0 +1,17 @@
+---
+- name: auditd | Enabled auditd on boot
+  lineinfile:
+    dest:   /etc/default/grub
+    regexp: '^(GRUB_CMDLINE_LINUX="(?!.*\baudit=1\b).*)"$'
+    line:   '\1 audit=1"'
+    backrefs: yes
+  notify:
+    - Update Grub2
+  when: security_level >= 2
+
+- name: auditd | Configure auditd
+  copy:
+    src:  etc/audit/rules.d/cis.rules
+    dest: /etc/audit/rules.d/cis.rules
+  when: security_level >= 2
+

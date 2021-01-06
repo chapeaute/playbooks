@@ -1,0 +1,23 @@
+---
+
+- name: RedHat | Disable SELinux :-(
+  selinux:
+    policy: targeted
+    state: permissive
+
+- name: RedHat | Add the Ambari repository (yum)
+  yum_repository:
+    name: "ambari"
+    description: "ambari Version - ambari-{{ ambari_version }}"
+    baseurl: "{{ ambari_repo_url }}"
+    file: 'ambari'
+    state: present
+    gpgcheck: yes
+    gpgkey: "{{ ambari_repo_url }}/RPM-GPG-KEY/RPM-GPG-KEY-Jenkins"
+
+- name: RedHat | Disable firewalld
+  service:
+    name:    firewalld
+    state:   stopped
+    enabled: false
+  when: ambari_disable_firewall

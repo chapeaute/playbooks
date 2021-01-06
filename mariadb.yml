@@ -1,0 +1,11 @@
+# v1.0
+---
+- hosts: all
+  vars:
+    mysql_version: 10.5
+    mysql_data_dir: /srv/mysql
+    mysql_backup_dir: /srv/backup/mysql
+    mysql_config_innodb_buffer_pool_size_prct: 0.7
+    mysql_config_max_connections: 500
+  roles:
+    - role: mariadb-server

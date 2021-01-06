@@ -1,0 +1,24 @@
+---
+- name: osd | Destroy existing data and filesystem on {{ device }} on OSD nodes
+  shell: "ceph-deploy disk zap {{ item }} {{ device }}"
+  become:      yes
+  become_user: "{{ ceph_user }}"
+  args:
+    chdir:     "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster"
+  with_items:
+    - "{{ osd_hosts }}"
+  when:
+    - inventory_hostname in ceph_ctl_hosts
+    - cpeh_osd_zap
+
+- name: osd | Create OSD from {{ device }} on OSD nodes
+  shell: "ceph-deploy osd create --data {{ device }} {{ item }} && touch ~{{ ceph_user }}/deploy_osdcreate_{{ item }}{{ device | replace('/','_') }}_success"
+  become:      yes
+  become_user: "{{ ceph_user }}"
+  args:
+    chdir:     "~{{ ceph_user }}/{{ ceph_cluster_name }}_cluster"
+    creates:   "~{{ ceph_user }}/deploy_osdcreate_{{ item }}{{ device | replace('/','_') }}_success"
+  with_items:
+    - "{{ osd_hosts }}"
+  when:
+    - inventory_hostname in ceph_ctl_hosts

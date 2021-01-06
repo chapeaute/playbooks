@@ -1,0 +1,11 @@
+#!/bin/bash
+
+if [ $# -eq 1 ]; then
+    vhost_opt="--vhost $1"
+fi
+
+echo -e "=== Queues ==="
+rabbitmqctl -q list_queues $vhost_opt name state consumers messages messages_ready messages_unacknowledged messages_persistent disk_reads disk_writes memory | column -t
+
+echo -e "\n=== Channels ==="
+rabbitmqctl -q list_channels $vhost_opt user vhost acks_uncommitted consumer_count messages_unacknowledged messages_uncommitted messages_unconfirmed | column -t

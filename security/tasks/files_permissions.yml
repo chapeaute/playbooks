@@ -1,0 +1,12 @@
+---
+- name: files_permissions | Permission on bootloader config
+  file:
+    path: /boot/grub2/grub.cfg
+    owner: root
+    group: root
+    mode:  0600
+  with_items:
+    - /boot/grub2/grub.cfg
+    - /etc/passwd-
+    - /etc/group-
+  when: security_level >= 2

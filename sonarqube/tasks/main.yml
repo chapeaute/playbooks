@@ -1,0 +1,38 @@
+---
+# Include per-environment variables
+- name: main | include vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+
+- name: main | include config tasks
+  include_tasks: config.yml
+  tags: config
+
+- name: main | Create link to /var/lib/sonarqube
+  file:
+    src:   "{{ sonarqube_root_dir }}/sonarqube"
+    dest:  "{{ sonarqube_default_root_dir }}/sonarqube"
+    state: link
+  when: sonarqube_root_dir != sonarqube_default_root_dir
+
+- name: main | link logs dir
+  file:
+    src: "{{ sonarqube_install_dir }}/logs"
+    dest: /var/log/sonarqube
+    state: link
+
+- name: main | start and enable sonarqube
+  service:
+    name: sonarqube
+    state: started
+    enabled: yes

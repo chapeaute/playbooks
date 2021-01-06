@@ -1,0 +1,50 @@
+---
+firewall_setup: true
+manage_firewalld: "{{ firewall_setup }}"
+
+# defaults file for bind
+bind_version: "SecureDNS"
+bind_address: [ '127.0.0.1', '192.168.0.0/16', '172.16.0.0/12', '10.0.0.0/8' ]
+
+# Bind global configuration parameter
+bind_dnssec_enable: false
+bind_recursion: true
+bind_forwarders: []
+bind_allow_transfert: [ 'none' ]
+bind_allow_notify: "{{ bind_allow_transfert }}"
+bind_also_notify: "{{ bind_allow_notify }}"
+bind_allow_recursion: ['clients']
+bind_allow_query: ['clients']
+bind_allow_query_cache: ['clients']
+bind_extra_options: {}
+
+# Bind DDNS variables
+bind_ddns_enable: false
+bind_ddns_key_name: "domain.lan"
+
+# Bind ACL variables
+bind_acl:
+  clients:
+    - 127.0.0.1
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+
+# Bind zone variables
+bind_zone_conf_manage: false
+bind_zone_file_include: True
+#bind_zone_dft_servers:
+#bind_zone_dft_soa_server:
+#bind_zone_dft_soa_mail:
+#bind_zone:
+#  rp.smile.lan:
+#    subnet: 10.2.1.0
+#    servers: [ '10.1.1.2', '10.1.1.3' ]
+#    state: absent
+#  ovh.smile.lan:
+#    subnet: 10.2.1.0
+#    servers: [ '10.1.1.2', '10.1.1.3' ]
+#  ovh.swan.lan:
+#    soa_server: ns1.ovh.swan.lan
+#    soa_mail: admin.ovh.swan.lan
+#    servers: [ '10.1.1.2', '10.1.1.3' ]

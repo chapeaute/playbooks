@@ -1,0 +1,18 @@
+---
+
+- name: tunnel | set default ipsec hosts
+  set_fact: ipsec_hosts={{ tunnel.groups|default(ipsec_hosts) }}
+
+- name: tunnel | Deploy tunnel configuration file
+  tags: conf
+  template:
+    src: etc/ipsec.d/tunnel.conf.j2
+    dest: "/etc/ipsec.d/{{ tunnel.name| default(ipsec_default_name) }}.conf"
+  notify: restart ipsec service
+
+- name: tunnel | Deploy tunnel secret file
+  tags: deploy_config
+  template:
+    src: etc/ipsec.d/tunnel.secrets.j2
+    dest: "/etc/ipsec.d/{{ tunnel.name | default(ipsec_default_name) }}.secrets"
+  notify: restart ipsec service

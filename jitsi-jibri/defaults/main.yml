@@ -1,0 +1,28 @@
+---
+
+# Global jitsi variables
+jitsi_domain: "{{ ansible_fqdn }}"
+jitsi_xmpp_domain: "{{ jitsi_domain }}"
+jitsi_xmpp_server: "{{ ansible_fqdn }}"
+jitsi_xmpp_auth_domain: auth.{{ jitsi_xmpp_domain }}
+jitsi_xmpp_recorder_domain: recorder.{{ jitsi_xmpp_domain }}
+jitsi_xmpp_internal_muc: "internal.{{ jitsi_xmpp_auth_domain }}"
+
+# defaults file for jitsi-jibri
+
+jibri_service_name: "jitsi-jibri"
+jibri_version: 5142
+jibri_xmpp_user: jibri
+jibri_xmpp_domain: "{{ jitsi_xmpp_domain }}"
+jibri_xmpp_server: "{{ jitsi_xmpp_server }}"
+jibri_xmpp_pass: "{{ lookup('password', 'credential/{{ jitsi_xmpp_domain }}-jibri_xmpp_pass chars=ascii_letters,digits') }}"
+jibri_xmpp_auth_domain: "{{ jitsi_xmpp_auth_domain }}"
+jibri_xmpp_recorder_domain: "{{ jitsi_xmpp_recorder_domain }}"
+jibri_xmpp_internal_domain: "{{ jitsi_xmpp_recorder_domain }}"
+jibri_xmpp_internal_muc: "{{ jitsi_xmpp_internal_muc }}"
+
+jibri_log_dir: /var/log/jitsi-jibri
+jitsi_recording_dir: /var/lib/jitsi-recordings
+jitsi_finalize_script: /usr/local/sbin/jibri-finalize-recordings
+jitsi_config_file: /etc/jitsi-jibri/jibri.conf
+jibri_workers: 1

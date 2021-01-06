@@ -1,0 +1,36 @@
+---
+- name: dashboard-import | Push all search in Kibana {{ dashbrd }}
+  uri:
+    url: "http://{{ kibana_elasticsearch_host }}:{{ kibana_elasticsearch_port }}/.kibana/search/{{ item[:-5] | basename }}"
+    method: PUT
+    body: "{{ lookup('file',item) }}"
+    body_format: json
+    status_code: 200,201
+  with_fileglob:
+    - "dashboards-5/{{ dashbrd }}/search/*.json"
+  register: import_search
+  changed_when: import_search.status == 201
+
+- name: dashboard | Push all visualization in Kibana {{ dashbrd }}
+  uri:
+    url: "http://{{ kibana_elasticsearch_host }}:{{ kibana_elasticsearch_port }}/.kibana/visualization/{{ item[:-5] | basename }}"
+    method: PUT
+    body: "{{ lookup('file',item) }}"
+    body_format: json
+    status_code: 200,201
+  with_fileglob:
+    - "dashboards-5/{{ dashbrd }}/visualization/*.json"
+  register: import_visualization
+  changed_when: import_visualization.status == 201
+
+- name: dashboard | Push all dashboard in Kibana {{ dashbrd }}
+  uri:
+    url: "http://{{ kibana_elasticsearch_host }}:{{ kibana_elasticsearch_port }}/.kibana/dashboard/{{ item[:-5] | basename }}"
+    method: PUT
+    body: "{{ lookup('file',item) }}"
+    body_format: json
+    status_code: 200,201
+  with_fileglob:
+    - "dashboards-5/{{ dashbrd }}/dashboard/*.json"
+  register: import_dashboard
+  changed_when: import_dashboard.status == 201

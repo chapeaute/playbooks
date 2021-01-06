@@ -1,0 +1,10 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: jendj
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCjo+Hztkj2cW4E9zWCJj43AnZNzNv10Oh14znmSFDa9k4Nd1jn1L1ddofGhmx/TBEYvRymCzTz766+CML4Cd1/DYSIQoh+NfSf4MJug+EIixXDmkdZd4hT26/RpFdA4nFCSnQ8HMo5W2Z+5nqJzPq61DvTTX8T3rcI50n64lcHw/+TA61dyneT+v9w03iXMqugYovi0+rWy8L7XQaQjmJr8iz9UaxRGnEIsKf5h+1oq4QP8YubH8vyl6rkI6ty67v7z7tFpG1ecedZfb+E7URAo1MobT4Yr81RbCVF53pXBbwrvl/e8J0BU07EyVJn/RURrlUEBUmpN6MgnjVuAeqj jean-marc.ndja@smile.ci

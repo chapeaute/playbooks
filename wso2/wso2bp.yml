@@ -1,0 +1,19 @@
+---
+
+- hosts: all
+  vars:
+    # WSO2 Version
+    wso2bp_version: 6.6.0
+    # WSO2 Password
+    wso2bp_admin_pass: changeme
+    # Root deploy directory
+    wso2bp_root_dir: "/var/lib"
+    # Percentage of total memory dedicated to jvm
+    wso2bp_memory_size_prct: 0.6
+    # Address of MySQL host
+    # wso2bp_db_host: "db_host_address"
+    # WSO2 data directory
+    # wso2bp_root_dir: /srv
+    wso2bp_nodes: "{{ groups['wso2bp'] }}"
+  roles:
+    - role: wso2bp

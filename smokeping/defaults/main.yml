@@ -1,0 +1,16 @@
+---
+
+# General configuration for smokeping
+smokeping_owner: IT Group
+smokeping_contact: user@example.com
+smokeping_mailhost: mail.example.com
+smokeping_cgiurl: "http://localhost/smokeping/sm.cgi"
+
+# Targets
+smokeping_title: Example Corp Network Latency Grapher
+smokeping_remark:  Welcome to the SmokePing website of Example Company. Here you will learn all about the latency of our network.
+smokeping_targets:
+  - name: Local
+    title: Local
+    hosts:
+      - 8.8.8.8

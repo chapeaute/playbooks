@@ -1,0 +1,75 @@
+---
+- name: config | Create kafka group
+  group:
+    name:  kafka
+    state: present
+
+- name: config | Create kafka user
+  user:
+    name:    kafka
+    comment: Kafka
+    group:   kafka
+    system:  yes
+    append:  yes
+    shell:   /sbin/nologin
+
+- name: config | Install kafka unit file
+  template:
+    src:   lib/systemd/system/kafka.service.j2
+    dest:  /lib/systemd/system/kafka.service
+    owner: root
+    mode:  0644
+  notify:
+    - "Reload systemd"
+
+- name: config | Create kafka data directory
+  file:
+    path:  '{{ item }}'
+    state: directory
+    owner: kafka
+    group: kafka
+    mode:  0775
+  with_items:
+    - "{{ kafka_log_dir }}"
+    - "{{ kafka_data_dir }}"
+
+- name: config | Get partition device info of {{ kafka_data_dir }}
+  shell: "df --output=source {{ kafka_data_dir }} | tail -1"
+  register: device
+  check_mode: no
+  changed_when: false
+
+- name: main | Get {{ device.stdout }} partition size
+  set_fact:
+    kafka_log_retention_bytes: "{{ ((ansible_mounts | selectattr('device','match',device.stdout) | list | first).size_total * kafka_log_retention_disk_prct)|int }}"
+  check_mode: no
+
+- name: config | Configure kafka
+  template:
+    src:   etc/kafka/server.properties.j2
+    dest:  /etc/kafka/server.properties
+    owner: root
+    group: root
+    mode:  0644
+  notify:
+      - "Restart Kafka"
+
+- name: config | Deploy admin script
+  tags: script
+  copy:
+    src:   "usr/local/sbin/{{ item }}"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - kafka-topic-read
+    - kafka-topic-write
+    - kafka-topic-create
+    - kafka-topic-delete
+    - kafka-topic-list
+    - kafka-topic-describe
+    - kafka-consumer-list
+    - kafka-group-list
+    - kafka-group-describe
+    - kafka-group-offset-sum

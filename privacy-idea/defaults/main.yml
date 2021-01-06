@@ -1,0 +1,11 @@
+---
+# defaults file for privacy-idea
+
+# USER
+privacy_admin_user: admin
+privacy_admin_password: changeme
+
+
+
+privacy_secret: "{{ lookup('password', 'credential/privacy_secret length=20 chars=ascii_letters,digits,hexdigits') }}"
+privacy_pepper:  "{{ lookup('password', 'credential/privacy_pepper length=20 chars=ascii_letters,digits,hexdigits') }}"

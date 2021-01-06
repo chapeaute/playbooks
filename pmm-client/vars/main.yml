@@ -1,0 +1,10 @@
+---
+# vars file for pmm-client
+pmmclient_package: pmm-client
+pmmclient_port_default:
+  - 42000
+  - 42001
+
+pmmclient_port_mysql: 42002
+pmmclient_port_mongo: 42003
+pmmclient_port_proxy: 42004

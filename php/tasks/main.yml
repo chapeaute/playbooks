@@ -1,0 +1,73 @@
+---
+- name: Include per-environment variables
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'default.yml'
+      paths: '../vars'
+
+- name: RedHat | Verify if php command exist
+  stat:
+    path: /usr/bin/php
+  register: php_bin
+
+- name: RedHat | Register PHP version
+  command: 'php -r "echo PHP_MAJOR_VERSION.PHP_MINOR_VERSION.\"\n\";"'
+  register: phpversion
+  ignore_errors: yes
+  changed_when: False
+  when: php_bin.stat.exists
+
+- name: main | Install dependencies
+  package:
+    name: "{{ php_dependencies | join(',') }}"
+
+- name: RedHat | Install PHP with SCL Repos
+  include: RedHat-scl-repo.yml
+  when: php_use_scl
+
+- name: RedHat | Install PHP with Remi Repos
+  include: RedHat-remi-repo.yml
+  when:
+    - not php_use_default_package
+    - not php_use_scl
+
+- name: main | Check if httpd is installed
+  shell: "service status {{ apache_service_name }} && echo started || echo stopped"
+  changed_when: false
+  register: httpd_exists
+
+- name: main | Install PHP packages
+  package:
+    name: "{{ (php_default_packages + php_packages + php_extension_packages + php_extra_packages) | join(',') }}"
+  async: 1200
+  notify:
+    - "Restart PHP-FPM"
+    - "Restart Apache Service"
+
+- name: main | Generate php extensions to install
+  set_fact:
+    php_extensions_list: "{{ (php_default_extensions + php_extensions + php_extra_extensions) | map('regex_replace', '^(.*)', '{{ php_package_prefix }}-\\1') | join(',') }}"
+
+- name: main | Install PHP extensions
+  package:
+    name: "{{ php_extensions_list }}"
+  async: 1200
+  notify:
+    - "Restart PHP-FPM"
+    - "Restart Apache Service"
+
+- include: '{{ ansible_os_family }}.yml'
+
+- name: main | Start PHP FPM
+  service:
+    name: "{{ php_fpm_service }}"
+    state: started
+    enabled: yes
+  when: php_use_scl

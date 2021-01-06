@@ -1,0 +1,12 @@
+---
+- hosts: all
+  vars:
+    ansible_ssh_pipelining: no
+  roles:
+    # - role: postgresql-server
+    #   postgresql_shared_buffers_prct: 0.15
+    #   postgresql_maintenance_work_mem_prct: 0.025
+    #   postgresql_effective_cache_size_prct: 0.25
+    #   postgresql_shared_buffers: 1MB
+    #   postgresql_client_encoding:
+    - role: odoo

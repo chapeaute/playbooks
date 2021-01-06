@@ -1,0 +1,9 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: sitou
+          groups: ['tomcat','dev']
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC1+hKIfjs52jmcf5q+5UZj71k2tz4wZYEa5d0sH1jdE/tEYo53j+DyvI5xfD3xvDKqEMDfxl8b3ZRFCl2YhmaMb9Nj5cfE/p68VEbiPvStndp11QlS2zp/w5PVwYMiO+woSv/yPReV4n7QmVH0pGeDeTY1tIRxcayoIg+eBrW9GVjM6vm3Bc1VhMYEkpogl5lToACSyBPXWLbe05nLeyBxXDDCEbXhgoyl47kNZevhUaJcoSSEial1Us8p/Qh188erAWPpXI59mkjZXPBMil7UZbSK3FO5PcMH7Ju6NIKVPRnYFbmdMkd0JeeZOI1EgE7yNgrX5qtJv6eAp5DIHtXl sie.toure@objectif-libre.ci

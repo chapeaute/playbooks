@@ -1,0 +1,37 @@
+---
+
+# tasks file for cassandra
+- name: include vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include_tasks: "{{ ansible_os_family }}.yml"
+
+- import_tasks: tuning.yml
+
+- include_tasks: install.yml
+  tags: setup
+
+- import_tasks: config.yml
+  tags: config
+
+- import_tasks: monitoring.yml
+  tags: monitoring
+
+- import_tasks: users.yml
+  when: cassandra_enable_password
+
+- import_tasks: keyspaces.yml
+  when: cassandra_keyspaces | length > 0
+
+- import_tasks: script.yml
+  tags: script

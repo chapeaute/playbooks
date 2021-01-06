@@ -1,0 +1,4 @@
+#!/bin/bash
+
+RULES_DIR="/var/lib/docker-volumes/modsecurity/rules"
+sed -i "s/^\([[:blank:]]*\)msg:.*/\1setvar:'tx.ogo=%{tx.ogo}\/%{rule.id}:%{tx.anomaly_score_pl1}-%{tx.anomaly_score_pl2}-%{tx.anomaly_score_pl3}-%{tx.anomaly_score_pl4}:%{TX.anomaly_score}:%{rule.msg}',\\\\\n\1setenv:'env_msecblk=%{tx.ogo}',\\\\\n&/g" $RULES_DIR/REQUEST-*.conf

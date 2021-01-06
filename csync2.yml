@@ -1,0 +1,19 @@
+---
+- name: main | Install csync2 only
+  hosts: csync2
+  tags: csync2
+  roles:
+    - role: csync2-lsyncd
+      csync2_hosts: "{{ play_hosts }}"
+      csync2_bash_logout: true
+      csync2_config_per_group: false
+      lsyncd_enabled: false
+      csync2_groups:
+        - name: haproxy
+          includes:
+            - /etc/haproxy/haproxy.cfg
+          actions:
+            - name: haproxy
+              pattern: '/etc/haproxy/*'
+              exec: 'haproxy -c -f /etc/haproxy/haproxy.cfg && systemctl reload haproxy'
+              do_local: true

@@ -1,0 +1,38 @@
+---
+- name: config | Check if {{ key }} is declared
+  shell: "egrep '^wrapper\\.java\\.additional\\.[0-9]+={{ key }}' {{ mule_esb_root_dir }}/{{ mule_esb_service_name }}/conf/wrapper.conf | awk -F'[.=]' '{print $4}'"
+  register: wrapper_exist_id
+  check_mode: no
+  changed_when: false
+  tags: config
+
+- name: config | Update configuration {{ key }} with value {{ value }}
+  lineinfile:
+    dest:   "{{ mule_esb_root_dir }}/{{ mule_esb_service_name }}/conf/wrapper.conf"
+    regexp: "^wrapper.java.additional.(\\d+)={{ key }}.*"
+    line:   'wrapper.java.additional.\1={{ key }}{{ sep }}{{ value }}'
+    backrefs: yes
+  when: wrapper_exist_id.stdout_lines|length == 1
+  register: update_key
+  notify:
+    - Restart mule-esb
+  tags: config
+
+
+- name: config | Get next available id of wrapper.java.additional
+  shell: "expr $(grep '^wrapper\\.java\\.additional\\.' {{ mule_esb_root_dir }}/{{ mule_esb_service_name }}/conf/wrapper.conf | awk -F'[.=]' '{print $4}' | sort -n | tail -1) + 1"
+  register: wrapper_id
+  check_mode: no
+  changed_when: false
+  when: wrapper_exist_id.stdout_lines|length == 0
+  tags: config
+
+- name: config | Add configuration {{ key }} with value {{ value }}
+  lineinfile:
+    dest:   "{{ mule_esb_root_dir }}/{{ mule_esb_service_name }}/conf/wrapper.conf"
+    line:   'wrapper.java.additional.{{ wrapper_id.stdout }}={{ key }}{{ sep }}{{ value }}'
+  when: wrapper_exist_id.stdout_lines|length == 0
+  register: update_key
+  notify:
+    - Restart mule-esb
+  tags: config

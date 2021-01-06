@@ -1,0 +1,46 @@
+---
+
+- name: Install | Install dependencies
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "{{ genieacs_gui_dependencies }}"
+
+- name: Install | Compile gem production
+  command: "{{ item }}"
+  args:
+    chdir: "{{ genieacs_gui_data_dir }}"
+  environment:
+    PATH: "/usr/local/bin:{{ ansible_env.PATH }}"
+    RAILS_ENV: production
+  with_items:
+    - bundle install
+    - rake secret
+    - rake db:migrate
+    - rake assets:precompile
+
+- name: Install | Set permissions
+  file:
+    path: "{{ genieacs_gui_data_dir }}"
+    owner: "{{ genieacs_gui_user }}"
+    group: "{{ genieacs_gui_group }}"
+    state: directory
+    follow: yes
+
+- name: Install | Generate configuration
+  template:
+    src:  "{{ item }}.j2"
+    dest: "{{ genieacs_gui_data_dir }}/{{ item }}"
+    owner: "{{ genieacs_gui_user }}"
+    group: "{{ genieacs_gui_group }}"
+  with_items:
+    - config/environments/production.rb
+    - config/database.yml
+  notify: Restart genieacs-gui
+
+- name: Install | Start genieacs-gui
+  service:
+    name: genieacs-gui
+    state: started
+    enabled: yes

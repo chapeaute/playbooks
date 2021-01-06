@@ -1,0 +1,23 @@
+---
+- name: main | Install csync2 only
+  hosts: csync2
+  tags: csync2
+  roles:
+    - role: csync2-lsyncd
+      csync2_hosts: "{{ play_hosts }}"
+      csync2_bash_logout: true
+      csync2_config_per_group: false
+      lsyncd_enabled: false
+      csync2_groups:
+        - name: httpd
+          includes:
+            - /etc/httpd/conf.d/
+            - /etc/httpd/conf.modules.d/
+            - /etc/httpd/htpasswd/
+            - /etc/httpd/ssl/
+          actions:
+            - name: httpd
+              pattern: '/etc/httpd/*'
+              exec: 'httpd -t && systemctl reload httpd'
+              do_local: true
+

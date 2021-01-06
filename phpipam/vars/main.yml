@@ -1,0 +1,3 @@
+---
+# vars file for phpipam
+phpipam_default_root_dir: /var/www/html

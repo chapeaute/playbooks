@@ -1,0 +1,22 @@
+---
+
+- name: dirs | Create log dir
+  file:
+    path: "{{ etherpad_log_dir }}"
+    state: directory
+    owner: "{{ etherpad_user }}"
+    group: "{{ etherpad_group }}"
+    mode: 0755
+
+- name: dirs | link log dir
+  file:
+    src: "{{ etherpad_log_dir }}"
+    dest: "/var/log/{{ etherpad_service_name }}"
+    state: link
+
+- name: dirs | link root dir
+  file:
+    src: "{{ etherpad_root_dir }}/etherpad"
+    dest: "{{ etherpad_default_root_dir }}/etherpad"
+    state: link
+  when: etherpad_root_dir != etherpad_default_root_dir

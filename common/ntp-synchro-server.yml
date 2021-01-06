@@ -1,0 +1,18 @@
+---
+
+- hosts: ntp
+  tasks:
+    - name: add ntp server [ns-int-1.adm.plateforme.ci]
+      lineinfile:
+        path: /etc/ntp.conf
+        insertafter: '^server mgt-katello.data.plateforme.ci'
+        line: 'server ns-int-1.adm.plateforme.ci'
+    - name: add ntp server [ns-int-2.adm.plateforme.ci]
+      lineinfile:
+        path: /etc/ntp.conf
+        insertafter: '^server ns-int-1.adm.plateforme.ci'
+        line: 'server ns-int-2.adm.plateforme.ci'
+    - name: Restart service ntpd, in all cases
+      service:
+        name: ntpd
+        state: restarted

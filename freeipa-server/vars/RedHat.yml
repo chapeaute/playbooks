@@ -1,0 +1,10 @@
+---
+freeipa_packages:
+  - ipa-server
+
+freeipa_dns_packages:
+  - ipa-server-dns
+
+freeipa_require_packages:
+  - bash-completion
+  - rng-tools

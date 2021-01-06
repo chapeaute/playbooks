@@ -1,0 +1,7 @@
+---
+# handlers file for drupal
+
+- name: "Apply new SELinux file context"
+  command: restorecon -irv "{{ drupal_site_root }}/{{ item }}(/.*)?"
+  with_items:
+    - "{{ drupal_files_dir }}"

@@ -1,0 +1,5 @@
+---
+
+wekan_dependencies: 
+  - gcc-c++
+  - fontconfig-devel

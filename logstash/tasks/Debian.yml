@@ -1,0 +1,12 @@
+---
+- name: Debian | Install curl
+  package:
+    name: curl
+    state: present
+
+- name: Debian | Download package filebeat
+  command: curl -L -O https://artifacts.elastic.co/downloads/logstash/logstash-5.1.1.deb
+
+- name: Debian | install filebeat
+  command: dpkg -i logstash-5.1.1.deb
+

@@ -1,0 +1,75 @@
+#!/bin/bash
+
+APP_DIR="{{ confd_conf_dir }}"
+APP_NAME=""
+APP_FILE=""
+
+USER="{{ confd_user }}"
+GROUP="{{ confd_group }}"
+CONFD_SVC="{{ confd_service_name }}"
+
+function syntax() {
+    cat <<EOF
+Script to deploy confd configuration file
+
+Usage: ${0##*/} [-h|-n <app_name> -f <conf_file>]
+    -h                  Display this message
+    -n <app_name>       Application name
+    -f <conf_file>      Archive file in tar.gz format
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Abording..."
+    exit 1
+fi
+
+while getopts "hn:f:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        n)
+            APP_NAME="${OPTARG}"
+            ;;
+        f)
+            APP_FILE="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+
+if [[ -z $APP_NAME ]] || [[ -z $APP_FILE ]]; then
+    syntax
+    exit 1
+fi
+
+if [ ! -r "$APP_FILE" ]; then
+    echo "$APP_FILE: No such file or directory"
+    exit 1
+fi
+
+if [ ! -d "${APP_DIR}" ]; then
+    echo "Confd configuration directory ${APP_DIR} not found."
+    exit 1
+fi
+
+echo "Deploy configuration files"
+tar xzf ${APP_FILE} -C ${APP_DIR}
+
+echo "Restore permissions"
+chown -R ${USER}:${GROUP} ${APP_DIR}/{conf.d,templates}
+chmod -R g-w,o-rwx ${APP_DIR}/{conf.d,templates}
+
+echo "Restart $CONFD_SVC"
+systemctl restart ${CONFD_SVC}
+
+exit $?
+

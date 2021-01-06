@@ -1,0 +1,24 @@
+---
+# defaults file for security-apache
+security_level: 1
+
+security_php_settings: true
+
+php_display_errors: Off
+php_log_errors: On
+
+php_file_uploads: On
+php_upload_max_filesize: 100M
+php_post_max_size: 100M
+php_allow_url_fopen: On
+php_allow_url_include: On
+
+php_always_populate_raw_post_data: '-1'
+php_session_gc_maxlifetime: 1
+php_session_gc_divisor: 100
+
+php_date_timezone: 'Africa/Abidjan'
+php_memory_limit: '512M'
+
+
+php_disable_functions: 'exec, shell_exec, system, passthru, phpinfo, show_source, popen, filepro, filepro_rowcount, filepro_retrieve, posix_mkfifo, fopen_with_path, dbmopen, dbase_open'

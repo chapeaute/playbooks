@@ -1,0 +1,48 @@
+---
+
+# - hosts: zimbra-ldap
+#   roles:
+#     - role: zimbra
+#       zimbra_server_hostname: "zimbra-ldap.{{ansible_domain}}"
+#       zimbra_services:
+#         - ldap
+
+- hosts: zimbra-ldap
+  roles:
+    - role: drbd
+      drbd_hosts: "{{ groups['zimbra-ldap'] }}"
+      drbd_disk:  /dev/mapper/vg-data
+      drbd_netif:  eth1
+      drbd_res_name: data
+    - role: pacemaker
+      pcmk_hosts: "{{ groups['zimbra-ldap'] }}"
+      pcmk_vip_rsc:
+        - interface: eth1
+          address: 192.168.8.38
+          netmask: 24
+      pcmk_svc_rsc:
+        - zimbra
+      pcmk_drbd_rsc:
+        rsc_name: data
+        mnt_point: /srv
+        dir:
+          - src_dir: /opt
+            dst_dir: /srv
+
+- hosts: zimbra-store
+  roles:
+    - role: zimbra
+      zimbra_ldap_fqdn: "zimbra-ldap.{{ansible_domain}}"
+      zimbra_services:
+        - store
+        - apache
+        - logger
+        - drive
+        - chat
+
+- hosts: zimbra-mta
+  roles:
+    - role: zimbra
+      zimbra_ldap_fqdn: "zimbra-ldap.{{ansible_domain}}"
+      zimbra_services:
+        - mta

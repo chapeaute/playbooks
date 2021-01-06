@@ -1,0 +1,10 @@
+---
+- import_playbook: centreon-database.yml
+- import_playbook: centreon-central.yml
+- import_playbook: centreon-poller.yml
+
+- hosts: all
+  tasks:
+  - pause: prompt='Please confirm when you finish to configure poller in centreon central (see README file in centreon-poller ansible role for more informations) ! Press return to continue. Press Ctrl+c and then "a" to abort'
+
+- import_playbook: centreon-agent.yml

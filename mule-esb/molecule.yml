@@ -1,0 +1,15 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: mule-esb
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+      ansible_groups:
+        - mule-esb
+verifier:
+  name: testinfra

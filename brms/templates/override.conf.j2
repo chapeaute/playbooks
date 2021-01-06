@@ -1,0 +1,12 @@
+[Unit]
+Description=Business rules management system
+After=network.target
+
+[Service]
+Type=simple
+ExecStop={{ brms_dir }}/{{ brms.subpath }}/bin/jboss-cli.sh -c --controller={{ ansible_hostname }} command=:shutdown
+Restart=always
+WorkingDirectory={{ brms_dir }}/{{ brms.subpath }}
+
+[Install]
+WantedBy=multi-user.target

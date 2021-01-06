@@ -1,0 +1,5 @@
+---
+# vars file for ansible-mariadb-galera-cluster
+mariadb_default_data_dir: /var/lib/mysql
+mariadb_log_dir: /var/log/mysql
+mariadb_default_backup_dir: /var/backup/mysql

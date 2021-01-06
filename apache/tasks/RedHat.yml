@@ -1,0 +1,111 @@
+---
+- name: RedHat | Install python libs for selinux
+  package:
+    name: "{{ apache_selinux_packages }}"
+    state: present
+
+- name: RedHat | Install firewalld
+  package:
+    name: firewalld
+    state: present
+  when: firewall_setup
+
+- name: RedHat | Start and enable firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+  when: firewall_setup
+
+- name: RedHat | Setting firewall rules
+  firewalld:
+    service: "{{ item }}"
+    permanent: true
+    state: enabled
+    immediate: yes
+  with_items:
+      - http
+      - https
+  when:
+    - firewall_type == 'firewalld'
+    - firewall_setup
+
+- name: RedHat | Install packages required by modules
+  package:
+    name: "{{ item.1 }}"
+    state: "present"
+  with_subelements:
+    - '{{ apache2_modules_packages }}'
+    - packages
+  when: apache2_modules_packages is defined and item.0.module in apache2_all_modules
+  tags:
+    - install
+    - update_config
+  notify:
+    - "Restart Apache"
+
+- name: RedHat | Configure Apache2 SSL port
+  lineinfile:
+    dest:   "{{ apache2_config_file_ssl }}"
+    regexp: "^Listen .* https$"
+    line:   "Listen {{ apache2_ssl_port }} https"
+  when: "'ssl' in apache2_all_modules"
+  notify: "Restart Apache"
+  tags:
+    - install
+    - update_config
+
+- name: RedHat | Configure Apache2 ports
+  lineinfile:
+    dest:   "{{ apache2_config_file }}"
+    regexp: "^Listen "
+    line:   "Listen {{ apache2_port }}"
+  notify:   "Restart Apache"
+  tags:
+    - install
+    - update_config
+
+- name: RedHat | Install Apache2 base packages
+  package:
+    name: "{{ item }}"
+    state: "present"
+  with_items: '{{ apache2_packages|default(apache2_default_packages) + apache2_extra_packages|default([]) }}'
+  tags:
+    - install
+    - update_config
+  notify:
+    - "Restart Apache"
+
+- name: RedHat | Add auto-restart on-failure - create directory
+  file:
+    path:  /etc/systemd/system/httpd.service.d/
+    state: directory
+    owner: root
+    group: root
+    mode:  0755
+
+- name: RedHat | Add auto-restart on-failure - deploy systemd config for httpd
+  copy:
+    src:  etc/systemd/system/httpd.service.d/override.conf
+    dest: /etc/systemd/system/httpd.service.d/override.conf
+    owner: root
+    group: root
+    mode:  0644
+  notify:
+    - Reload Systemd
+
+# - include: firewall.yml
+#   when: firewall_setup
+
+- name: RedHat | Disable default Apache2 site
+  file:
+    path: "{{ apache2_vhosts_dir }}/{{ item }}"
+    state: absent
+  with_items: '{{ apache2_disabled_default }}'
+  notify: "Restart Apache"
+  tags:
+    - install
+    - update_config
+
+- include: selinux.yml
+  when: ansible_selinux and ansible_selinux.status == "enabled"

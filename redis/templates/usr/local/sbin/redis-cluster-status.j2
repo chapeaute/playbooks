@@ -1,0 +1,42 @@
+#!/bin/bash
+
+output=$(redis-cli -p {{ redis_sentinel_port }} sentinel get-master-addr-by-name {{ redis_sentinel_cluster_name }})
+master_host=$(echo $output | awk '{print $1}')
+master_port=$(echo $output | awk '{print $2}')
+
+{% if redis_enable_password %}
+redis_version=$(redis-cli --version | awk '{print $2}' | cut -d. -f1)
+redis_extra_opts=""
+
+if [ $redis_version -lt 5 ]; then
+	redis_extra_opts="-a $REDISCLI_AUTH"
+fi
+
+{% endif %}
+
+server_role=$(redis-cli {% if redis_enable_password %}$redis_extra_opts {% endif %} role)
+server_state=$(echo $server_role | awk '{print $1}')
+
+echo "Node State: $server_state"
+
+if [ $server_state == "slave" ]; then
+	sync_state=$(echo $server_role | awk '{print $4}')
+	echo "Sync State: $sync_state"
+fi
+
+echo "Redis Master:"
+echo "   - "$master_host `getent hosts $master_host | awk '{print $2}'`
+
+echo "Redis Slave: "
+for s in `redis-cli {% if redis_enable_password %}$redis_extra_opts {% endif %}-h $master_host -p $master_port info replication | grep ^slave`
+do
+        slave_ip=$(echo $s | awk -F'[=,]' '{print $2}')
+        echo -e "   - "$slave_ip `getent hosts $slave_ip | awk '{print $2}'`
+done | sort -k3
+
+echo "Redis Sentinel: "
+for s in `redis-cli -h $master_host -p {{ redis_sentinel_port }} sentinel sentinels {{ redis_sentinel_cluster_name }} | grep -A1 ip | egrep -v "^--|^ip"`
+do
+        echo -e "   - "$s `getent hosts $s | awk '{print $2}'`
+done | sort -k3
+

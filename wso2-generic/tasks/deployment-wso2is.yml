@@ -1,0 +1,55 @@
+---
+
+- name: add configs to deployment.toml
+  template:
+    src: "repository/is/{{ item }}.j2"
+    dest: "{{ wso2_generic_install_dir }}/repository/{{ item }}"
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+    mode: 0640
+  with_items:
+    - conf/deployment.toml
+  notify: "Restart service"
+
+- name: change configs of log4j
+  replace:
+    path: "{{ wso2_generic_confs_dir }}/log4j2.properties"
+    regexp: .*logger.com-hazelcast.name.*
+    replace: logger.com-hazelcast.name = com.hazelcast
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+  when: wso2_generic_isnodes|length > 1
+
+- name: change configs of log4j
+  replace:
+    path: "{{ wso2_generic_confs_dir }}/log4j2.properties"
+    regexp: .*logger.com-hazelcast.level.*
+    replace: logger.com-hazelcast.level = INFO
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+  when: wso2_generic_isnodes|length > 1
+
+- name: cluster configuration | add jndi file
+  template:
+    src: "repository/{{ item }}.j2"
+    dest: "{{ wso2_generic_install_dir }}/repository/{{ item }}"
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+    mode: 0640
+  with_items:
+    - conf/jndi2.properties
+  when: wso2_generic_amnodes|length > 1
+  notify: "Restart service"
+
+- name: cluster configuration | add JMS event publisher files- name
+  copy:
+    src: "{{ item }}"
+    dest: "{{ wso2_generic_install_dir }}/repository/deployment/server/eventpublishers/{{ item }}"
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+    mode: 0640
+  with_items:
+    - jmsEventPublisher_1.10.0-2.xml
+    - jmsEventPublisher-2.xml
+  when: wso2_generic_amnodes|length > 1
+    

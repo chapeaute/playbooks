@@ -1,0 +1,10 @@
+---
+# defaults file for beat
+
+# Global variables
+use_satellite_repo: False
+
+# Beat variable
+elastic_version: "5.6"
+elastic_string_version: "{{ elastic_version | string}}"
+elastic_major_version: "{{ elastic_string_version.split('.')[0] }}"

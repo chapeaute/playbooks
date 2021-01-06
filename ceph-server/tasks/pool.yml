@@ -1,0 +1,7 @@
+---
+- name: pool | Create pool
+  command: "ceph osd pool create {{ item.name }} {{ item.pg }}"
+  with_items:
+    - "{{ ceph_osd_pools }}"
+  when:
+    - inventory_hostname == ceph_osd_hosts[0]

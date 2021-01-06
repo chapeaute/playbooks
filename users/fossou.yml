@@ -1,0 +1,11 @@
+---
+
+- hosts: all
+  gather_facts: false
+  roles:
+    - role: basic-user
+      users:
+        - login: ulfos
+          groups: ['tomcat','exploit']
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC9zN6t6wsYlv+xvZ49qngyCWM4Ig1SIzCY3nEofscl4wYdGFCv4/Q31FtVfbetfpdcKs29N/uOflvu3YbAv5nSfIibxemVprBYoWmEU5kVpGnXw9qZ8rYVI7g1gUfMIDUyzL1hUXhAKhYfF4Bo7FvEWqR7XNWQuaIvBVzs0fcjfxbmUpNsTMEkE+rI/IqDkHoNFs/XlfW8DUjMypWh4GD9Pe/6xxBJCRQkU/ucXrypZhspW9anp/kOnMSfvlYW9kHQPRTk3UIn1W6ecyEbxm9Ij0tcxhs8dAtkVJDnSQHAt7StNw9eIjrEBagVIoEWK3ExE35AoaYe+uEQNne5OaMjCLVUHB9u0P06KEmdI47xElQ7eFl4Q4vgM4Xtg0ZCC08KGKg/ePsyimXJ7oRxZyUViSMcpE2kXAd7w9XIDjUCoXx8CpnvbvHHMJ9VfFRk3JfaM9XMLRr37e3Vmmh77XrmXSvcugcqlALAWWdH69zeSy+9dStltZIDxC9bu4XeFv03d2fgMDykR8o/0KPbnhYMK4b/pIcY6zeODJCEmWvHpooF3UOGO871cHJU6YjHNPBaW+2NKJDqCzXwC5bF8H+UdgNEYtXc+aSKw2gqW6nULTrTbvxlJ+sB78lvOdL/Ui6Dnl1s99ugSD+9fNAjTEd/viyTFfwLEM4/JdA7Qg9iAQ== ulrich.fossou@smile.ci

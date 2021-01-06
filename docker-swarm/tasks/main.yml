@@ -1,0 +1,100 @@
+---
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  tags:
+    - always
+
+- name: main | Setting firewall rules
+  firewalld:
+    port:      "{{ item }}"
+    zone:      "{{ firewall_zone }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - 2377/tcp
+    - 7946/tcp
+    - 7946/udp
+    - 4789/udp
+    - 9323/tcp
+
+- name: main | Download and deploy docker compose
+  get_url:
+    url:   "{{ docker_compose_download_url }}"
+    dest:  /usr/local/sbin/docker-compose
+    owner: root
+    group: root
+    mode:  0750
+    force: True
+  changed_when: no
+  when: inventory_hostname in docker_node_manager
+
+- name: main | Download docker compose bash completion
+  get_url:
+    url:   "{{ docker_bashcompletion_download_url }}"
+    dest:  /etc/bash_completion.d/docker-compose
+    owner: root
+    group: root
+    mode:  0644
+    force: True
+  changed_when: no
+
+- name: main | Flush handlers
+  meta: flush_handlers
+
+- set_fact:
+    master_mgr_addr: "{{ hostvars[docker_node_manager[0]]['ansible_'+docker_cluster_bind_interface]['ipv4']['address'] }}"
+  tags:
+    - always
+
+- name: main | Check Docker Swarm node status
+  shell: "docker info | grep '^ *Swarm: ' | awk '{print $2}'"
+  changed_when: no
+  register: swarm_status
+  check_mode: no
+
+- name: main | Initialize Docker Swarm cluster
+  command: "docker swarm init --advertise-addr {{ master_mgr_addr }}" 
+  when:
+    - "'inactive' in swarm_status.stdout_lines"
+    - inventory_hostname == docker_node_manager[0]
+
+- name: main | Retrieve Docker Swarm manager join token
+  command: "docker swarm join-token -q manager"
+  changed_when: no
+  register: swarm_mgr_token
+  delegate_to: "{{ docker_node_manager[0] }}"
+
+- name: main | Retrieve Docker Swarm worker join token
+  command: "docker swarm join-token -q worker"
+  changed_when: no
+  register: swarm_wrk_token
+  delegate_to: "{{ docker_node_manager[0] }}"
+
+- name: main | Join Manager node to Swarm cluster
+  command: "docker swarm join --token {{ swarm_mgr_token.stdout }} {{ master_mgr_addr }}:2377"
+  when:
+    - "'inactive' in swarm_status.stdout_lines"
+    - inventory_hostname in docker_node_manager
+    - inventory_hostname != docker_node_manager[0]
+
+- name: main | Join Worker node to Swarm cluster
+  command: "docker swarm join --token {{ swarm_wrk_token.stdout }} {{ master_mgr_addr }}:2377"
+  when:
+    - "'inactive' in swarm_status.stdout_lines"
+    - inventory_hostname in docker_node_worker
+
+- name: main | Update facts
+  setup:
+  tags:
+    - config
+

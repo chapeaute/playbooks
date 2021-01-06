@@ -1,0 +1,8 @@
+---
+- hosts: spagobi
+  roles:
+    - role: drbd
+      drbd_hosts: "{{ groups['spagobi'] }}"
+      drbd_disk:  /dev/vdb
+      drbd_netif:  eth1
+      drbd_res_name: data

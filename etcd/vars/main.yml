@@ -1,0 +1,15 @@
+---
+# vars file for etcd
+etcd_package_name: etcd
+etcd_service_name: etcd
+
+etcd_user: etcd
+etcd_group: etcd
+
+etcd_ports:
+  - 2379/tcp
+  - 2380/tcp
+
+etcd_conf_dir: /etc/etcd
+etcd_default_data_dir: /var/lib/etcd
+etcd_ctl_bin: /usr/bin/etcdctl

@@ -1,0 +1,18 @@
+---
+
+mysql_databases:
+  wso2_is:
+    db_name: "{{ wso2is_db_app_name }}"
+    encoding: latin1
+    collation: latin1_swedish_ci
+    sync_source:
+      host: "{{ inventory_hostname }}"
+      src: "{{ wso2is_install_dir }}/dbscripts/identity/mysql5.7.sql"
+      file: wso2is.sql
+  wso2_reg:
+    db_name: "{{ wso2is_db_shared_name }}"
+    encoding: latin1
+    collation: latin1_swedish_ci
+    sync_source:
+      host: "{{ inventory_hostname }}"
+      src: "{{ wso2is_install_dir }}/dbscripts/mysql5.7.sql"

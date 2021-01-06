@@ -1,0 +1,26 @@
+---
+
+- name: Config | Add hbase-site.xml
+  template:
+    src: conf/hbase-site.xml.j2
+    dest: "{{hbase_install_dir}}/conf/hbase-site.xml"
+    owner: hbase
+    group: hbase
+    mode: 644
+  notify:
+    - Restart Hbase
+
+- name: Config | Add envs to conf/hbase-env.sh
+  lineinfile:
+    line: "export {{ item.key }}={{ item.value }}"
+    dest: "{{ hbase_install_dir }}/conf/hbase-env.sh"
+    regexp: "^export {{ item.key }}"
+  notify:
+    - Restart Hbase
+  with_items:
+    - key: HBASE_MANAGES_ZK
+      value: "{{ hbase_manages_zk }}"
+    - key: "JAVA_HOME"
+      value: "{{ java_home }}"
+    - key: "HBASE_HEAPSIZE"
+      value: "{{ hbase_memory_size }}"

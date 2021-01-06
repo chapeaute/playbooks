@@ -1,0 +1,50 @@
+---
+#
+# GeoIP update
+#
+- name: geoip | Update GeoIP on CentOS distribution packages to avoid conflict
+  package:
+    name: "GeoIP"
+    state: latest
+
+- name: geoip | Install GeoIP Update package
+  package:
+    name: "{{ geoipupdate_get_url }}"
+
+- name: geoip | Deploy GeoIP configuration files
+  template:
+    src:   "etc/GeoIP.conf.j2"
+    dest:  "/etc/GeoIP.conf"
+    owner: root
+    group: root
+    mode:  0640
+
+- name: geoip | Create GeoIP local volume directory
+  file:
+    path:  "{{ docker_swarm_data_dir }}/ogo/GeoIP"
+    state: directory
+    owner: root
+    group: root
+    mode:  0755
+
+- name: geoip | Check if GeoIP databases exists
+  stat:
+    path: "{{ docker_swarm_data_dir }}/ogo/GeoIP/GeoLite2-Country.mmdb"
+  check_mode: no
+  register: geoip_country_db
+
+- name: geoip | Download first GeoIP databases version
+  command: /usr/bin/geoipupdate -f /etc/GeoIP.conf -d {{ docker_swarm_data_dir }}/ogo/GeoIP
+  when:
+    - not geoip_country_db.stat.exists
+
+- name: geoip | Crontab to update GeoIP databases
+  cron:
+    name:    "Crontab to update GeoIP Country database"
+    hour:    "4"
+    minute:  "{{ 59 | random(seed=ansible_fqdn) }}"
+    job:     "chronic /usr/bin/geoipupdate -f /etc/GeoIP.conf -d {{ docker_swarm_data_dir }}/ogo/GeoIP"
+    weekday: "{{ 7 | random(seed=ogo_cluster_name) }}"
+  tags:
+    - crontab
+    - script

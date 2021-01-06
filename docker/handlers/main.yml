@@ -1,0 +1,14 @@
+---
+# handlers file for docker
+- name: "Reload Systemd"
+  command: systemctl daemon-reload
+
+- name: "Restart Docker"
+  service:
+    name:  docker
+    state: restarted
+
+- name: "Restart Journald"
+  service:
+    name:  systemd-journald
+    state: restarted

@@ -1,0 +1,127 @@
+plugin_paths = { "{{ jicofo_prosody_plugins }}" }
+
+muc_mapper_domain_base = "{{ jicofo_xmpp_domain }}";
+admins = { "{{ jicofo_xmpp_user }}@{{ jicofo_xmpp_auth_domain }}", "{{ jicofo_jvb_xmpp_user }}@{{ jicofo_xmpp_auth_domain }}" }
+http_default_host = "{{ jicofo_xmpp_domain }}"
+
+{% if jitsi_use_turn_server | bool %}
+turncredentials_secret = "{{ jitsi_turn_secret }}";
+turncredentials_port = {{ jitsi_turn_credentials_port }};
+turncredentials_ttl = 86400;
+
+turncredentials = {
+{% for stun_server in jitsi_stun_servers %}
+    { type = "stun", host = "{{ stun_server }}", port =  "3478" },
+{% endfor %}
+{% for turn_server in jitsi_turn_servers %}
+    { type = "stun", host = "{{ turn_server }}", port =  3478, transport = "udp" },
+    { type = "turn", host = "{{ turn_server }}", port =  3478, transport = "udp" },
+    { type = "turns", host = "{{ turn_server }}", port = {{ jitsi_turn_credentials_port }}, transport = "tcp" },
+{% endfor %}
+};
+{% endif %}
+cross_domain_bosh = false;
+cross_domain_websocket = true;
+consider_bosh_secure = true;
+
+VirtualHost "{{ jicofo_xmpp_domain }}"
+
+  {% if jicofo_auth == "jwt" %}
+
+   authentication = "token"
+   app_id="{{ jicofo_auth_jwt_id }}"
+   app_secret="{{ jicofo_auth_jwt_secret }}"
+   allow_empty_token = false;  -- tokens are verified only if they are supplied by the client
+
+  {% else %}
+
+  authentication = "anonymous"
+
+  {% endif %}
+  ssl = {
+    key = "{{ jicofo_ssl_key_path }}";
+    certificate = "{{ jicofo_ssl_cert_path }}";
+  }
+
+  modules_enabled = {
+      "bosh";
+      "pubsub";
+      "websocket";
+      {% if jitsi_turn_servers | length > 0 %}"turncredentials";{% endif %}
+
+      "ping"; -- Enable mod_ping
+      "speakerstats";
+      "muc_domain_mapper";
+      "muc_meeting_id";
+      "conference_duration";
+      "muc_lobby_rooms";
+      "muc_size";
+      "polls";
+      "presence_identity";
+  }
+  c2s_require_encryption = false
+  allow_unencrypted_plain_auth = true
+  speakerstats_component = "speakerstats.{{ jicofo_xmpp_domain }}"
+  conference_duration_component = "conferenceduration.{{ jicofo_xmpp_domain }}"
+  main_muc = "conference.{{ jicofo_xmpp_domain }}"
+  lobby_muc = "lobby.{{ jicofo_xmpp_domain }}"
+
+{% if jicofo_auth == 'ldap' %}
+-- Guest virtual domain
+VirtualHost "guest.{{ jicofo_xmpp_auth_domain }}"
+  authentication = "anonymous"
+  c2s_require_encryption = false
+{% endif %}
+
+VirtualHost "{{ jicofo_xmpp_auth_domain }}"
+  ssl = {
+    key = "{{ jicofo_ssl_key_path }}";
+    certificate = "{{ jicofo_ssl_cert_path }}";
+  }
+  authentication = "internal_hashed"
+  c2s_require_encryption = false
+
+VirtualHost "recorder.{{ jicofo_xmpp_domain }}"
+    modules_enabled = {
+        "ping";
+    }
+    authentication = "internal_hashed"
+
+
+Component "lobby.{{ jicofo_xmpp_domain }}" "muc"
+    storage = "memory"
+    restrict_room_creation = true
+    muc_room_locking = false
+    muc_room_default_public_jids = true
+
+Component "conference.{{ jicofo_xmpp_domain }}" "muc"
+  storage = "memory"
+  modules_enabled = { 
+    "ping"; 
+    "muc_meeting_id";
+    "muc_domain_mapper";
+    "polls";
+    "polls_component";
+    {% if jicofo_auth == "jwt" %}
+    "token_verification";
+    "token_moderation";
+    {% endif %}
+  }
+  muc_room_cache_size = 1000
+  muc_room_locking = false
+  muc_room_default_public_jids = true
+
+Component "internal.{{ jicofo_xmpp_auth_domain }}" "muc"
+  storage = "memory"
+  modules_enabled = { "ping"; }
+  muc_room_locking = false                               
+  muc_room_default_public_jids = true   
+
+Component "focus.{{ jicofo_xmpp_domain }}"
+  component_secret = "{{ jicofo_xmpp_secret }}"
+
+Component "speakerstats.{{ jicofo_xmpp_domain }}" "speakerstats_component"
+  muc_component = "conference.{{ jicofo_xmpp_domain }}"
+
+Component "conferenceduration.{{ jicofo_xmpp_domain }}" "conference_duration_component"
+  muc_component = "conference.{{ jicofo_xmpp_domain }}"

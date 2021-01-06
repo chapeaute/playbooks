@@ -1,0 +1,5 @@
+---
+
+varnish_monitoring_packages:
+  - perl
+  - perl-Switch

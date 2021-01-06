@@ -1,0 +1,61 @@
+---
+- name: "Secure PHP ini"
+  ini_file:
+    dest: '/etc/php.d/security.ini'
+    section: "{{ item.section }}"
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+  with_items:
+    - key: file_uploads   # File upload
+      value: "{{php_file_uploads}}"
+      section: PHP
+    - key: upload_max_filesize
+      value: "{{php_upload_max_filesize}}"
+      section: PHP
+    - key: post_max_size
+      value: "{{php_post_max_size}}"
+      section: PHP
+    - key: date.timezone
+      value: "{{php_date_timezone}}"
+      section: Date
+    - key: memory_limit
+      value: "{{php_memory_limit}}"
+      section: PHP
+    - key: always_populate_raw_post_data
+      value: "{{php_always_populate_raw_post_data}}"
+      section: PHP
+    - key: session.gc_maxlifetime
+      value: "{{php_session_gc_maxlifetime}}"
+      section: Session
+    - key: session.gc_divisor
+      value: "{{php_session_gc_divisor}}"
+      section: Session
+    - key: display_errors
+      value: "{{php_display_errors}}"
+      section: PHP
+    - key: log_errors
+      value: "{{php_log_errors}}"
+      section: PHP
+  when: security_level >= 2
+  notify:
+    - "Restart Apache"
+
+- name: "Secure PHP ini"
+  ini_file:
+    dest: '/etc/php.d/security.ini'
+    section: "{{ item.section }}"
+    option: "{{ item.key }}"
+    value: "{{ item.value }}"
+  with_items:
+    - key: allow_url_fopen  # example if Off file_get_content function will not work
+      value: "{{php_allow_url_fopen}}"
+      section: PHP
+    - key: allow_url_include
+      value: "{{php_allow_url_include}}"
+      section: PHP
+    - key: disable_functions
+      value: "{{php_disable_functions}}"
+      section: PHP
+  when: security_level >= 3
+  notify:
+    - "Restart Apache"

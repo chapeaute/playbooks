@@ -1,0 +1,33 @@
+---
+
+- src: git@git.smile.ci:adminsys/ansible/role/apache.git
+  scm: git
+  version: v1.3.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/apache-proxy.git
+  scm: git
+  version: v1.2.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-firewalld.git
+  scm: git
+  version: v1.0.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/debian-backports.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/generic-service.git
+  scm: git
+  version: v1.3.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/openjdk.git
+  scm: git
+  version: v1.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/postgresql.git
+  scm: git
+  version: v1.3.5
+
+- src: git@git.smile.ci:adminsys/ansible/role/postgresql-provider.git
+  scm: git
+  version: v0.9.6

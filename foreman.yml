@@ -1,0 +1,9 @@
+---
+
+- hosts: foreman
+  roles:
+    - role: postgresql
+      postgresql_version: 13
+    - role: foreman
+      foreman_version: "2.2"
+      foreman_admin_password: changeme

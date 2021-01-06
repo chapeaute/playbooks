@@ -1,0 +1,42 @@
+---
+# defaults file for coturn
+
+# Global variables
+manage_firewalld: true
+use_satellite_repo: False
+
+
+# Server and realm conf
+coturn_server_name: "{{ ansible_fqdn }}"
+coturn_realm_name: "{{ ansible_fqdn }}"
+
+# Certs configuration
+coturn_use_certs: false
+coturn_cert_path:
+coturn_key_path:
+
+# Configure interfaces and ports
+coturn_listening_ip: 0.0.0.0
+coturn_external_ip: "{{ ansible_default_ipv4.address }}"
+coturn_listening_port: 3478
+coturn_tls_listening_port: 4443
+coturn_min_port: 10000
+coturn_max_port: 20000
+# Set up logging
+coturn_log_file: /var/log/coturn/turnserver.log
+coturn_syslog_enable: false
+
+# Authentication method (long term or time limited credentials)
+coturn_use_auth_secret: true
+coturn_static_auth_secret: "{{ lookup('password', 'credential/{{ inventory_hostname }}-coturn_static_auth_secret chars=ascii_letters,digits') }}"
+
+coturn_use_user: false
+coturn_user_name: coturn
+coturn_user_password: "{{ lookup('password', 'credential/{{ inventory_hostname }}-coturn_user_password chars=ascii_letters,digits') }}"
+
+# database settings
+coturn_db_type:
+coturn_db_name:
+coturn_db_user:
+coturn_db_pass:
+coturn_db_options:

@@ -1,0 +1,8 @@
+---
+
+apache2_modsecurity_default_mode: "Off"
+apache2_default_load_balencing_method: byrequests
+apache2_default_stickysession: PHPSESSID
+apache2_proxy_timeout: 120    # seconds
+apache2_port_ssl: 443
+apache2_proxies: {}

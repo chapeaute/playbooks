@@ -1,0 +1,11 @@
+# v1.0
+---
+- hosts: odoo
+  vars:
+    odoo_version:  '12.0'
+    odoo_admin_password: changeme
+    odoo_home_dir: /var/lib/odoo
+    odoo_db_host: "sva-postgresql"
+  roles:
+    - role: odoo
+      odoo_db_remote_host: "{{ odoo_db_host }}"

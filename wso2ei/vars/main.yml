@@ -1,0 +1,14 @@
+---
+
+# vars file for wso2
+wso2ei_service_name: "wso2ei"
+wso2ei_data_dir_list:
+  - repository/deployment/server/carbonapps
+  - repository/deployment/server/dataservices
+  - repository/deployment/server/synapse-configs
+  - repository/deployment/server/webapps
+
+wso2ei_configs:
+  synapse.properties:
+    - regexp: .*synapse.xpath.dom.failover.enabled.*
+      line: synapse.xpath.dom.failover.enabled=true

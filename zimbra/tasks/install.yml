@@ -1,0 +1,44 @@
+---
+# Installing dependencies and removing other smtp servers
+- name: Sendmail and Postfix | Ensure Sendmail and Postfix is not installed
+  package:
+    name: "{{ zimbra_absents }}"
+    state: absent
+
+# Installing dependencies and removing other smtp servers
+- name: Dependencies | Install dependencies
+  package:
+    name: "{{ zimbra_dependencies }}"
+    state: present
+
+- name: zimbra-vars | install zimbra version vars
+  include_vars: "vars/zimbra-{{ zimbra_version }}.yml"
+
+- name: /var/tmp/zcs | Create the folder to upload the scripts
+  file:
+    path: "{{ zimbra_tmp_dir }}"
+    state: directory
+
+# Download and install Zimbra OSE
+- name: Zimbra Package | Download Zimbra OSE
+  get_url:
+    url: "{{ zimbra_url }}{{ zimbra_package }}.tgz"
+    dest: "{{ zimbra_tmp_dir }}/zimbra.tgz"
+    validate_certs: no
+  register: zimbra_downloaded
+
+- name: Zimbra package | unpack zimbra
+  unarchive:
+    src: "{{ zimbra_tmp_dir }}/zimbra.tgz"
+    dest: "{{ zimbra_tmp_dir }}"
+    remote_src: yes
+  when: zimbra_downloaded
+
+
+- name: install | Uploading keystroke file for network version
+  tags: keystroke
+  template:
+    src: network-keystrokes.j2
+    dest: "{{ zimbra_tmp_dir }}/keystrokes"
+    mode: 0644
+  when: zimbra_license_file is defined

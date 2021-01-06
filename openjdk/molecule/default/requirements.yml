@@ -1,0 +1,4 @@
+---
+- src: git@git.smile.ci:adminsys/ansible/role/debian-backports.git
+  scm: git
+  version: v1.0.0

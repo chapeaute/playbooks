@@ -1,0 +1,6 @@
+#!/bin/bash
+
+USER_FILE="~/.my.cnf"
+MYSQL_CMD="mysql --defaults-extra-file=$USER_FILE -NB -e"
+
+$MYSQL_CMD "SHOW DATABASES"

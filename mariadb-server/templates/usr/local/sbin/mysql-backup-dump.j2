@@ -1,0 +1,284 @@
+#!/bin/bash
+
+# Append custom script to path
+PATH=$PATH:/usr/local/sbin
+
+# If the server is in cluster mode, backups should be saved in
+# /srv/drbd/mysql/mysql-backup with a symlink to /var/backup/mysql
+BACKUP_DIR={{ mysql_backup_dir }}
+
+# Name of the table used for backup locking
+LOCK_MAX_PERIOD=43200
+LOCK_DATE=$(date +%s)
+LOCK_TABLE_BASE="_lock_backup"
+LAST_TABLE_BASE="_last_backup"
+LOCK_TABLE="${LOCK_TABLE_BASE}_${LOCK_DATE}"
+SRVNAME=$(echo ${HOSTNAME%%.*} | tr '[A-Z]' '[a-z]' | tr '-' '_')
+BACKUP_EXEC=0
+GALERA_NODE=0
+
+# Fichier d'authentification
+AUTH_FILE=/root/.my.cnf
+CONF_FILE=/etc/mysql-backup-dump.conf
+
+# Get current date
+CUR_DATE=`date +%Y-%m-%d`
+CUR_TMSTAMP=`date +%s`
+
+# Set backup log file
+LOG_FILE=$BACKUP_DIR/backupdb-$CUR_DATE.log
+
+# Default return code
+force_backup=0
+ret=0
+extra_opts=''
+
+syntax ()
+{
+        cat << EOF
+Usage: ${0##*/} -f
+
+MySQL backup script
+Option:
+        -f            Used to force backup
+EOF
+}
+
+while getopts "f" opt; do
+        case $opt in
+                f)
+                        force_backup=1
+                        ;;
+                *)
+                        syntax
+                        exit 1
+                        ;;
+        esac
+done
+
+# Logging
+log() {
+  echo `date "+%Y-%d-%m %H:%M:%S"`": $1" >> $LOG_FILE
+  echo `date "+%Y-%d-%m %H:%M:%S"`": $1"
+}
+
+galera_get_state() {
+  mysql --defaults-extra-file=$AUTH_FILE -NBe "show status like 'wsrep_local_state_comment'" | cut -f2
+}
+
+mysql_get_table() {
+  mysql --defaults-extra-file=$AUTH_FILE mysql -BNf -e "SHOW TABLES LIKE '${1}%'"
+}
+
+mysql_create_table() {
+  mysql --defaults-extra-file=$AUTH_FILE mysql -BNf -e "create table ${1}(id int)"
+}
+
+mysql_delete_table() {
+  mysql --defaults-extra-file=$AUTH_FILE mysql -BNf -e "drop table if exists ${1}"
+}
+
+select_backup_node() {
+    # Check if last backup table is present
+    LAST_BACKUP=$(mysql_get_table "${LAST_TABLE_BASE}_")
+        
+    if [ "$LAST_BACKUP" != "" ]; then
+    	log "Found $LAST_BACKUP table."
+    	LAST_BCK_HOST=$(echo "$LAST_BACKUP" | sed -r "s/${LAST_TABLE_BASE}_[0-9]+_//")
+    	LAST_BCK_DATE=$(echo "$LAST_BACKUP" | sed -r "s/${LAST_TABLE_BASE}_([0-9]+)_.*/\1/")
+    	LAST_SINCE=$(($CUR_TMSTAMP - $LAST_BCK_DATE))
+    
+    	if [ "$SRVNAME" == "$LAST_BCK_HOST" ]; then
+    		log "Last backup realized by me. "
+    		if [[ $force_backup -eq 1 ]]; then
+    			log "Forcing backup..."
+    		else
+    			log "Skipping backup... (used -f option to force backup)"
+    			exit 0
+    		fi
+    	else
+    		log "Last backup realized by ${LAST_BCK_HOST}."
+    	fi
+    
+    	if [ $LAST_SINCE -lt $LOCK_MAX_PERIOD ]; then
+    		log "Last backup ending $LAST_SINCE seconds ago. "
+    		if [[ $force_backup -eq 1 ]]; then
+                            log "Forcing backup..."
+                    else
+                            log "Too early to start new backup. Configuration time between backup: $LOCK_MAX_PERIOD seconds. (used -f option to force backup)"
+                            exit 0
+                    fi
+    	else
+    		log "Last backup ending $LAST_SINCE seconds ago. New backup can be done. Continuing..."
+    	fi
+    else
+    	log "No last backup found. Continue..."
+    fi
+    
+    # Check if lock backup tabke is present
+    LOCK_BACKUP=$(mysql_get_table "${LOCK_TABLE_BASE}_")
+    
+    if [ "$LOCK_BACKUP" != "" ]; then
+    	log "Found $LOCK_BACKUP table."
+    	LOCK_BCK_HOST=$(echo "$LOCK_BACKUP" | sed -r "s/${LOCK_TABLE_BASE}_[0-9]+_//")
+    	LOCK_BCK_DATE=$(echo "$LOCK_BACKUP" | sed -r "s/${LOCK_TABLE_BASE}_([0-9]+)_.*/\1/")
+    	LOCK_SINCE=$(($CUR_TMSTAMP - $LOCK_BCK_DATE))
+
+    	if [ $LOCK_SINCE -gt $LOCK_MAX_PERIOD ]; then
+    		log "Warning, running backup exceeded $LOCK_MAX_PERIOD seconds !"
+    		exit 1
+    	else
+    		log "Backup already running since $LOCK_SINCE seconds."
+    	fi
+    else
+    	log "No running backup. Continue..."
+    	
+    	LOCK_TABLE="${LOCK_TABLE_BASE}_${CUR_TMSTAMP}_${SRVNAME}"
+    	log "Create lock table $LOCK_TABLE"
+    	mysql_create_table "$LOCK_TABLE"
+
+        BACKUP_EXEC=1
+    fi
+}
+
+if [ -f $BACKUP_DIR/no_backup ]; then
+    log "No backup file $BACKUP_DIR/no_backup found. "
+    if [[ $force_backup -eq 1 ]]; then
+        log "Forcing backup..."
+    else
+        log "Abording backup... (used -f option to force backup)"
+        exit 0
+    fi
+fi
+
+# Execute backup only if we are master/not in cluster
+if [ $(command -v cluster-state) ]; then
+    # Server status
+    HB_STATE=$(if [[ $(cluster-state) == '[master]' ]] ; then echo 'master' ; else echo 'backup' ; fi ; )
+
+    case $HB_STATE in
+        backup)
+            log "This server isn't master on the cluster, stopping backup."
+            exit 0;
+        ;;
+        master)
+            log "This server is master, starting backup process."
+        ;;
+        *)
+            log "Unknown state: $HB_STATE";
+            exit 0;
+        ;;
+    esac
+else
+    HB_STATE="BACKUP"
+    log "Crm isn't configured on this server, forcing backup state"
+fi
+
+# Check if MySQL is running
+mysql --defaults-extra-file=$AUTH_FILE -BN -e "status" >/dev/null 2>&1
+if [ $? -ne 0 ]; then
+    log "Failed to connect to database. Check if MySQL is running and backup user are sufficient permissions."
+    exit 1
+fi
+
+# Check if MySQL is a galera node
+output=$(mysql --defaults-extra-file=$AUTH_FILE -BN -e "show status where Variable_name='wsrep_provider_name'" | cut -f 2)
+if [ "$output" == "Galera" ]; then
+    log "This server is part of galera cluster."
+    GALERA_NODE=1
+fi
+
+# Create backupdir if not exists
+if [ ! -d $BACKUP_DIR ]; then
+    echo "$BACKUP_DIR doesn't exist."
+    echo "Creating $BACKUP_DIR..."
+    mkdir -p $BACKUP_DIR
+fi
+
+# Check if backup dir is writable
+if [ ! -w $BACKUP_DIR ]; then
+    echo "Error: $BACKUP_DIR is not writable, exiting..."
+    exit 1
+fi
+
+# Check if authentication file exist
+if [ ! -f $AUTH_FILE ]; then
+    echo "Error: $AUTH_FILE doesn't exist, exiting..."
+    exit 1
+fi
+
+# Check if configuration file exist
+if [ ! -f $CONF_FILE ]; then
+    log "Info: $CONF_FILE doesn't exist, continuing..."
+else
+    log "Info: Load configuration file $CONF_FILE"
+    source $CONF_FILE
+
+    EXTRA_OPTS=""
+    for t in `echo ${IGNORE_TABLE//,/ }`
+    do
+        EXTRA_OPTS="$EXTRA_OPTS --ignore-table=${t}"
+    done
+fi
+
+echo -n "" > $LOG_FILE
+exec 2>> $LOG_FILE
+
+# Add extra options if binary log is enabled
+log_bin=$(mysql --defaults-extra-file=$AUTH_FILE -B -s -N -e 'select @@log_bin')
+
+if [ "$log_bin" == "1" ]; then
+  extra_opts="$extra_opts --master-data=2"
+fi
+
+# Disconnect from cluster if node is member of Galera cluster
+if [ $GALERA_NODE -eq 1 ]; then
+    select_backup_node
+
+    if [ $BACKUP_EXEC -ne 1 ]; then
+        log "Node not elected to be backuper !"
+        exit 0
+    fi
+fi
+
+log "=== Start databases backup ==="
+BASES_DONNEES=`echo 'show databases;' | mysql --defaults-extra-file=$AUTH_FILE -b --skip-column-names`
+
+for i in $BASES_DONNEES
+do
+    if [ "$i" == "information_schema" -o "$i" == "performance_schema" ]; then
+        continue
+    fi
+
+    # Skip backup if DB is in exclude list
+    if [[ "${IGNORE_DB//,/ }" =~ (^|[[:space:]])$i($|[[:space:]]) ]]; then
+        log "== Ignore backup of $i =="
+        continue
+    fi
+
+    log "== Backuping $i =="
+    struct_output=$(mysqldump --defaults-extra-file=$AUTH_FILE $EXTRA_OPTS -v -f -R -E -C $extra_opts --single-transaction "$i" | gzip -c > $BACKUP_DIR/backupdb-$i-${CUR_DATE}.sql.gz 2>&1)
+
+    if [ $? -ne 0 ]; then
+        log "Failed to backup mysql database structure: $struct_output"
+        ret=1
+    else
+         log "Success to backup mysql database structure: $struct_output"
+    fi
+done
+
+log "=== End databases backup ==="
+
+# Reconnect to cluster if node is member of Galera cluster
+if [ $GALERA_NODE -eq 1 ]; then
+    if [ $BACKUP_EXEC -eq 1 ]; then
+        log "Deleting lock table mysql.${LOCK_TABLE}"
+        mysql_delete_table $LOCK_TABLE
+
+        log "Rename last backup table from $LAST_BACKUP to ${LAST_TABLE_BASE}_`date +%s`_${SRVNAME}"
+        mysql_delete_table $LAST_BACKUP
+        mysql_create_table ${LAST_TABLE_BASE}_`date +%s`_${SRVNAME}
+    fi
+fi
+
+exit $ret

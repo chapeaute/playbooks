@@ -1,0 +1,29 @@
+---
+
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  tags: always
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: "main | include repository tasks"
+  include_tasks: "{{ ansible_os_family }}.yml"
+
+- name: "main | install rspamd"
+  package:
+    name: rspamd
+
+- name: "main | enable rspamd"
+  service:
+    name: rspamd
+    enabled: yes
+
+- include_tasks: "config.yml"

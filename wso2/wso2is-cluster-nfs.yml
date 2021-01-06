@@ -1,0 +1,24 @@
+---
+- hosts: wso2is
+  vars:
+    wso2is_version: 5.11.0 
+    # WSO2 Password
+    wso2is_admin_pass: changeme
+    # Address of MySQL host
+    wso2is_db_host: "db_host_address"
+    # NFS server host
+    wso2is_nfs_host: "nfs_host_address"
+    # Percentage of total memory dedicated to jvm
+    wso2is_memory_size_prct: 0.6
+    # WSO2 data directory
+    # wso2_root_dir: /srv
+    wso2is_data_root_dir: "/srv/nfs/wso2"
+    wso2is_nodes: "{{ groups['wso2ei'] }}"
+  roles:
+    - role: nfs-client
+      nfs_mounts:
+        - server: "{{ wso2is_nfs_host }}"
+          remotedir: /srv
+          localdir: /srv/nfs
+    - role: wso2is
+      wso2is_repl_method: nfs

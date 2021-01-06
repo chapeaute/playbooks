@@ -1,0 +1,14 @@
+---
+# tasks file for RedHat-like DRBD
+- name: RedHat | Setting firewall rules
+  firewalld:
+    port:      "{{ item }}"
+    zone:      "{{ firewall_zone }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - "{{ apm_server_port }}/tcp"
+  when:
+    - ansible_distribution_version >= '7'
+    - firewall_setup

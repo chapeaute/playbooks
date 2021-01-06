@@ -1,0 +1,39 @@
+---
+
+- name: Profile | link log dir for {{ service }}
+  file:
+    src: "{{ wso2sp_install_dir }}/wso2/{{ service }}/logs"
+    dest: "/var/log/wso2sp/{{ service }}"
+    state: link
+
+- name: Profile | Create Environment file for profile {{ service }}
+  file:
+    name: "/etc/default/wso2sp-{{ service }}"
+    state: touch
+
+- name: Profile | Create Service {{ service }}
+  template:
+      src: etc/systemd/system/unit.j2
+      dest: "/etc/systemd/system/wso2sp-{{ service }}.service"
+  notify: reload systemd
+
+- name: Profile | Enable {{ service }}
+  service:
+    name:    "wso2sp-{{ service }}"
+    enabled: "{{ enable }}"
+    state:   "{{ enable | ternary('started', 'stopped') }}"
+
+- name: Config | Configure to use remote db for profile {{ service }}
+  tags:
+    - config
+    - config_mysql
+    - config_profile
+  template:
+    src:    "conf/{{ service }}/deployment.yaml.j2"
+    dest:   "{{ wso2sp_install_dir }}/conf/{{ service }}/deployment.yaml"
+    owner:  wso2sp
+    group:  wso2sp
+    backup: yes
+  notify: "Restart wso2sp-{{ service }}"
+  when: wso2sp_db_host is defined
+

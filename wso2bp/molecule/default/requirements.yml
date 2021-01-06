@@ -1,0 +1,9 @@
+---
+
+- src: git@git.smile.ci:adminsys/ansible/role/wso2ei.git
+  scm: git
+  version: v2.2.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/wso2-generic.git
+  scm: git
+  version: v2.2.5

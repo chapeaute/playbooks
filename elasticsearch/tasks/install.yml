@@ -1,0 +1,163 @@
+---
+- name: install | Set virtual memory
+  sysctl:
+    name:  vm.max_map_count
+    value: "{{ es_vm_max_map_count }}"
+    state: present
+
+- name: install | Set swappiness
+  sysctl:
+    name:  vm.swappiness
+    value: "1"
+    state: present
+
+- name: install | Create directory
+  file:
+    path:  "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ es_path_data }}"
+    - "{{ es_path_logs }}"
+    - "{{ es_path_repo }}"
+
+- name: install | Link to default directories
+  file:
+    src:  "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+  when: item.src != item.dest
+  with_items:
+    - dest: "{{ es_default_path_data }}"
+      src:  "{{ es_path_data }}"
+    - dest: "{{ es_default_path_logs }}"
+      src:  "{{ es_path_logs }}"
+    - dest: "{{ es_default_path_repo }}"
+      src:  "{{ es_path_repo }}"
+
+- name: install | Install package
+  package:
+    name: "elasticsearch-{{ es_full_version|default(es_major_version + '*') }}"
+  notify:
+    - "Systemctl daemon-reload"
+
+- name: install | Set elasticseach to be owner of directory
+  file:
+    path:  "{{ item }}"
+    owner: elasticsearch
+    group: elasticsearch
+    mode:  0750
+  with_items:
+    - "{{ es_path_data }}"
+    - "{{ es_path_logs }}"
+    - "{{ es_path_repo }}"
+
+- name: install | Deploy Elasticsearch 2.x specific configuration file
+  template:
+    src:     "etc/elasticsearch-{{ es_major_version }}.x/{{ item }}.j2"
+    dest:    "/etc/elasticsearch/{{ item }}"
+    owner:   root
+    group:   elasticsearch
+    mode:    0640
+    backup:  yes
+  with_items:
+    - elasticsearch.yml
+    - logging.yml
+  notify:
+    - "Restart Elasticsearch"
+  when: es_major_version == '2'
+  tags:
+    - config
+    - config_main
+
+- name: install | Deploy Elasticsearch >= 5.x specific configuration file
+  template:
+    src:     "etc/elasticsearch-{{ es_major_version }}.x/{{ item }}.j2"
+    dest:    "/etc/elasticsearch/{{ item }}"
+    owner:   root
+    group:   elasticsearch
+    mode:    0640
+    backup:  yes
+  with_items:
+    - elasticsearch.yml
+    - jvm.options
+  notify:
+    - "Restart Elasticsearch"
+  when: es_major_version|int >= 5
+  tags:
+    - config
+    - config_main
+
+- name: install | Configure log4j for elasticsearch >= 5 and <= 6
+  template:
+    src:     "etc/elasticsearch-{{ es_major_version }}.x/{{ item }}.j2"
+    dest:    "/etc/elasticsearch/{{ item }}"
+    owner:   elasticsearch
+    group:   elasticsearch
+    mode:    0640
+    backup:  yes
+    block_start_string: "<<"
+    block_end_string:   ">>"
+  with_items:
+    - log4j2.properties
+  notify:
+    - "Restart Elasticsearch"
+  when:
+    - es_major_version|int >= 5
+    - es_major_version|int <= 6
+  tags:
+    - config
+    - config_main
+    - config_log4j
+
+- name: install | change owner elasticsearch config dir
+  file:
+    path:    /etc/elasticsearch
+    state:   directory
+    owner:   root
+    group:   elasticsearch
+    mode:    0755
+
+- name: install | Create scripts directory
+  file:
+    path:    /etc/elasticsearch/scripts
+    state:   directory
+    owner:   root
+    group:   elasticsearch
+    mode:    0755
+
+- name: install | Create Elasticsearch systemd directory
+  file:
+    path: /etc/systemd/system/elasticsearch.service.d/
+    state: directory
+    mode: 0755
+
+- name: install | Copy Elasticsearch systemd script
+  copy:
+    src: elasticsearch.conf
+    dest: /etc/systemd/system/elasticsearch.service.d/elasticsearch.conf
+  when: ansible_service_mgr == 'systemd'
+  notify:
+    - "Systemctl daemon-reload"
+    - "Restart Elasticsearch"
+
+- name: install | Start and enable service
+  service:
+    name: elasticsearch
+    state: started
+    enabled: yes
+
+- name: install | Waiting Elasticsearch to start
+  wait_for:
+    host: 127.0.0.1
+    port: "{{ es_port }}"
+
+- name: install | Enable shard and replicas for the cluster
+  uri:
+    url:         "http://127.0.0.1:{{ es_port }}/_template/default"
+    method:      POST
+    body:        "{{ lookup('template','settings-{{ es_major_version }}.x.json.j2') }}"
+    body_format: json
+    timeout:     120
+  tags:
+    - config
+

@@ -1,0 +1,9 @@
+---
+# handlers file for bind
+- name: "Restart Bind"
+  service:
+    name:  "{{ bind_service_name }}"
+    state: restarted
+
+- name: "Reload Systemd"
+  command: systemctl daemon-reload

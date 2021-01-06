@@ -1,0 +1,25 @@
+---
+
+- name: script | add binaries to /usr/local/sbin
+  template:
+    src:  "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+  with_items:
+    - wso2am-api-deploy
+    - wso2am-api-undeploy
+
+- name: script | extract apictl archive to /tmp
+  tags: apictl
+  unarchive:
+    src: "{{ wso2am_apictl_url }}"
+    dest: /tmp
+    creates:  /tmp/apictl
+    remote_src: yes
+
+- name: script | copy apictl to sbin
+  tags: apictl
+  copy:
+    src: /tmp/apictl/apictl
+    dest: /usr/local/sbin/apictl
+    remote_src: yes
+

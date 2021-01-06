@@ -1,0 +1,136 @@
+---
+# Global
+use_satellite_repo: false
+
+# defaults file for filebeat-agent
+ab_version: "7.4"
+ab_string_version: "{{ ab_version | string }}" # Make sure we receive sting
+ab_major_version: "{{ ab_string_version.split('.')[0] }}"
+
+# Kafka
+ab_kafka_port: 9092
+ab_kafka_hosts: []
+ab_kafka_broker_timeout: 6
+ab_kafka_topic: logstash
+ab_kafka_version: "0.10.1"
+ab_kafka_worker: "{{ ansible_processor_vcpus }}"
+
+# Logstash
+ab_logstash_port: 5044
+ab_logstash_hosts: []
+
+# Elasticsearch
+ab_es_hosts: []
+ab_es_port: 9200
+ab_es_protocol: http
+ab_es_username:
+ab_es_password:
+
+# Monitoring Elasticsearch hosts
+ab_monitoring_enabled: "{% if ab_monitoring_es_hosts|length > 0 %}true{% else %}false{% endif %}"
+ab_monitoring_es_hosts: "{{ ab_es_hosts }}"
+ab_monitoring_es_port: "{{ ab_es_port }}"
+ab_monitoring_es_protocol: "{{ ab_es_protocol }}"
+ab_monitoring_es_username: "{{ ab_es_username }}"
+ab_monitoring_es_password: "{{ ab_es_password }}"
+ab_monitoring_collection_interval: "10s"
+
+# Filebeat modules
+ab_modules: []
+ab_default_modules: ['system','auditd']
+
+# Filebeat tags and extra fields
+ab_tags: []
+ab_extra_fields: []
+ab_default_extra_fields:
+  ansible_groups: "[{% for group in group_names %}'{{ group }}',{% endfor %}]"
+
+# all log files for CentOS and Debian are declare event if there not used
+applications:
+  - name: apache
+    files:
+      - /var/log/apache2/*.log
+      - /var/log/httpd/*_log
+      - /var/www/*/logs/*.log
+  # - name: basic-server
+  #   files:
+  #     - /var/log/messages
+  #     - /var/log/secure
+  #     - /var/log/cron
+  #   type: syslog
+  - name: freeradius
+    files:
+      - /var/log/radius/*.log
+  - name: haproxy
+    files:
+      - /var/log/haproxy.log
+  - name: mariadb
+    files:
+      - /var/log/mysql/*.log
+  - name: mongodb
+    files:
+      - /var/log/mongodb/*.log
+  - name: mule-esb
+    files:
+      - /var/log/mule-esb/*.log
+  - name: nginx
+    files:
+      - /var/log/nginx/*.log
+      - /srv/www/*/logs/*.log
+  - name: nodejs
+    files:
+      - /var/log/nodejs/*.log
+  - name: odoo
+    files:
+      - /var/log/odoo/odoo.log
+    fields: odoo
+    multiline_pattern: '^[0-9]{4}-[0-9]{2}-[0-9]{2}'
+  - name: postfix
+    files:
+      - /var/log/mail.err
+      - /var/log/mail.info
+      - /var/log/mail.warn
+      - /var/log/maillog
+  - name: redis
+    files:
+      - /var/log/redis/*.log
+  - name: rundeck
+    files:
+      - /var/log/rundeck/*.log
+  - name: traefik
+    files:
+      - /var/log/traefik/access.log
+      - /var/log/traefik/traefik.log
+  - name: varnish
+    files:
+      - /var/log/varnish/varnishncsa.log
+  - name: tomcat
+    files:
+      - /var/log/tomcat/catalina.out
+    multiline_pattern: '^[[:space:]]+|^Caused by:'
+    multiline_negate: false
+    multiline_match: after
+  - name: wso2am
+    files:
+      - /var/log/wso2am/wso2error.log
+    multiline_pattern: '^[[:space:]]'
+    multiline_negate: false
+    multiline_match: after
+  - name: wso2ei
+    files:
+      - /var/log/wso2ei/wso2error.log
+    multiline_pattern: '^[[:space:]]'
+    multiline_negate: false
+    multiline_match: after
+  - name: wso2is
+    files:
+      - /var/log/wso2is/wso2error.log
+    multiline_pattern: '^[[:space:]]'
+    multiline_negate: false
+    multiline_match: after
+  - name: wso2iot
+    files:
+      - /var/log/wso2iot/wso2error.log
+    multiline_pattern: '^[[:space:]]'
+    multiline_negate: false
+    multiline_match: after

@@ -1,0 +1,49 @@
+---
+
+# Global
+manage_firewalld: true
+manage_by_cluster: false
+use_satellite_repo: false
+
+mongodb_version: 4.2
+mongodb_port: 27017
+mongodb_bind_address: 0.0.0.0
+mongodb_replica_set_name: rs0
+mongodb_admin_user: "root"
+mongodb_admin_cluster_pass: "{{ lookup('password', 'credential/{{ mongodb_replica_set_name }}-mongodb_admin_password chars=ascii_letters,digits') }}"
+mongodb_admin_standard_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-mongodb_admin_password chars=ascii_letters,digits') }}"
+mongodb_admin_pass: "{% if mongodb_hosts | length > 2 %}{{ mongodb_admin_cluster_pass }}{% else %}{{ mongodb_admin_standard_pass }}{% endif %}"
+mongodb_hosts: []
+mongodb_keyfile_path: /etc/mongodb_keyfile
+
+# Directory
+mongodb_log_dir: "{{ mongodb_default_log_dir }}"
+mongodb_data_dir: "{{ mongodb_default_data_dir }}"
+mongodb_backup_dir: "{{ mongodb_default_backup_dir }}"
+mongodb_backup_age: "0"
+
+mongodb_thp_disable: False
+
+# Kernel parameter
+mongodb_sysctl_vm_dirty_ratio: 10
+mongodb_sysctl_vm_dirty_background_ratio: 3
+mongodb_sysctl_vm_swappiness: 1
+
+# Databases creation :
+mongodb_databases: {}
+#mongodb_databases:
+#  drupal:
+#    db_name : drupal
+#    user: magento
+#    password: changeme
+#    roles: readWrite,dbAdmin,userAdmin
+
+# PMM user declaration
+mongodb_pmm_enable: False
+mongodb_pmm_user: pmm
+mongodb_pmm_pass: changeme
+
+# monitoring nagios user declaration
+mongodb_monitoring_enable: False
+mongodb_nagios_user: nagios
+mongodb_nagios_pass: changeme

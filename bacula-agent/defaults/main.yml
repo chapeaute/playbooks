@@ -1,0 +1,252 @@
+---
+# defaults file for bacula
+# Bacula File daemon variables
+bacula_fd_port: 9102
+bacula_fd_name: "{{ ansible_fqdn }}"
+bacula_fd_bind_addr: 0.0.0.0
+bacula_fd_password: "{{ lookup('password', 'credential/{{ inventory_hostname }}-bacula_fd_password chars=ascii_letters,digits') }}"
+bacula_fd_max_concurrent_job: 5
+bacula_fd_restore_dir: /var/lib/bacula-restores
+bacula_fd_heartbeat_interval: 60
+bacula_fd_dependencies: []
+bacula_fd_regenerate_config: yes
+
+# Bacula director variables
+bacula_dir_host: bacula
+bacula_dir_name: "{{ bacula_dir_host }}"
+bacula_conf_dir: "/etc/bacula"
+bacula_tmp_backup_dir: "/var/backup"
+
+# Bacula sd variables
+bacula_sd_hosts: ["{{ bacula_dir_host }}"]
+bacula_sd_host: "{{ bacula_sd_hosts[(bacula_sd_hosts|length - 1)|random(seed=ansible_fqdn)] }}"
+# Firewall configuration
+firewall_setup: true
+firewall_type:  firewalld
+
+filesets:
+  - name: apache
+    include:
+      - /var/www/
+    exclude:
+      - /var/www/*/logs
+      - /var/www/*/cache
+  - name: bacula-dir
+    include:
+      - /etc/bacula/
+      - /etc/sysconfig/bacula-dir
+  - name: bacula-fd
+    include:
+      - /etc/bacula/
+      - /etc/sysconfig/bacula-fd
+  - name: bacula-sd
+    include:
+      - /etc/bacula/
+      - /etc/sysconfig/bacula-sd
+  - name: basic-server
+    include:
+      - /etc/
+      - /usr/local/bin/
+      - /usr/local/sbin/
+      - /var/spool/cron/
+  - name: bind
+    include:
+      - /etc/sysconfig/named
+      - /etc/rwtab.d/named
+      - /etc/rndc.key
+      - /etc/named.conf
+      - /etc/named.iscdlv.key
+      - /etc/named.rfc1912.zones
+      - /etc/named.root.key
+      - /etc/named/
+      - /var/named/
+    exclude:
+      - /var/named/data
+  - name: cassandra
+    include:
+      - /etc/cassandra/
+      - /etc/default/cassandra
+      - /var/backup/cassandra/
+    before: /usr/local/sbin/cassandra-backup-dump
+    after: /usr/local/sbin/cassandra-backup-clean
+  - name: confd
+    include:
+      - /etc/confd/
+  - name: csync2
+    include:
+      - /etc/csync2/csync2.cfg
+      - /etc/xinetd.d/csync2
+      - /var/lib/csync2/
+  - name: drbd
+    include:
+      - /etc/drbd.conf
+      - /etc/drbd.d/
+  - name: elasticsearch
+    include:
+      - /etc/elasticsearch/
+      - /var/backup/elasticsearch/
+    before: "/usr/local/sbin/es-indice-dump -d 1"
+    after: "/usr/local/sbin/es-indice-clean -a"
+  - name: etcd
+    include:
+      - /etc/etcd/
+      - /var/backup/etcd/
+    before: "/usr/local/sbin/etcd-backup-dump"
+    after: "/usr/local/sbin/etcd-backup-clean"
+  - name: freeradius
+    include:
+      - /etc/raddb/
+      - /usr/local/sbin/
+  - name: galera
+    include:
+      - /etc/my.cnf
+      - /etc/my.cnf.d/
+      - /var/backup/mysql/
+    before: "/usr/bin/sudo /usr/local/sbin/mysql-backup-dump"
+    after: "/usr/bin/sudo /usr/local/sbin/mysql-backup-clean"
+  - name: gitlab-server
+    include:
+      - /var/opt/gitlab/backups/
+    before: /usr/local/sbin/gitlab-backup-dump
+    after: /usr/local/sbin/gitlab-backup-clean
+  - name: katello
+    include:
+      - /var/backup/katello/
+    before: "/usr/sbin/katello-backup -y --online-backup /var/backup/katello --skip-pulp-content"
+    after: "rm -rf /var/backup/katello/*"
+  - name: lsyncd
+    include:
+      - /etc/logrotate.d/lsyncd
+      - /etc/lsyncd.conf
+      - /etc/sysconfig/lsyncd
+  - name: mariadb
+    include:
+      - /etc/my.cnf
+      - /etc/my.cnf.d/
+      - /var/backup/mysql/
+    before: /usr/local/sbin/mysql-backup-dump
+    after: /usr/local/sbin/mysql-backup-clean
+  - name: memcached
+    include:
+      - /etc/sysconfig/memcached
+  - name: mongodb
+    include:
+      - /etc/mongod.conf
+      - /var/backup/mongo/
+    before: /usr/local/sbin/mongodb-backup-dump
+    after: /usr/local/sbin/mongodb-backup-clean
+  - name: mule-esb
+    include:
+      - /var/lib/mule-esb/
+    exclude:
+      - /var/lib/mule-esb/*.hprof
+      - /var/lib/mule-esb/logs
+  - name: nfs
+    include:
+      - /var/lib/nfs_data/
+  - name: nodejs
+    include:
+      - /var/lib/nodejs/
+    exclude:
+      - /var/lib/nodejs/logs
+      - /var/lib/nodejs/pids
+      - /var/lib/nodejs/pm2.*
+  - name: ntp
+    include:
+      - /etc/ntp.conf
+      - /etc/ntp/
+  - name: odoo
+    include:
+      - /etc/odoo/
+      - /var/lib/odoo/
+    exclude:
+      - /var/lib/odoo/data/.git/
+  - name: openvpn
+    include:
+      - /etc/openvpn/
+  - name: pcs
+    include:
+      - /etc/corosync/
+      - /etc/logrotate.d/pcsd
+      - /etc/logrotate.d/corosync
+      - /etc/logrotate.d/pacemaker
+      - /etc/pam.d/pcsd
+      - /etc/sysconfig/pcsd
+      - /etc/sysconfig/corosync
+      - /etc/sysconfig/pacemaker
+      - /etc/sysconfig/crm_mon
+      - /usr/lib/ocf/
+      - /var/lib/pcsd/
+      - /var/lib/corosync/
+      - /var/lib/pacemaker/
+  - name: postgresql
+    include:
+      - /etc/postgresql/
+      - /var/backup/postgresql/
+    before: /usr/local/sbin/postgresql-backup-dump
+    after: /usr/local/sbin/postgresql-backup-clean
+  - name: rancid
+    include:
+      - /var/lib/rancid/
+  - name: redis
+    include:
+      - /etc/redis.conf
+      - /etc/redis-sentinel.conf
+      - /etc/redis_ansible.conf
+      - /etc/redis_custom.conf
+      - /var/lib/redis/
+    exclude:
+      - /var/lib/redis/appendonly.aof
+  - name: rspamd
+    include:
+      - /etc/rspamd
+  - name: rundeck-server
+    include:
+      - /etc/rundeck/
+      - /var/lib/rundeck/
+      - /var/rundeck/projects/
+    exclude:
+      - /var/lib/rundeck/logs/
+  - name: spagobi
+    include:
+      - /var/lib/spagobi/
+    exclude:
+      - /var/lib/spagobi/logs
+  - name: traefik
+    include:
+      - /etc/traefik/
+  - name: tomcat
+    include:
+      - /var/lib/tomcat/
+    exclude:
+      - /var/lib/tomcat/logs
+  - name: varnish
+    include:
+      - /etc/varnish/
+      - /etc/logrotate.d/varnish
+  - name: wso2am
+    include:
+      - /var/lib/wso2am/repository/
+      - /var/lib/wso2am-data/
+    exclude:
+      - /var/lib/wso2am/repository/logs
+  - name: wso2bp
+    include:
+      - /var/lib/wso2bp/repository/
+      - /var/lib/wso2bp/conf/
+      - /var/lib/wso2bp-data/
+    exclude:
+      - /var/lib/wso2bp/repository/logs
+  - name: wso2ei
+    include:
+      - /var/lib/wso2ei/repository/
+      - /var/lib/wso2ei/conf/
+      - /var/lib/wso2ei-data/
+    exclude:
+      - /var/lib/wso2ei/repository/logs
+  - name: wso2is
+    include:
+      - /var/lib/wso2is/repository/
+      - /var/lib/wso2is-data/
+    exclude:
+      - /var/lib/wso2is/repository/logs

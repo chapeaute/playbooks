@@ -1,0 +1,4 @@
+---
+# defaults file for nfs-client
+nfs_mounts: []
+nfs_selinux_httpd_enable: true

@@ -1,0 +1,9 @@
+# v1.0
+---
+- hosts: postgresql
+  vars:
+    postgresql_version: 9.6
+    postgresql_data_dir: "/var/lib/pgsql/{{ postgresql_version }}/data"
+    postgresql_backup_dir: /var/backup/postgresql
+  roles:
+  - role: postgresql

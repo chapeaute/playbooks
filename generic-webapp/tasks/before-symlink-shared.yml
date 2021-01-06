@@ -1,0 +1,16 @@
+---
+
+# Copy shared paths and files
+- name: ANSISTRANO | Create softlinks for shared paths and files
+  synchronize:
+    archive: yes
+    delete: no
+    src: "{{ ansistrano_release_path.stdout }}/{{ item }}"
+    dest: "{{ ansistrano_deploy_to }}/shared/{{ item | dirname }}"
+    rsync_opts:
+      - "--ignore-missing-args"
+  with_flattened:
+    - "{{ ansistrano_shared_paths }}"
+    - "{{ ansistrano_shared_files }}"
+  delegate_to: "{{ inventory_hostname }}"
+

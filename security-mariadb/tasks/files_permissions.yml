@@ -1,0 +1,9 @@
+---
+- name: files_permissions | File System Permissions
+  file:
+    path:  "{{ mysql_data_dir }}"
+    mode:  0700
+    owner: mysql
+    group: mysql
+    state: directory
+  when: security_level >= 2

@@ -1,0 +1,87 @@
+#!/bin/bash
+#
+# This script aims to verify Systemd service state
+#
+
+rc=0
+
+update_state() {
+    register_state=$1
+    current_state=$2
+
+    if [ $current_state -eq 2 -o $register_state -eq 2 ]; then
+        echo 2
+        return
+    fi
+
+    if [ $current_state -gt $register_state ]; then
+        echo $current_state
+        return
+    else
+        echo $register_state
+        return
+    fi
+}
+
+if [ ! `command -v systemctl` ];
+then
+    echo "ERROR: systemctl command not found ! This system doesn't seems to used systemd"
+    exit 3
+fi
+
+if [ $# -eq 0 ]; then
+    GLOBAL_STATE=$(systemctl is-system-running 2>/dev/null)
+
+    case "$GLOBAL_STATE" in
+        running)
+            OUTPUT="Everything seems to be fine."
+            ;;
+        starting)
+            OUTPUT="System still starting... Some services has not started completly: "
+            OUTPUT=$OUTPUT`systemctl list-jobs | grep start | awk '{print $2}' | tr '\n' ' '`
+            rc=1
+            ;;
+        *)
+            OUTPUT="System in degraded state. Service in failed state: "
+            OUTPUT=$OUTPUT`systemctl --failed --no-legend --no-pager | awk '{print $1}' | tr '\n' ' '`
+            rc=1
+            ;;
+    esac
+else
+    for svc in $*
+    do
+        SVC_STATE=$(systemctl is-active $svc)
+        OUTPUT="${OUTPUT}${svc}: ${SVC_STATE}. "
+
+        case "$SVC_STATE" in
+            active)
+                ;;
+
+            failed|inactive)
+                rc=$(update_state $rc 2)
+                ;;
+
+            *)
+                rc=$(update_state $rc 3)
+                ;;
+        esac
+    done
+fi
+
+case "$rc" in
+    0)
+        echo "OK: $OUTPUT"
+        ;;
+    1)
+        echo "WARNING: $OUTPUT"
+        ;;
+    2)
+        echo "CRITICAL: $OUTPUT"
+        ;;
+    3)
+        echo "UNKNOWN: $OUTPUT"
+        ;;
+esac
+
+exit $rc
+

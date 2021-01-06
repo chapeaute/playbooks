@@ -1,0 +1,7 @@
+{% if proftpd_enable_ftp -%}
+<VirtualHost 0.0.0.0>
+    Port {{ proftpd_ftp_port }}
+    DefaultRoot ~
+    AuthUserFile   {{ proftpd_auth_user_file }}
+</VirtualHost>
+{% endif %}

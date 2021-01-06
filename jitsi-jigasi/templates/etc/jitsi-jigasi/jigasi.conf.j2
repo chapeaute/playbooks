@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+
+JIGASI_OPTS='--apis=rest,xmpp'
+JIGASI_MAX_MEMORY="{{ jigasi_memory_size }}"
+JAVA_SYS_PROPS="-Xms{{ jigasi_memory_size }} -Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION={{ jigasi_etc_dir | dirname }} -Dnet.java.sip.communicator.SC_HOME_DIR_NAME={{ jigasi_etc_dir | basename }} -javaagent:{{ jigasi_install_dir }}/lib/jolokia-jvm-{{ jolokia_version }}-agent.jar=config={{ jigasi_etc_dir }}/jolokia.properties -Djava.util.logging.config.file={{ jigasi_etc_dir }}/logging.properties -Djava.util.prefs.systemRoot={{ jigasi_install_dir }}/.java -Djava.util.prefs.userRoot={{ jigasi_install_dir }}/.java/.userPrefs"

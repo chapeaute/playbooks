@@ -1,0 +1,14 @@
+---
+# handlers file for bacula_server
+
+- name: Restart bacula sd service
+  service:
+    name:  "{{ bacula_sd_service }}"
+    state: restarted
+
+- name: Restart bacula-dir
+  service:
+    name:  "{{ bacula_dir_service }}"
+    state: restarted
+  delegate_to: "{{ bacula_dir_host }}"
+  run_once: true

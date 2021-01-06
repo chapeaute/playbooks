@@ -1,0 +1,46 @@
+---
+- hosts: all
+  vars:
+    lookup_ldapkey_url: "ldap://ldap/dc=groupe,dc=lan?sshPublicKey?sub?(uid=%s)"
+    lookup_ldapkey_binddn: "cn=manager,dc=groupe,dc=lan"
+    lookup_ldapkey_bindpw: "smileci0901"
+  roles:
+    - role: basic-user
+      users_groups:
+        - name: dev
+      users_default_groups:
+        - name: dev
+      users_to_remove:
+        - azkon
+        #- stbio
+        - jedje
+        - zacou
+      ldap_users:
+        #- dikou # to create
+        #- thsan # to create
+        - ulfos
+        - layao
+        - layeb
+        - sikon
+        - wikak
+        - hagba
+        - ersit
+        - botib
+        - jendj
+        - madia
+        - thngu
+        - pabeu
+        - genan
+        - stoua
+        - sioua
+        - noadi
+        - sitou
+        - abcou
+        - eukou
+        - arass
+        - abdou
+        - paozi
+        - modou
+        - abkam
+        - danou
+

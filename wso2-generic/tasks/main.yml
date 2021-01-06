@@ -1,0 +1,134 @@
+---
+# tasks file for wso2
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  tags: always
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | Download jolokia jar
+  tags:
+    - config_monitoring
+    - monitoring
+  get_url:
+    url:  "https://search.maven.org/remotecontent?filepath=org/jolokia/jolokia-osgi/1.6.0/jolokia-osgi-1.6.0.jar"
+    dest: "{{ wso2_generic_dropins_dir }}"
+    validate_certs: no
+
+- name: main | Download mysql jar driver
+  tags:
+    - config_mysql
+  get_url:
+    url:   https://archive.smile.ci/wso2/mysql-connector-java-5.1.41-bin.jar
+    dest:  "{{ wso2_generic_libs_dir }}/mysql-connector-java-5.1.41-bin.jar"
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+    validate_certs: no
+
+- name: main | Download postgresql jar driver
+  tags:
+    - config_postgresql
+  get_url:
+    url:   https://archive.smile.ci/wso2/postgresql-connector-java-bin.jar
+    dest:  "{{ wso2_generic_libs_dir }}/postgresql-connector-java-bin.jar"
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+    validate_certs: no
+
+- name: main | Create link to /var/lib/{{wso2_generic_service_name}}
+  file:
+    src:   "{{ wso2_generic_root_dir }}/{{wso2_generic_service_name}}"
+    dest:  "{{ wso2_generic_default_root_dir }}/{{wso2_generic_service_name}}"
+    state: link
+  when: wso2_generic_root_dir != wso2_generic_default_root_dir
+
+- name: main | Create user and system prefs folders
+  file:
+    path:    "{{ wso2_generic_root_dir }}/{{wso2_generic_service_name}}/{{ item }}"
+    state:   directory
+    recurse: yes
+    owner:   "{{ wso2_generic_service_name }}"
+    group:   "{{ wso2_generic_service_name }}"
+  with_items:
+    - .java/.systemPrefs
+    - .java/.userPrefs
+
+- name: main | create logrotate file
+  template:
+    src:  etc/logrotate.d/logrotate.j2
+    dest: "/etc/logrotate.d/{{ wso2_generic_service_name }}"
+  when: wso2_generic_version is version_compare('2.6.0', '<=')
+
+- name: main | Create {{ wso2_generic_data_dir }}
+  file:
+    path: "{{ wso2_generic_data_dir }}"
+    state: directory
+    owner: "{{ wso2_generic_service_name }}"
+    group: "{{ wso2_generic_service_name }}"
+
+- name: main | Link data dir {{ wso2_generic_data_dir }} to {{ wso2_generic_default_data_dir }}
+  file:
+    src:  "{{ wso2_generic_data_dir }}"
+    dest: "{{ wso2_generic_default_data_dir }}"
+    state: link
+  when: wso2_generic_data_dir != wso2_generic_default_data_dir
+
+- include: "export_conf_dir.yml dir={{ item }}"
+  with_items:
+    - "{{ wso2_generic_data_dir_list }}"
+  when:
+    - wso2_generic_data_dir != wso2_generic_install_dir
+  tags:
+    - export_dir
+
+- name: main | launch tuning tasks
+  include: tuning.yml
+
+- name: main | launch ssl tasks
+  include: ssl.yml
+  tags: config_ssl
+  when: not wso2_generic_use_default_jks | bool
+
+- name: main | check if deployment.toml exist
+  stat:
+    path: "{{ wso2_generic_confs_dir }}/deployment.toml"
+  register: wso2_deployment_toml
+  tags: always
+
+- name: main | launch config tasks for wso2am >= 3.x.x if deployment.toml detected
+  include: deployment-wso2am.yml
+  when:
+    - wso2_generic_product_name == "wso2am"
+    - wso2_generic_version is version_compare('3.0.0', '>=')
+
+- name: main | launch config tasks for wso2is >= 5.10.0 if deployment.toml detected
+  include: deployment-wso2is.yml
+  when:
+    - wso2_generic_product_name == "wso2is"
+    - wso2_generic_version is version_compare('5.10.0', '>=')
+
+- name: main | launch config tasks if wso2am <= 2.6.0
+  include: config.yml
+  when:
+    - wso2_generic_product_name == "wso2am"
+    - wso2_generic_version is version_compare('2.6.0', '<=')
+
+- name: main | launch config tasks if wso2is < 5.10.0
+  include: config.yml
+  when:
+    - wso2_generic_product_name == "wso2is"
+    - wso2_generic_version is version_compare('5.10.0', '<')
+
+- name: main | launch config tasks if wso2ei < 6.6.0
+  include: config.yml
+  when:
+    - wso2_generic_product_name == "wso2ei"
+    - wso2_generic_version is version_compare('6.6.0', '<=')

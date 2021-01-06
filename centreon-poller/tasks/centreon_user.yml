@@ -1,0 +1,49 @@
+---
+- name: centreon_user | Generate centreon user SSH Key
+  user:
+    name: centreon
+    generate_ssh_key: yes
+    ssh_key_comment: "centreon@{{ ansible_fqdn }}"
+  delegate_to: "{{ centreon_server }}"
+  delegate_facts: True
+  run_once: true
+
+- name: centreon_user | Deploy centreon SSH configuration file
+  copy:
+    src:   var/spool/centreon/ssh.config
+    dest:  ~centreon/.ssh/config
+    mode:  0644
+    owner: centreon
+    group: centreon
+  delegate_to: "{{ centreon_server }}"
+  run_once: true
+
+- name: centreon_user | Fetch centreon user key file on centreon server
+  command: cat ~centreon/.ssh/id_rsa.pub
+  register: pub_key_file
+  delegate_to: "{{ centreon_server }}"
+  run_once: true
+  check_mode: no
+  changed_when: false
+
+- name: centreon_user | Deploy centreon user key file on poller
+  authorized_key:
+    user:  centreon
+    key:   "{{ pub_key_file.stdout }}"
+    state: present
+
+- name: centreon_user | Accept SSH host key file
+  command: "ssh {{ inventory_hostname }} hostname"
+  delegate_to: "{{ centreon_server }}"
+  delegate_facts: True
+  become: true
+  become_user: centreon
+  changed_when: false
+
+- name: centreon_user | Retrieve SSH host key file
+  command: "ssh {{ ansible_default_ipv4.address }} hostname"
+  delegate_to: "{{ centreon_server }}"
+  delegate_facts: True
+  become: true
+  become_user: centreon
+  changed_when: false

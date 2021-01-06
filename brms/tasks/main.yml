@@ -1,0 +1,65 @@
+---
+- name: main | generate standard template
+  template:
+    src: standalone.xml.j2
+    dest: "{{ brms_dir }}/{{ brms.subpath }}/standalone/configuration/standalone.xml"
+  notify:
+    - restart brms
+
+- name: main | create user brms for application
+  shell: "{{ brms_dir }}/{{ brms.subpath }}/bin/add-user.sh -a --user {{ brms_user }} --password {{ brms_password }} --role kie-server,admin,rest-all,analyst"
+  register: add_user
+  changed_when: "'Added user' in add_user.stdout"
+
+- name: main | Set permissions on shell scripts
+  file:
+    path: "{{ brms_dir }}/{{ brms.subpath }}/{{ item }}"
+    mode: 0750
+  with_items:
+    - bin/standalone-secure.sh
+    - bin/jboss-cli.sh
+
+- name: main | Extending the default unit configuration
+  file:
+    path:  "/etc/systemd/system/{{ brms_service_name }}.service.d"
+    state: directory
+
+- name: main | Create override.conf file
+  template:
+    src:  override.conf.j2
+    dest: "/etc/systemd/system/{{ brms_service_name }}.service.d/override.conf"
+  register: copyunit
+  notify:
+       - reload systemd
+
+- name: main | Set Heap Size Xms
+  lineinfile:
+    dest:   "{{ brms_dir }}/{{ brms.subpath }}/bin/standalone-secure.conf"
+    regexp: "(.*)JAVA_OPTS=(.*)-Xms[^ ]* (.*)"
+    line:   '\1JAVA_OPTS=\2-Xms{{brms_heap_size_xms}} \3'
+    backrefs: yes
+  notify:
+    - restart brms
+  tags:
+    - config
+
+- name: main | Set Heap Size Xmx
+  lineinfile:
+    dest:   "{{ brms_dir }}/{{ brms.subpath }}/bin/standalone-secure.conf"
+    regexp: "(.*)JAVA_OPTS=(.*)-Xmx[^ ]* (.*)"
+    line:   '\1JAVA_OPTS=\2-Xmx{{brms_heap_size_xmx}} \3'
+    backrefs: yes
+  notify:
+    - restart brms
+  tags:
+    - config
+
+- name: main | Reload Systemd
+  command: systemctl daemon-reload
+  when: copyunit.changed
+
+- name: main | Enabled and start brms
+  service:
+    name:    "{{ brms_service_name }}"
+    state:   started
+    enabled: yes

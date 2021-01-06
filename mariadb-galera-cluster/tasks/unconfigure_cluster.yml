@@ -1,0 +1,23 @@
+---
+
+- name: unconfigure_cluster | Unconfiguring galera cluster (RedHat)
+  template:
+    src:  etc/my.cnf.d/reset.server.cnf.j2
+    dest: "{{ mariadb_config_fragment_dir }}/server.cnf"
+  when: ansible_os_family == "RedHat"
+
+- name: unconfigure_cluster | Unconfiguring galera cluster
+  file:
+    path:  /etc/galera_cluster_configured
+    state: absent
+
+- name: unconfigure_cluster | Remove grastate.dat file in MySQL data directory
+  file:
+    path: "{{ mariadb_data_dir }}/grastate.dat"
+    state: absent
+  when: galera_reconfigure == "force"
+
+- name: unconfigure_cluster | Restarting mysql when reconfiguring galera cluster
+  service:
+    name: mariadb
+    state: restarted

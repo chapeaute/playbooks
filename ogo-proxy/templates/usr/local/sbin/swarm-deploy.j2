@@ -1,0 +1,3 @@
+#!/bin/bash
+
+docker stack deploy --prune --with-registry-auth -c {{ docker_swarm_conf_dir }}/docker-compose.yml {{ docker_swarm_stack_name }}

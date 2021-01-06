@@ -1,0 +1,5 @@
+[all]
+phpipam ansible_connection=docker
+
+[phpipam]
+phpipam

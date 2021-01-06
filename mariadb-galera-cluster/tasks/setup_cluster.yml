@@ -1,0 +1,141 @@
+---
+- name: setup_cluster | Create log directory
+  file:
+    state:   directory
+    path:    "{{ mariadb_log_dir }}"
+    recurse: true
+
+- name: setup_cluster | Create data directory
+  file:
+    state:   directory
+    path:    "{{ mariadb_data_dir }}"
+    mode:    0755
+    setype: mysqld_db_t
+
+- name: setup_cluster | Create symlink from {{ mariadb_default_data_dir }} to data directory
+  file:
+    state: link
+    setype: mysqld_db_t
+    src:   "{{ mariadb_data_dir }}"
+    dest:  "{{ mariadb_default_data_dir }}"
+  when: mariadb_data_dir != mariadb_default_data_dir
+
+- name: setup_cluster | Installing mariadb mysql
+  package:
+    name: "{{ mariadb_galera_packages }}"
+    state: present
+
+- name: setup_cluster | link galera install
+  file:
+    src: "/usr/lib64/galera-4"
+    dest: "/usr/lib64/galera"
+    state: link
+  when: mariadb_version is version('10.4', '>=')
+
+- name: setup_cluster | Add tuning configuration
+  template:
+    src: "etc/my.cnf.d/tuning.cnf.j2"
+    dest: "{{ mariadb_config_fragment_dir }}/tuning.cnf"
+
+- name: setup_cluster | Ensuring mariadb is enabled on boot and started
+  service:
+    name:    mariadb
+    state:   started
+    enabled: true
+
+- name: setup_cluster | Configuring db server and galera (RedHat)
+  template:
+    src:  "{{ item.src }}"
+    dest: "{{ item.dest }}"
+  with_items:
+    - src:  etc/my.cnf.d/server.cnf.j2
+      dest: "{{ mariadb_config_fragment_dir }}/server.cnf"
+  when: ansible_os_family == "RedHat"
+
+- name: setup_cluster | Checking if galera cluster setup
+  stat:
+    path: "/etc/galera_cluster_configured"
+  register: "galera_cluster_configured"
+
+- name: setup_cluster | Stopping mariadb
+  service:
+    name:  mariadb
+    state: stopped
+  when: not galera_cluster_configured.stat.exists
+
+- name: setup_cluster | Killing lingering mariadb processes
+  shell: "pkill mysqld || echo noprocess"
+  when: not galera_cluster_configured.stat.exists
+
+- name: setup_cluster | Configuring temp galera config (RedHat)
+  template:
+    src:  "etc/my.cnf.d/temp.server.cnf.j2"
+    dest: "{{ mariadb_config_fragment_dir }}/server.cnf"
+  when: >
+        ansible_os_family == "RedHat" and
+        not galera_cluster_configured.stat.exists and
+        inventory_hostname == galera_master_node
+
+- name: setup_cluster | Bootstrapping galera cluster
+  service:
+    name:  mariadb
+    state: restarted
+  when: >
+        not galera_cluster_configured.stat.exists and
+        inventory_hostname == galera_master_node
+
+- include: configure_wsrep_user.yml
+  when: >
+        inventory_hostname == galera_master_node
+
+- name: setup_cluster | Waiting master to become active...
+  wait_for:
+    port:  3306
+    host:  "{{ galera_master_node }}"
+    state: "started"
+    delay: 10
+  when: >
+        not galera_cluster_configured.stat.exists and
+        inventory_hostname != galera_master_node
+
+- name: setup_cluster | Joining galera cluster
+  service:
+    name:  mariadb
+    state: restarted
+  when: >
+        not galera_cluster_configured.stat.exists and
+        inventory_hostname != galera_master_node
+
+- name: setup_cluster | Configuring galera on mariadb_master (RedHat)
+  template:
+    src:  "etc/my.cnf.d/server.cnf.j2"
+    dest: "{{ mariadb_config_fragment_dir }}/server.cnf"
+  when: >
+        ansible_os_family == "RedHat" and
+        not galera_cluster_configured.stat.exists and
+        inventory_hostname == galera_master_node
+
+- name: setup_cluster | Waiting slave to become active...
+  wait_for:
+    port:  3306
+    host:  "{{ item }}"
+    state: "started"
+    delay: 20
+  with_items: "{{ galera_nodes }}"
+  when: >
+        not galera_cluster_configured.stat.exists and
+        inventory_hostname == galera_master_node
+
+- name: setup_cluster | Restarting galera on mariadb_master
+  service:
+    name:  mariadb
+    state: restarted
+  when: >
+        not galera_cluster_configured.stat.exists and
+        inventory_hostname == galera_master_node
+
+- name: setup_cluster | Marking galera cluster as configured
+  file:
+    path:  /etc/galera_cluster_configured
+    state: touch
+  when: not galera_cluster_configured.stat.exists

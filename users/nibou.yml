@@ -1,0 +1,11 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: nibou
+          groups: ['exploit']
+          state: present
+          sshkeys:
+            - ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIGYaiME2zZca9vbAaHl8nmE2VKBrhoGuOOfUwXcq3SMq nicolas@bouthors.org
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDPcNBk2b4UJRHsdTi57WGUA7/4AQR0EM68SQKOkam747jnB81q77k5SrN16ZZvLpde/ANt88E51dbfE83b+jV2B5KUt/FoUp8kWw/Pgwzmco2aBZYcP6i3+KxFCtbfm6nZAIQjxjVTGs2xGAXXKw7CUW0YHDdBCYrvYIz5pTi51QEecGNGBS61DYtlNQXKcIN/AVIgvSvCJZC2pMYhwDUs26ZklQgyXZpc4JLvo51uQvlATR38r9n5Ou+c6RLkKFuaomNECHX7a6iD0SYSV+L0tgiFX273taYMD4iOAP6Wb60AWQJ9zLIHCo12CwaJ5lxrPwBGEqYcU/r+hyas4UTB nicolas@bouthors.org

@@ -1,0 +1,70 @@
+Pool {
+    Name = DailyFilePool-{{ bacula_sd_name }}
+    Pool Type = Backup
+    Recycle = yes
+    AutoPrune = yes
+    File Retention = {{ bacula_daily_file_retention }} days
+    Job Retention = {{ bacula_daily_job_retention }} days
+    Volume Retention = {{ bacula_daily_volume_retention }} days
+    Volume Use Duration = {{ bacula_daily_volume_use_duration }} # after the first write
+    Action on Purge = Truncate
+    LabelFormat = "{{ bacula_sd_name }}-Daily-${dc+}"
+}
+
+Pool {
+    Name = WeeklyFilePool-{{ bacula_sd_name }}
+    Pool Type = Backup
+    Recycle = yes
+    AutoPrune = yes
+    File Retention = {{ bacula_weekly_file_retention }} days
+    Job Retention = {{ bacula_weekly_job_retention }} days
+    Volume Retention = {{ bacula_weekly_volume_retention }} days
+    Volume Use Duration = {{ bacula_weekly_volume_use_duration }} # after the first write
+    Action on Purge = Truncate
+    LabelFormat = "{{ bacula_sd_name }}-Weekly-${wc+}"
+}
+
+JobDefs {
+    Name = "DefaultJob-{{ bacula_sd_name }}"
+    Type = Backup
+    Level = Full
+    FileSet = "Unix Configuration Set"
+    Schedule = "WeeklyCycle-{{ bacula_sd_name }}"
+    Messages = Standard
+    Pool = WeeklyFilePool-{{ bacula_sd_name }}
+    Storage = "File-{{ bacula_sd_name }}"
+    Priority = 10
+    Write Bootstrap = "/var/spool/bacula/%c.bsr"
+    Spool Data = yes
+    Allow Mixed Priority = yes
+    Maximum Concurrent Jobs = {{ bacula_sd_max_concurrent_jobs  }}
+}
+
+Job {
+    Name = "RestoreFiles-{{ bacula_sd_name }}"
+    Type = Restore
+    Client = {{ bacula_dir_name }}
+    FileSet = "Unix Configuration Set"
+    Storage = File-{{ bacula_sd_name }}
+    Pool = DailyFilePool-{{ bacula_sd_name }}
+    Messages = Daemon
+    Where = "/var/lib/bacula-restores"
+    Maximum Concurrent Jobs = {{ bacula_sd_max_concurrent_jobs  }}
+}
+
+Storage {
+  Name = File-{{ bacula_sd_name }}
+  Address = {{ bacula_sd_address }}
+  SDPort = {{ bacula_sd_port }}
+  Password = "{{ bacula_sd_password }}"
+  Device = FileStorage
+  Media Type = {{ bacula_sd_media_type }}
+  Maximum Concurrent Jobs = {{ bacula_sd_max_concurrent_jobs  }}
+}
+
+Schedule {
+    Name = "WeeklyCycle-{{ bacula_sd_name }}"
+    Run = Pool=WeeklyFilePool-{{ bacula_sd_name }} Full {{bacula_schedule_full}}
+    Run = Pool=DailyFilePool-{{ bacula_sd_name }}  Differential {{bacula_schedule_diff}}
+}
+

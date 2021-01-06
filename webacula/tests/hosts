@@ -1,0 +1,5 @@
+[all]
+webacula ansible_connection=docker
+
+[webacula]
+webacula

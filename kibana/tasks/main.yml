@@ -1,0 +1,47 @@
+---
+# tasks file for kibana
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  tags: always
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family}}.yml"
+
+- name: main | install kibana
+  package:
+    name: "kibana-{{ kibana_major_version }}*"
+
+- name: main | Copy configuration file for kibana version
+  tags: config
+  template:
+    src:   "etc/kibana-{{kibana_major_version}}.x/kibana.yml.j2"
+    dest:  "/etc/kibana/kibana.yml"
+    owner: root
+    group: root
+    mode:  0644
+  notify:
+    - "restart kibana"
+
+- include: firewall.yml
+  when: firewall_setup == True
+
+- name: main | Start and enable service
+  service:
+    name:    kibana
+    state:   started
+    enabled: yes
+
+- include: dashboard.yml
+  when: kibana_deploy_dashboard
+  tags:
+    - dashboard
+

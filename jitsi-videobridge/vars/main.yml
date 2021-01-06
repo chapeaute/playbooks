@@ -1,0 +1,9 @@
+---
+
+jvb_root_dir: /usr/share
+jvb_install_dir: "{{ jvb_root_dir }}/jitsi-videobridge"
+jvb_user: jvb
+jvb_group: "{{ jvb_user }}"
+jvb_etc_dir: /etc/jitsi-videobridge
+jvb_log_dir: /var/log/jitsi-videobridge
+jvb_install_tmp_dir: "/tmp/jvb-{{ jvb_version }}"

@@ -1,0 +1,17 @@
+# v1.0
+---
+- hosts: all
+  vars:
+    site_name: rodje
+    site_aliases: ['rodje.lan']
+    site_dir:  /srv/www
+    docs_dir:  "{{ site_dir }}/{{ site_name }}/htdocs"
+  roles:
+    - role: apache
+      apache2_data_dir: "{{ site_dir }}"
+      apache2_vhosts:
+        site:
+          vhost_name: "{{ site_name }}" 
+          server_aliases: "{{ site_aliases }}"
+    - role: security-apache
+      security_level: 2

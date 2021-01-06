@@ -1,0 +1,5 @@
+---
+
+- hosts: basic-server
+  roles:
+    - role: security

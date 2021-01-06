@@ -1,0 +1,24 @@
+--- 
+- hosts: zimbra
+  vars: 
+    zimbra_domain: "labs.lan"
+    zimbra_admin_password: changeme
+    zimbra_timezone: "UTC"
+  roles: 
+    - role: zimbra
+      zimbra_is_ldap_master: true
+      zimbra_ldap_server: "{{ ansible_fqdn }}"
+      zimbra_mta_server: "{{ ansible_fqdn }}"
+      zimbra_network:
+      zimbra_services: 
+        - store
+        - ldap
+        - mta
+        - apache
+        - logger
+        - drive
+        - chat
+        - proxy
+        - memcached
+        - dnscache
+        - spell

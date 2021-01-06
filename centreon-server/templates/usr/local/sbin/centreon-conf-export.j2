@@ -1,0 +1,84 @@
+#!/bin/bash
+#
+# Export template
+#
+
+# Nagios var directory
+CLAPI_CONF={{ centreon_clapi_conf }}
+CLAPI_CMD={{ centreon_clapi_bin }}
+PLUGIN_DIR=/usr/lib/nagios/plugins
+
+[ -r $CLAPI_CONF ] && source $CLAPI_CONF
+
+#
+# Display command syntax and exit with error code
+#
+syntax ()
+{
+	echo "Syntax: $0 [ALL|PLUGINS|TPL-ONLY|CONF-ONLY|CONTACT|CG|CMD|HTPL|HG|STPL|SG] [template_name]"
+        exit 1
+}
+
+export_template_object ()
+{
+	# Get object to export
+	object="$1"
+
+	# Select appropriate template and hostgroup depending on kind of OS
+	case $object in
+		CONTACT|CG|CMD|HTPL|HG|STPL|SG|HOST)
+			$CLAPI_CMD -u $CLAPI_USER -p $CLAPI_PASS -e | grep "^$object;"
+		;;
+		CONF-ONLY)
+		  $CLAPI_CMD -u $CLAPI_USER -p $CLAPI_PASS -e | egrep "^HTPL|^HC|^STPL|^SC|^CG|^CMD|^TP|^BITPL|^TRAP|^VENDOR"
+		;;
+		TPL-ONLY)
+		  $CLAPI_CMD -u $CLAPI_USER -p $CLAPI_PASS -e | egrep "^HTPL|^HC|^STPL|^SC|^CMD|^TP|^BITPL|^TRAP|^VENDOR"
+		;;
+		PLUGINS)
+			tar cvzf /tmp/plugins.tar.gz $(./export_tpl.sh CMD | grep -i "^CMD;ADD;" | awk -F';' '{print $5}' | sed -e 's#\$USER1\$#/usr/lib/nagios/plugins#' | awk '{print $1}' | sort -n | uniq)
+		;;
+		ALL)
+			TMP_DIR=$(mktemp -d /tmp/centreon-export-XXX)
+			cd $TMP_DIR
+			$CLAPI_CMD -u $CLAPI_USER -p $CLAPI_PASS -e | egrep "^HTPL|^HC|^STPL|^SC|^CMD|^TP|^TRAP|^VENDOR" > config.txt
+			tar cvzf /tmp/plugins.tar.gz config.txt $($CLAPI_CMD -u $CLAPI_USER -p $CLAPI_PASS -e | grep -i "^CMD;ADD;" | awk -F';' '{print $5}' | sed -e "s#\\\$USER1\\\$#$PLUGIN_DIR#" | awk '{print $1}' | grep "^$PLUGIN_DIR" | sort -n | uniq)
+			rm config.txt
+			echo "Conf and plugins export in file /tmp/plugins.tar.gz"
+		;;
+		*)
+			syntax
+	esac
+}
+
+
+export_template ()
+{
+	# Get object to export
+	object="$1"
+	tmpl="$2"
+
+	# Select appropriate template and hostgroup depending on kind of OS
+	case $object in
+		ALL|CONTACT|CG|CMD|HTPL|HG|STPL|SG|HOST)
+			# Extract template
+			$CLAPI_CMD -u $CLAPI_USER -p $CLAPI_PASS -e | egrep "^STPL;[^\;]*;$tmpl;"
+		;;
+		*)
+			syntax
+	esac
+}
+
+
+
+# Check command syntax
+case $# in
+	1) export_template_object $*
+	;;
+	2) export_template $*
+	;;
+	*) syntax
+	;;
+esac
+
+exit 0

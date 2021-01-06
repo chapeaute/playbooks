@@ -1,0 +1,10 @@
+---
+# handlers file for wso2iot
+
+---
+# handlers file for
+
+- name: Restart wso2iot
+  service:
+    name: wso2iot
+    state: restarted

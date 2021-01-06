@@ -1,0 +1,43 @@
+---
+# tasks file for wso2
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | Load vars for IS <= 5.8.0
+  include_vars: "../vars/wso2is-5.8.yml"
+  tags: 
+    - config
+    - config_mysql
+  when: wso2is_version is version_compare('5.8.0', '<=')
+
+- name: main | Load vars for IS > 5.8.0
+  include_vars: "../vars/wso2is-5.9.yml"
+  tags: 
+    - config
+    - config_mysql
+  when: wso2is_version is version_compare('5.8.0', '>')
+
+- import_tasks: config.yml
+  tags: config
+
+- name: main | link log dir
+  file:
+    src:   "{{ wso2is_install_dir }}/repository/logs"
+    dest:  /var/log/wso2is
+    state: link
+
+- name: main | start and enable {{ wso2is_service_name }}
+  service:
+    name:    "{{ wso2is_service_name }}"
+    state:   started
+    enabled: yes

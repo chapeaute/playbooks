@@ -1,0 +1,27 @@
+#
+# TLS
+#
+tls:
+{% if ogo_api_crt_content != "" and ogo_api_key_content != "" %}
+  certificates:
+    - certFile: /etc/traefik/domain.crt
+      keyFile: /etc/traefik/domain.key
+{% endif %}
+  options:
+    default:
+      sniStrict: {{ traefik_sni_strict }}
+      minVersion: VersionTLS12
+{% if ogo_cli_crt_files|length > 0 %}
+      clientAuth:
+        caFiles:
+{% for cert in ogo_cli_crt_files %}
+          - "/etc/traefik/{{ cert | basename }}"
+{% endfor %}
+        clientAuthType: RequireAndVerifyClientCert
+{% endif %}
+{% if traefik_cipher_list | length > 0 %}
+      cipherSuites:
+{% for cipher in traefik_cipher_list %}
+        - "{{ cipher }}"
+{% endfor %}
+{% endif %}

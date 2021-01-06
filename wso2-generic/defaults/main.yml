@@ -1,0 +1,87 @@
+# defaults file for wso2
+
+wso2_generic_product_name: "{{ wso2_generic_service_name }}"
+wso2_version: "{{ wso2_generic_product_name }}-{{ wso2_generic_version }}.zip"
+wso2_patched_version: "{{ wso2_generic_product_name }}/{{ wso2_generic_version }}/full/{{ wso2_generic_product_name }}-{{ wso2_generic_version }}+{{ wso2_generic_patch_version }}.full.zip"
+wso2_generic_download_url: "https://archive.smile.ci/wso2/{% if wso2_generic_patch_version %}{{ wso2_patched_version }}{% else %}{{ wso2_version }}{% endif %}"
+wso2_generic_download_tmp_dir: /var/tmp
+wso2_generic_subpath: "{{ wso2_generic_product_name }}-{{ wso2_generic_version }}"
+
+# Admin interface
+wso2_generic_enable_http_admin: false
+wso2_generic_enable_http_reverse: "{{ wso2_generic_enable_http_admin }}"
+wso2_generic_admin_port: "{% if wso2_generic_enable_http_admin %}443{% else %}9443{% endif %}"
+wso2_generic_enable_https_reverse: false
+
+# Commands
+wso2_generic_start_command: "bin/wso2server.sh"
+wso2_generic_stop_command: "bin/wso2server.sh --stop"
+
+# Firewalls
+wso2_generic_offset: 0
+wso2_generic_ports: []
+
+# SSO
+wso2_generic_sso_enabled: "{{ wso2_generic_sso_url|jdefault(false) }}"
+wso2_generic_admin_create: "{{ wso2_generic_admin_create }}"
+wso2_generic_admin_user: admin
+wso2_generic_admin_pass: changeme
+
+# Hostname
+wso2_generic_hostname: "{{ ansible_fqdn }}"
+wso2_generic_remote_hostname: "{{ wso2_generic_hostname }}"
+
+# Clustering wso2am-3.x.x
+wso2_generic_ammanager_nodes: []
+wso2_generic_amworker_nodes: []
+wso2_generic_amnodes: "{{ wso2_generic_ammanager_nodes|length + wso2_generic_amworker_nodes|length }}"
+
+# Clustering wso2is >= 5.10.0
+wso2_generic_isnodes: ["{{ wso2_generic_hostname }}"]
+
+# JKS
+ssl_certs_filename: "{{ wso2_generic_service_name }}"
+ssl_certs_keystore_filename: wso2carbon
+ssl_certs_truststore_filename: client-truststore
+wso2_generic_use_default_jks: False
+wso2_generic_keystores_path: "{{ ssl_certs_path }}"
+wso2_generic_keystore_pass: "{% if wso2_generic_use_default_jks|bool %}wso2carbon{% else %}lookup('password', 'credential/{{ inventory_hostname }}-wso2_generic_keystore_pass chars=ascii_letters,digits'){% endif %}"
+wso2_generic_truststore_pass: "{% if wso2_generic_use_default_jks|bool %}wso2carbon{% else %}lookup('password', 'credential/{{ inventory_hostname }}-{{ wso2_generic_service_name }}_truststore_pass chars=ascii_letters,digits'){% endif %}"
+
+# Config dirs
+wso2_generic_root_dir: "/var/lib"
+wso2_generic_install_dir: "{{ wso2_generic_root_dir }}/{{ wso2_generic_service_name }}"
+wso2_generic_home_dir: "{{ wso2_generic_root_dir }}/{{ wso2_generic_service_name }}"
+wso2_generic_dropins_dir: "{{ wso2_generic_home_dir }}/repository/components/dropins"
+wso2_generic_libs_dir:  "{{ wso2_generic_home_dir }}/repository/components/lib"
+wso2_generic_confs_dir: "{{ wso2_generic_home_dir }}/repository/conf"
+wso2_generic_data_root_dir: "{{ wso2_generic_root_dir }}"
+wso2_generic_data_dir: "{{ wso2_generic_data_root_dir }}/{{ wso2_generic_service_name }}-data"
+wso2_generic_data_dir_list: []
+wso2_generic_repl_method: none
+
+# Database
+
+wso2_generic_db_host: ''
+wso2_generic_db_enable: "{% if wso2_generic_db_host != '' %}true{% else %}false{% endif %}"
+wso2_generic_db_driver: mysql
+wso2_generic_db_port: 3306
+wso2_generic_db_remote_host: "{{ wso2_generic_db_host | default('') }}"
+wso2_generic_db_type: "{% if wso2_generic_db_host != '' %}mysql{% else %}h2{% endif %}"
+wso2_generic_db_apim_name: "{% if wso2_generic_version is version_compare('2.6.0', '<=') %}WSO2_AM{% elif wso2_generic_version is version_compare('2.6.0', '>') and wso2_generic_version is version_compare('3.1.0', '<=') %}WSO2_APIMGT31{% else %}WSO2_APIMGT{% endif %}"
+wso2_generic_db_apim_url: "{% if wso2_generic_db_host != '' %}jdbc:mysql://{{ wso2_generic_db_host }}:3306/{{ wso2_generic_db_apim_name }}{% else %}jdbc:h2:./repository/database/WSO2AM_DB;AUTO_SERVER=TRUE;DB_CLOSE_ON_EXIT=FALSE{% endif %}"
+wso2_generic_db_identity_url: "{% if wso2_generic_db_host != '' %}jdbc:mysql://{{ wso2_generic_db_host }}:3306/WSO2_IDENTITY{% else %}jdbc:h2:./repository/database/WSO2IDENTITY_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000{% endif %}"
+wso2_generic_db_shared_url: "{% if wso2_generic_db_host != '' %}jdbc:mysql://{{ wso2_generic_db_host }}:3306/WSO2_SHARED{% else %}jdbc:h2:./repository/database/WSO2SHARED_DB;DB_CLOSE_ON_EXIT=FALSE{% endif %}"
+wso2_generic_db_user: wso2carbon
+wso2_generic_db_password: wso2carbon
+
+# JAVA Tuning
+wso2_generic_java_version: 11
+wso2_generic_java_impl: openjdk
+wso2_generic_memory_size_prct: 0.6
+wso2_generic_memory_size: "{{ (ansible_memtotal_mb*wso2_generic_memory_size_prct)|int }}M"
+wso2_generic_default_java_opts: "-Dcom.sun.jndi.ldap.object.disableEndpointIdentification=true -Djava.util.prefs.systemRoot=/var/lib/{{ wso2_generic_service_name }}/.java -Djava.util.prefs.userRoot=/var/lib/{{ wso2_generic_service_name }}/.java/.userPrefs -server -Dorg.opensaml.httpclient.https.disableHostnameVerification=true  -Dorg.wso2.ignoreHostnameVerification=true -Dhttpclient.hostnameVerifier=AllowAll -XX:MaxMetaspaceSize=1g -XX:MaxPermSize=1024m -DentityExpansionLimit=10000 -XX:NewRatio=1 -XX:SurvivorRatio=6"
+wso2_generic_java_opts: ""
+
+# logrotate
+wso2_generic_logs_rotate: 7

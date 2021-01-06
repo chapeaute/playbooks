@@ -1,0 +1,16 @@
+---
+- name: selinux | Check SELinux module
+  shell: "set -o pipefail && semodule -l | grep -q ^mongodb-ha && echo found || echo notfound"
+  changed_when: false
+  register: mongodb_semod
+  check_mode: no
+
+- name: selinux | Copy SELinux module
+  copy:
+    src:   var/tmp/mongodb-ha.pp
+    dest:  /var/tmp/mongodb-ha.pp
+    owner: root
+    group: root
+    mode:  0640
+  register: mongodb_module
+  notify: "selinux | Apply SELinux module"

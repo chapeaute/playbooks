@@ -1,0 +1,62 @@
+---
+- name: install | Create {{ traefik_group }} group
+  group:
+    name:   "{{ traefik_group }}"
+    system: yes
+    state:  present
+
+- name: install | Create {{ traefik_user }} user
+  user:
+    name:  "{{ traefik_user }}"
+    group: "{{ traefik_group }}"
+    home:  "{{ traefik_data_dir }}"
+    system: yes
+    state:  present
+
+- name: install | Create traefik directories
+  file:
+    state: directory
+    path:   "{{ item }}"
+    owner: "{{ traefik_user }}"
+    group: "{{ traefik_group }}"
+  with_items:
+    - "{{ traefik_conf_dir }}"
+    - "{{ traefik_conf_dir }}/traefik.d"
+    - "{{ traefik_data_dir }}"
+    - "{{ traefik_log_dir }}"
+
+- name: install | Download archive (version 1)
+  get_url:
+    url:  "{{ traefik_download_url }}"
+    dest: "/usr/bin/{{ traefik_service }}"
+    owner: "{{ traefik_group }}"
+    group: "{{ traefik_group }}"
+    mode:  0750
+    force: "{{ traefik_force_version }}"
+  when:
+    traefik_version is version_compare('2.0.0', '<')
+  notify:
+    - Restart traefik
+
+- name: install | Download archive (version 2)
+  unarchive:
+    src:   "{{ traefik_download_url }}"
+    dest:  "/usr/bin/"
+    owner: "{{ traefik_group }}"
+    group: "{{ traefik_group }}"
+    mode:  0750
+    force: "{{ traefik_force_version }}"
+    remote_src: yes
+    exclude:
+      - LICENSE.md
+      - CHANGELOG.md
+  when:
+    traefik_version is version_compare('2.0.0', '>=')
+  notify:
+    - Restart traefik
+
+- name: install | Install extra package for dashboard
+  package:
+    name: "{{ traefik_packages_extra | join(',') }}"
+  when:
+    - traefik_dashboard_enable

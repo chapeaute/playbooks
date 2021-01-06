@@ -1,0 +1,113 @@
+---
+
+- name: config | Create default cassandra backup dir
+  file:
+    path:    "{{ cassandra_path_backup }}"
+    state:   directory
+    owner:   cassandra
+    group:   cassandra
+    recurse: true
+    mode: 0750
+  when: cassandra_path_home != cassandra_default_path_home
+
+- name: config | Create default cassandra backup dir
+  file:
+    path:    "{{ cassandra_path_backup }}"
+    state:   directory
+    owner:   cassandra
+    group:   cassandra
+    recurse: true
+    mode: 0750
+  when: cassandra_path_home != cassandra_default_path_home
+
+- name: config | Symlink cassandra backup dir
+  file:
+    src:   "{{ cassandra_path_backup }}"
+    dest:  "{{ cassandra_default_path_backup }}"
+    state: link
+    force: yes
+  when: cassandra_path_backup != cassandra_default_path_backup
+
+- name: config | Create cassandra home dir
+  file:
+    path:   "{{ cassandra_path_home }}"
+    state:  directory
+    owner:  cassandra
+    group:  cassandra
+    mode:   0750
+
+- name: config | symlink cassandra home dir
+  file:
+    src:   "{{ cassandra_path_home }}"
+    dest:  "{{ cassandra_default_path_home }}"
+    state: link
+    force: yes
+  when: cassandra_path_home != cassandra_default_path_home
+
+- name: config | Add systemd service
+  template:
+    src:   etc/systemd/system/cassandra.service.j2
+    dest:  /etc/systemd/system/cassandra.service
+    owner: cassandra
+    group: cassandra
+    mode:  0644
+  notify:  "Reload systemd"
+
+- name: config | Deploy cassandra configuration file
+  template:
+    src:   "etc/cassandra/conf/{{ item }}.j2"
+    dest:  "/etc/cassandra/conf/{{ item }}"
+    owner: cassandra
+    group: cassandra
+    mode:  0644
+  with_items:
+    - cassandra.yaml
+    - jvm.options
+  notify:
+    - "Restart Cassandra"
+
+- name: config | Add other configurations to cassandra.yml
+  lineinfile:
+    path: "/etc/cassandra/conf/cassandra.yaml"
+    regexp: "{{ item.key }}"
+    value: "{{ item.key }}: {{  item.value }}"
+    owner: cassandra
+    group: cassandra
+    mode:  0644
+  with_dict: "{{ cassandra_configuration }}"
+  notify:
+    - "Restart Cassandra"
+
+- name: config | Create /root/.cassandra
+  file:
+    path: /root/.cassandra
+    state: directory
+    owner: root
+    group: root
+    mode: 0750
+
+# TODO: Change cassandra password with handler or ...
+# - name: "Change cassandra password"
+#   cassandra_user:
+#     user: "{{ cassandra_root_user }}"
+#     password: "{{ cassandra_root_password }}"
+#     superuser: "yes"
+#     login_host: "{{ cassandra_bind_addr }}"
+#     login_user: "cassandra"
+#     login_password: "cassandra"
+#   run_once: true
+#   when: cassandra_enable_password
+
+- name: config | Add cqlshrc
+  template:
+    src: root/.cassandra/cqlshrc.j2
+    dest: /root/.cassandra/cqlshrc
+    owner: root
+    mode: 0644
+    group: root
+
+- name: main | Enable and Start Cassandra service
+  service:
+    name:    cassandra
+    enabled: yes
+    state:   started

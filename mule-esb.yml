@@ -1,0 +1,9 @@
+# v1.0
+---
+- hosts: muleesb
+  vars:
+    mule_esb_version: 3.8.0
+    mule_esb_root_dir: /var/lib
+    mule_esb_memory_size_prct: 0.7
+  roles:
+    - role: mule-esb

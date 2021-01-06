@@ -1,0 +1,38 @@
+---
+- name: RedHat | Install postgresql packages
+  yum:
+    name:  "{{ item }}"
+    state: installed
+  with_items: "{{ postgresql_packages }}"
+  register: postgresql_install_packages
+
+- name: RedHat | Update pgdata bash_profile
+  lineinfile:
+    dest:   "{{ postgresql_home_dir }}/.bash_profile"
+    regexp: "^PGDATA="
+    line:   "PGDATA={{ postgresql_data_dir }}"
+    backup: yes
+
+- name: RedHat | Stat PG_VERSION file
+  stat:
+    path: "{{ postgresql_data_dir }}/PG_VERSION"
+  register: pg_version
+
+- name: RedHat | Initialize postgresql if necessary
+  command: /usr/bin/postgresql-setup initdb
+  args:
+    creates: "{{ postgresql_data_dir }}/PG_VERSION"
+  notify: restart postgresql
+  when: not pg_version.stat.exists
+
+- name: RedHat | Move configuraiton file to etc directory
+  command: mv {{ postgresql_data_dir }}/postgresql.conf {{ postgresql_etc_dir }}
+  notify: restart postgresql
+  when: not pg_version.stat.exists
+
+- name: RedHat | Setting firewall rules
+  firewalld:
+    port:      "{{postgres_port}}/tcp"
+    state:     enabled
+    permanent: true
+    immediate: yes

@@ -1,0 +1,5 @@
+[repo-smile]
+name=repo-smile
+baseurl=https://repo.smile.ci/rpm/$releasever
+enabled=1
+gpgcheck=0

@@ -1,0 +1,17 @@
+---
+- hosts: pacemaker-spagobi
+  roles:
+    - role: pacemaker
+      pcmk_hosts: "{{ groups['spagobi'] }}"
+      pcmk_vip_rsc: 
+        - interface: eth1
+          address: 192.168.122.112
+          netmask: 32
+      pcmk_svc_rsc:
+        - spagobi
+      pcmk_drbd_rsc:
+        rsc_name: data
+        mnt_point: /srv/drbd
+        dir:
+          - src_dir: /var/lib/All-In-One-SpagoBI-5.1.0_21012015
+            dst_dir: /srv/drbd/spagobi

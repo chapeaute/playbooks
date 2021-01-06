@@ -1,0 +1,211 @@
+#!/bin/bash
+
+ES=http://localhost:{{ es_port }}
+ED=elasticdump
+
+
+# You must change it
+BACKUP_DIR="{{ es_default_backup_dir }}"
+ED_LIMIT=100
+DUMP_TYPE=""
+EXCL_PREFIX=".monitoring-"
+
+# jq package must be installed
+getmaster() {
+    nodeid=$(curl -s $ES/_nodes/_local | jq --raw-output '.nodes|keys[]')
+    masternode=$(curl -s $ES/_cluster/state/master_node | jq --raw-output '.master_node')
+
+    if [ "$nodeid" == "$masternode" ]; then
+      return 0
+    else
+      return 1
+    fi
+}
+
+# List indices with filter based on date and or indice prefix
+list_index() {
+    days=$1
+    prefix=$2
+    exclude=$3
+    filters=""
+    curator_opts=""
+
+    if [ "$days" != "" ]; then
+        filters="{\"filtertype\":\"age\",\"source\":\"creation_date\",\"direction\":\"older\",\"unit\":\"days\",\"unit_count\":${days}}"
+    fi
+
+    if [ "$prefix" != "" ]; then
+        [[ -n $filters ]] && filters="$filters,"
+        filters="$filters{\"filtertype\":\"pattern\",\"kind\":\"prefix\",\"value\":\"${prefix}\"}"
+    fi
+
+    if [ "$filters" != "" ]; then
+        curator_opts="--filter_list [$filters]"
+    fi
+
+    if [ "$exclude" != "" ]; then
+        list_index=$(curator_cli --loglevel ERROR --master-only show_indices $curator_opts | egrep -v "$exclude")
+    else
+        list_index=$(curator_cli --loglevel ERROR --master-only show_indices $curator_opts)
+    fi
+
+    if [ $? != 0 ]; then
+        >&2 echo "No indices matching filter found !"
+        exit 1
+    else
+        echo $list_index
+    fi
+}
+
+# Check if index exist
+exist_index() {
+    local index=$1
+
+    curl -s $ES/_cat/indices?h=i | egrep -q "${index}"
+
+    return $?
+}
+
+# Dump index
+dump_index() {
+    local index=$1
+
+    exist_index $index
+
+    if [ "$?" -eq 0 ]; then
+        mkdir -p $BACKUP_DIR
+
+        echo "Dump index $index"
+        $ED --quiet --limit=$ED_LIMIT --input=$ES/$index --output=$ | gzip > "$BACKUP_DIR/${index}.json.gz"
+    else
+        echo "Warning: index $index doesn't exist"
+    fi
+}
+
+# Dump indices corresponding to a date before n days ago current date
+dump_date() {
+    if [[ "${1}" =~ ^[+]?[0-9]+$ ]];  then
+        day=$1
+        prefix=$2
+        exclude=$3
+        date=$(date --date="$day days ago" +%Y.%m.%d)
+
+        if [ "$exclude" != "" ]; then
+            index_list=$(curl -s $ES/_cat/indices?h=i | egrep "^${prefix}.*${date}" | egrep -v "$exclude")
+        else
+            index_list=$(curl -s $ES/_cat/indices?h=i | egrep "^${prefix}.*${date}")
+        fi
+
+        for idx in $index_list
+        do
+            dump_index $idx
+        done
+    else
+        echo "Warning: Argument passed to the option is not a number or is a negative number "
+    fi
+
+    exit 0
+}
+
+# Dump all indices before n days ago from current date
+dump_before_date() {
+    for idx in $(list_index "$1" "$2" "$3")
+    do
+        dump_index $idx
+    done
+
+    exit 0
+}
+
+dump_name() {
+    index_list=$1
+
+    for idx in $index_list
+    do
+        dump_index $idx
+    done
+    exit 0
+}
+
+help() {
+  echo "
+  es-index-dump scripts allow you to dump the indexes of an elasticsearch cluster
+
+SYNOPSIS
+
+  es-indice-dump [-a|-d days_ago|-o older|-i index_name][-p prefix_name][-e prefix_name1,prefix_name2,...]
+
+Options:
+
+    -a     Takes no argument and allows to dump all indexes of $ES
+    -b     backup directory (default: $BACKUP_DIR)
+    -d     Takes as argument a number (1 ... N) to determine the creation date of the index to dump
+           Examples:
+             - es-indice-dump -d 1 # Dump the index with the date of the previous day
+             - es-indice-dump -d 2 # Dump the index with the date of two days ago
+             - ...
+    -i     Takes as argument the name of the index a dump
+           Examples:
+             -  es-indice-dump -i logstash-2017.01.01
+    -o older_than  Include only indices older than n days
+    -p prefix      Include only indices beginning with prefix
+    -e exclude     Exclude indices list separeted by comma beginning with prefix (default: $EXCL_PREFIX)
+    "
+    exit 1
+}
+
+if [ -f $BACKUP_DIR/no_backup ] ; then
+    echo "Found $BACKUP_DIR/no_backup file. Exiting backup..."
+    exit 0
+fi
+
+getmaster || {
+    echo "You must run this script on master node"
+    exit 0
+}
+
+while getopts "ab:d:i:ho:p:e:" opt
+do
+    case $opt in
+        a) DUMP_TYPE="all"
+       ;;
+        b) BACKUP_DIR=$OPTARG
+       ;;
+        d) DUMP_TYPE="date"
+           DAYS=$OPTARG
+        ;;
+        e) EXCL_PREFIX=$(echo "${OPTARG//,/|}" | sed 's/|$//')
+        ;;
+        i) DUMP_TYPE="name"
+           IDX_NAME=$OPTARG
+        ;;
+        h) help
+        ;;
+        o) DUMP_TYPE="before_date"
+           DAYS=$OPTARG
+        ;;
+        p) IDX_PREFIX=$OPTARG
+        ;;
+        *) help
+        ;;
+    esac
+done
+
+case $DUMP_TYPE in
+    "all") dump_before_date "0" "$IDX_PREFIX" "$EXCL_PREFIX"
+    ;;
+    "date") dump_date "$DAYS" "$IDX_PREFIX" "$EXCL_PREFIX"
+    ;;
+    "name") dump_name "$IDX_NAME"
+    ;;
+    "before_date") dump_before_date "$DAYS" "$IDX_PREFIX" "$EXCL_PREFIX"
+    ;;
+    *)
+    echo "Invalid dump type."
+    help
+    ;;
+esac
+
+if [ -z "$index_list" ]; then
+    help
+fi

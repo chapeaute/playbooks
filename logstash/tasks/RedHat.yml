@@ -1,0 +1,9 @@
+---
+
+- name: RedHat | Open http port
+  firewalld:
+    port: "{{ ls_input_http_port }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: yes
+  when: ls_input_http

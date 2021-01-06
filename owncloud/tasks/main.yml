@@ -1,0 +1,53 @@
+---
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+
+- name: main | check if nextcloud is installed
+  stat:
+    path: "{{ nextcloud_config_file }}"
+  register: nextcloud_installed
+
+- name: main | install
+  become_user: "{{ apache2_user }}"
+  command: php occ maintenance:install --database "mysql" --database-name "{{ nextcloud_db_name }}"  --database-user "{{ nextcloud_db_user }}" --database-pass "{{ nextcloud_db_pass }}" --admin-user "{{ nextcloud_admin_user }}" --admin-pass "{{ nextcloud_admin_pass }}" --data-dir "{{  nextcloud_data_dir }}"
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  when: nextcloud_installed.stat.exists == False
+
+- name: main | set trusted_domains
+  become_user: "{{ apache2_user }}"
+  command: php occ config:system:set trusted_domains {{ item.0 }} --value={{ item.1 }}
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  with_indexed_items:
+   - "{{ nextcloud_trusted_domains }}"
+   - "{{ nextcloud_vhost_aliases }}"
+
+- name: main | configure performance and caching
+  become_user: "{{ apache2_user }}"
+  command: php occ config:system:set {{ item }}
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  with_items:
+    - memcache.local --value "\OC\Memcache\APCu"
+    - asset-pipeline.enabled --value true
+
+- name: main | configure redis caching
+  become_user: "{{ apache2_user }}"
+  command: php occ config:system:set {{ item }}
+  args:
+    chdir: "{{ nextcloud_docroot_dir }}"
+  with_items:
+    - redis "host" --value "{{ nextcloud_redis_host }}"
+    - redis "port" --value {{ nextcloud_redis_port}}"
+  when: nextcloud_redis_host is defined

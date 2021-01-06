@@ -1,0 +1,13 @@
+[Unit]
+Description=Launch cassandra Service
+After=network.target
+
+[Service]
+Type=simple
+LimitNOFILE=infinity
+LimitNPROC=infinity
+LimitCORE=infinity
+User=cassandra
+Group=cassandra
+EnvironmentFile=/etc/default/cassandra
+ExecStart=/usr/sbin/cassandra -p /run/cassandra/cassandra.pid -f

@@ -1,0 +1,5 @@
+[all]
+redis ansible_connection=docker
+
+[redis]
+redis

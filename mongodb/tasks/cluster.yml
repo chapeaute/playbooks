@@ -1,0 +1,16 @@
+---
+
+- name: cluster | flush handlers
+  meta: flush_handlers
+  tags: cluster
+
+- name: cluster | Ensure {{ mongodb_replica_set_name }} exists
+  tags: cluster
+  mongodb_replicaset:
+    login_host: localhost
+    login_user: "{{ mongodb_admin_user }}"
+    login_password: "{{ mongodb_admin_pass }}"
+    replica_set: "{{ mongodb_replica_set_name }}"
+    members: "{{ mongodb_hosts }}"
+  when: mongodb_hosts.index(inventory_hostname) == 0
+

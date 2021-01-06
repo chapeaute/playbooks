@@ -1,0 +1,15 @@
+---
+# Global settings
+firewall_setup: true
+firewall_zone: public
+
+# Defaults settings for docker-swarm
+docker_node_manager: []
+docker_node_worker: []
+docker_cluster_bind_interface: eth0
+docker_metric_bind_interface: docker0
+
+docker_compose_version: 1.21.2
+docker_compose_download_url: https://github.com/docker/compose/releases/download/{{ docker_compose_version }}/docker-compose-{{ ansible_system }}-{{ ansible_architecture }}
+docker_bashcompletion_download_url: https://raw.githubusercontent.com/docker/compose/{{ docker_compose_version }}/contrib/completion/bash/docker-compose
+

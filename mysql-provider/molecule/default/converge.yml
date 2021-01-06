@@ -1,0 +1,29 @@
+---
+
+- name: Converge
+  hosts: all
+  gather_facts: no
+  tasks:
+    - name: Install mariadb server
+      package:
+        name: ['mariadb-server', 'MySQL-python']
+    - name: start mariadb service
+      service:
+        name: mariadb
+        state: started
+    - import_role:
+        name: mysql-provider
+      vars:
+        mysql_databases:
+          db_test:
+            user: db_test
+            password: db_test
+          sample:
+            user: sample
+            password: sample
+            sync_source:
+              src: files/sample.sql
+        mysql_users:
+          - user: db_test
+            password: db_test
+            priv: "db_test.*:ALL"

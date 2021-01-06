@@ -1,0 +1,11 @@
+---
+- hosts: all
+  gather_facts: False
+  roles:
+    - role: basic-user
+      tags: user
+      users:
+        - login: ersit
+          groups: exploit
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC4kJe291dKEDQSFGtK2goJV1IsFYJCEfK2V51KbYxjhqps1vMdzZdLFQWcoLUWhXut9e1H+Xt7VI4i6s1H7q2OuqNSHmV94c8as6PEbLG6PVGFbe1IJ8OGeF/qAZMkXMWiHFwEu/k4vdp7li+MdfpHd0qnCFr4cOXXR3GDhwauGkn7w/noQgp7B6tMWE93cCege5pmzWWfcRk9Ug4JcCQD191Aw1J/DXqC0n63GJIlnwjupAiQjlzWt2C+JJVkcrS3KxC7BMThCDHhgu0W9KDQ/1H/r9Y19C+Jt8hMGHYuAvgEpmMyD9ENqlqwEy/FERx04DLSkhNvDE7TPf1NkSXN erwin.sittie@sfl.ci

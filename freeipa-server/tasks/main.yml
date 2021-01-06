@@ -1,0 +1,155 @@
+---
+# tasks file for freeipa-server
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family }}.yml"
+
+- name: main | Install rng-tools
+  package:
+    name: rng-tools
+    state: present
+  tags:
+    - setup
+    - install
+
+- name: main | Enable and Start rng-tools
+  service:
+    name: rngd
+    state:   started
+    enabled: yes
+
+- name: main | Install packages
+  package:
+    name: "{{ (freeipa_packages + freeipa_require_packages) | join(',') }}"
+    state: present
+  tags:
+    - setup
+    - install
+
+- name: main | Install DNS packages
+  package:
+    name: "{{ freeipa_dns_packages | join(',') }}"
+    state: present
+  when:
+    - freeipa_dns_enable
+  tags:
+    - setup
+    - install
+
+- set_fact:
+    freeipa_dns_options: "--setup-dns --auto-reverse --auto-forwarders --ssh-trust-dns"
+  when:
+    - freeipa_dns_enable
+
+- name: main | Deploy FreeIPA server
+  command: >
+    {{ ipa_srv_install }} --unattended \
+    --domain {{ freeipa_domain }}
+    --realm {{ freeipa_realm }}
+    --hostname {{ inventory_hostname }} --ip-address {{ hostvars[inventory_hostname]['ansible_' + main_interface]['ipv4']['address'] }}
+    --admin-password {{ freeipa_admin_pass }} --ds-password {{ freeipa_dm_pass }}
+    --mkhomedir --idstart {{ freeipa_userid_start }} --idmax {{ freeipa_userid_max }}
+    {{ freeipa_dns_options | default() }}
+  args:
+    creates: /etc/ipa/default.conf
+  when:
+    - inventory_hostname == freeipa_hosts[0]
+  tags:
+    - setup
+    - install
+
+- name: main | Deploy FreeIPA replicas servers
+  command: >
+    {{ ipa_cli_install }} --unattended \
+    --domain {{ freeipa_domain }}
+    --realm {{ freeipa_realm }}
+    --server {{ freeipa_hosts[0] }}
+    --principal {{ freeipa_admin_user }} --password {{ freeipa_admin_pass }}
+    --mkhomedir 
+  args:
+    creates: /etc/ipa/default.conf
+  register: freeipa_install
+  when:
+    - inventory_hostname != freeipa_hosts[0]
+  tags:
+    - setup
+    - install
+
+- name: main | Add FreeIPA replicas hosts to ipaservers group
+  ipa_hostgroup:
+    name:  ipaservers
+    state: present
+    host:  "{{ freeipa_hosts }}"
+    ipa_host: "{{ freeipa_hosts[0] }}"
+    ipa_user: "{{ freeipa_admin_user }}"
+    ipa_pass: "{{ freeipa_admin_pass }}"
+  when:
+    - inventory_hostname == freeipa_hosts[0]
+  tags:
+    - setup
+    - install
+
+- name: main | Extract CA certificat
+  command:      "openssl pkcs12 -clcerts -nokeys -in /root/cacert.p12 -password pass:{{ freeipa_dm_pass }}"
+  register:     ca_cert_file
+  delegate_to:  "{{ freeipa_hosts[0] }}"
+  changed_when: false
+  tags:
+    - config
+
+- name: main | Make CA certificat available on https://{{ freeipa_hosts[0] }}/{{ freeipa_domain }}.pem
+  copy:
+    dest:    "/var/www/html/{{ freeipa_domain }}.pem"
+    content: "{{ ca_cert_file.stdout }}"
+    mode:    0644
+    owner:   root
+    group:   root
+  tags:
+    - config
+
+- name: main | Configure replication between IPA Servers
+  command: "{{ ipa_rpl_install }} --setup-ca {{ freeipa_dns_options | default() }}"
+  when:
+    - inventory_hostname != freeipa_hosts[0]
+    - freeipa_install.changed
+  tags:
+    - config
+
+- name: main | DNS declaration
+  template:
+    src:  "var/tmp/{{ item }}.j2"
+    dest: "/var/tmp/{{ item }}"
+  with_items:
+    - "ipa.system.records.db"
+  when:
+    - not freeipa_dns_enable
+  tags:
+    - config
+
+- name: main | CA Certificate download URL
+  debug:
+    msg:
+      - '===== IMPORTANT ====='
+      - '- CA Certificate for domain {{ freeipa_domain }} is available at https://{{ freeipa_hosts[0] }}/{{ freeipa_domain }}.pem'
+      - '- You can login at FreeIPA server with user ''{{ freeipa_admin_user }}'' at https://{{ freeipa_hosts[0] }}/'
+      - '- You must declare in your DNS server entries available in file /var/tmp/ipa.system.records.db'
+      - '===== IMPORTANT ====='
+  when:
+    - inventory_hostname == freeipa_hosts[0]
+  tags:
+    - config
+
+- include: ipa_groups.yml
+  when:
+    - freeipa_ansible_groups|length() > 0

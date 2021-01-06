@@ -1,0 +1,21 @@
+---
+# defaults file for symfony
+
+# Apache
+symfony_ssl_enabled: false
+symfony_ssl_key_file: "{{ apache2_default_ssl_key }}"
+symfony_ssl_cert_file: "{{ apache2_default_ssl_key }}"
+symfony_ssl_redirect: true
+
+# PHP
+symfony_php_version: "7.2"
+symfony_php_extensions: []
+symfony_php_memory_prct: 0.4
+symfony_php_memory: "{{ ansible_memtotal_mb*(symfony_memory_prct|float) }}M"
+symfony_php_max_execution: 120
+
+# Database
+symfony_site_dir: "/var/www"
+symfony_site_aliases: []
+symfony_web_dir: "public"
+symfony_site_root: "{{ symfony_site_dir }}/{{ symfony_site_name }}/htdocs/{{ symfony_web_dir }}"

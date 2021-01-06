@@ -1,0 +1,48 @@
+---
+# tasks file for basic-interface
+
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  tags: always
+
+- include: scripts.yml
+  tags: script
+
+- stat:
+    path: /etc/udev/rules.d/70-persistent-net.rules
+  register: udev_net_rules
+
+- name: main | verify file exists
+  file:
+    path: /etc/udev/rules.d/70-persistent-net.rules
+    state: touch
+  tags: config
+  when: not udev_net_rules.stat.exists
+
+- name: main | Update facts
+  setup:
+  tags:
+    - config
+
+- include: interface.yml name="{{ item.value.interface|default(item.key) }}" address="{{ item.value.address }}" netmask="{{ item.value.netmask|default('255.255.255.0') }}"
+  when: item.value.address | length > 0
+  with_dict: "{{ interfaces|default({}) }}"
+  tags: config
+
+- include: rename_interface.yml oldname="{{ item.key }}" newname="{{ item.value }}"
+  with_dict: "{{ rename_interfaces }}"
+  when: rename_interfaces|length > 0
+  register: interfaces_renamed
+  tags: config
+
+- name: Force handlers
+  meta: flush_handlers

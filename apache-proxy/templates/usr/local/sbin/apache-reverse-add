@@ -1,0 +1,167 @@
+#!/bin/bash
+# Script de création d'un nouvel accès reverse
+#
+# Utilisation : new_reverse.sh toto
+# crée une redirection toto.dev.smile.ci -> http://toto.domaine.local/
+#
+# Ou : new_reverse.sh toto http://url/machin/
+# crée une redirection toto.dev.smile.ci -> http://url/machin (utile avec tomcat, etc.)
+#
+# Un utilisateur toto:passwordrandom sera crée pour protéger l'accès
+# En cas de perte du mot de passe, consulter $PASSDIR/toto.clear
+#
+
+# System variables
+[[ -r /etc/lsb-release ]] && source /etc/lsb-release
+
+# Variables
+DISTRIB_ID={{ ansible_os_family }}
+PWGEN={{ pwgen_dir }}
+HTPASSWD={{ apache2_htpasswd }}
+CONFDIR={{ apache2_confd_dir }}
+PASSDIR={{ apache2_htpasswd_dir }}
+APACHECTL={{ apache2_apachectl }}
+ENSITE=/usr/sbin/a2ensite
+
+# Tests
+if ! test -x $PWGEN; then
+    echo "pwgen is not installed, or binary not found"
+    exit 1
+elif ! test -x $APACHECTL; then
+    echo "apachectl is not installed, or binary not found"
+    exit 2
+elif ! test -x $ENSITE && test $DISTRIB_ID == "Debian" ; then
+    echo "a2ensite is not installed, or binary not found"
+    exit 3
+elif ! test -x $HTPASSWD; then
+    echo "htpasswd is not installed, or binary not found"
+    exit 4
+elif ! test -d $CONFDIR; then
+    echo "Folder $CONFDIR does not exist"
+    exit 5
+elif ! test -d $PASSDIR; then
+    echo "Folder $PASSDIR does not exist"
+    exit 6
+fi
+
+# Processing arguments
+if [ "$#" -lt 2 -o "$#" -gt 3 ]; then
+    echo "Usage: $0 external_url internal_url [PASSWD]"
+    echo "  Create an external access http://external_url/ to proxify requests to a specific VM addr (http://internal_url/)"
+    echo
+    echo "Options:"
+    echo "  external_url     external URL to access service from internet"
+    echo "  internal_url     internal URL where requests will be forward"
+    echo "  password         optional parameter to protect external access"
+    echo
+    echo "Example:"
+    echo "  $0 centreon.ovh.smile.ci centreon.ovh.smile.lan"
+    exit 7
+fi
+
+EXT_NAME=$1
+INT_NAME=$2
+URL=http://$INT_NAME/
+
+# If not provided, generate access passwd
+if test "$3"; then
+    PASS=$3
+#else
+#    PASS=`pwgen -nc`
+fi
+
+# Create VirtualHost
+if test -f $CONFDIR/$EXT_NAME.conf; then
+    echo "VirtualHost $EXT_NAME already exists" >&2
+    exit 1
+fi
+
+cat <<EOF >$CONFDIR/$EXT_NAME.conf
+<VirtualHost *:80>
+  ServerName			$EXT_NAME
+  ProxyPass			/	$URL
+  ProxyPassReverse		/	$URL
+  ProxyPreserveHost		On
+EOF
+
+if [ -n "$PASS" ]; then
+cat <<EOF >>$CONFDIR/$EXT_NAME.conf
+
+  <Location />
+    AuthName		"Acces client"
+    AuthUserFile		$PASSDIR/$EXT_NAME.htpasswd
+    AuthType		Basic
+    Require			valid-user
+    Order			allow,deny
+    Allow from		10.0.0.0/8
+    Satisfy			any
+  </Location>
+EOF
+fi
+
+cat <<EOF >>$CONFDIR/$EXT_NAME.conf
+</VirtualHost>
+EOF
+
+if test -e /etc/apache2/ssl/star.smile.ci.key; then
+    cat <<EOF >>$CONFDIR/$EXT_NAME.conf
+
+<VirtualHost *:443>
+  ServerName			$EXT_NAME
+  SSLEngine			On
+  SSLCertificateFile		/etc/apache2/ssl/star.smile.ci.crt
+  SSLCertificateChainFile	/etc/apache2/ssl/star.smile.ci.chain
+  SSLCertificateKeyFile	/etc/apache2/ssl/star.smile.ci.key
+  ProxyPass			/	$URL
+  ProxyPassReverse		/	$URL
+  ProxyPreserveHost		On
+EOF
+
+  if [ -n "$PASS" ]; then
+    cat <<EOF >>$CONFDIR/$EXT_NAME.conf
+
+  <Location />
+    AuthName		"Acces client"
+    AuthUserFile		$PASSDIR/$EXT_NAME.htpasswd
+    AuthType		Basic
+    Require			valid-user
+    Order			allow,deny
+    Allow from		10.0.0.0/8
+    Satisfy			any
+  </Location>
+EOF
+  fi
+
+cat <<EOF >>$CONFDIR/$EXT_NAME.conf
+</VirtualHost>
+EOF
+fi
+
+if [ -n "$PASS" ]; then
+  $HTPASSWD -b -c $PASSDIR/$EXT_NAME.htpasswd $EXT_NAME $PASS >/dev/null 2>&1
+  $HTPASSWD -b -c -p $PASSDIR/$EXT_NAME.clear $EXT_NAME $PASS >/dev/null 2>&1
+  chown {{ apache2_log_owner }}:{{ apache2_group }} $PASSDIR/$EXT_NAME.htpasswd
+  chown {{ apache2_log_owner }}:{{ apache2_group }} $PASSDIR/$EXT_NAME.clear
+  chmod 640 $PASSDIR/$EXT_NAME.htpasswd
+  chmod 640 $PASSDIR/$EXT_NAME.clear
+fi
+
+if [ $DISTRIB_ID == Debian ]; then
+  if ! $ENSITE $EXT_NAME >/dev/null 2>&1; then
+      echo "Unable to enable $EXT_NAME, rollback!" >&2
+      rm -f $PASSDIR/$EXT_NAME.clear $PASSDIR/$EXT_NAME.htpasswd $CONFDIR/$EXT_NAME.conf $CONFDIR/../sites-available/$EXT_NAME.conf
+      exit 1
+  fi
+elif ! $APACHECTL configtest >/dev/null 2>&1; then
+    echo "Syntax error, rollback !" >&2
+    rm -f $PASSDIR/$EXT_NAME.clear $PASSDIR/$EXT_NAME.htpasswd $CONFDIR/$EXT_NAME.conf
+    exit 1
+elif ! $APACHECTL graceful; then
+    echo "Configuration reload failed. WARNING!" >&2
+fi
+
+echo "URL:    http://$EXT_NAME/"
+
+if [ -n "$PASS" ]; then
+  echo "Access: $EXT_NAME:$PASS"
+fi

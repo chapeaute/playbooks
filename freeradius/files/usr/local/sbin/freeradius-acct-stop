@@ -1,0 +1,2 @@
+#!/bin/bash
+radclient -xs -f /usr/local/sbin/acct_stop.txt localhost acct "testing123"

@@ -1,0 +1,114 @@
+---
+# tasks file for mule-esb
+- name: main | Symlink log dir
+  file:
+    src: "{{ mule_esb_root_dir }}/{{ mule_esb_service_name }}/logs"
+    dest: "{{ mule_esb_logs_dir }}"
+    state: link
+
+- stat:
+    path: "{{ mule_esb_root_dir }}"
+  register: root_dir
+
+- name: main | Create root directory
+  file:
+    state:   directory
+    path:    "{{ mule_esb_root_dir }}"
+    recurse: yes
+  when: not root_dir.stat.exists
+
+- name: main | Create symlink from {{ mule_esb_default_root_dir }} to root directory
+  file:
+    state: link
+    src:   "{{ mule_esb_root_dir }}/{{ mule_esb_service_name }}"
+    dest:  "{{ mule_esb_default_root_dir }}/{{ mule_esb_service_name }}"
+  when: mule_esb_root_dir != mule_esb_default_root_dir
+
+- name: main | Create files directory {{ mule_esb_default_root_dir }}/files
+  file:
+    state: directory
+    path:  "{{ mule_esb_root_dir }}/{{ mule_esb_service_name }}/files"
+    owner: "{{ mule_esb_user }}"
+    group: "{{ mule_esb_group }}"
+    mode:  0750
+
+# Workaround for bug with Mule ESB max memory limit to 4096M (set to 0 and redefined Xms and Xmx manually)
+- name: main | Set some configuration tuning in wrapper.conf
+  lineinfile:
+    dest:   "{{ mule_esb_root_dir }}/{{ mule_esb_service_name }}/conf/wrapper.conf"
+    regexp: "^{{ item.key }}.*=.*"
+    line:   "{{ item.key }}={{ item.value }}"
+  with_items:
+    - key:   "wrapper.java.initmemory"
+      value: 0
+    - key:   "wrapper.java.maxmemory"
+      value: 0
+  notify:
+    - Restart mule-esb
+  tags:
+    - config
+
+- name: main | Add extra parameter to mule-esb wrapper.conf
+  include: "config.yml key={{ kv.key }} value={{ kv.value }} sep=''"
+  with_items:
+    - key: "-Xms"
+      value: "{{ ((mule_esb_memory_size | int )/2) | int }}m"
+    - key: "-Xmx"
+      value: "{{ mule_esb_memory_size }}m"
+  loop_control:
+    loop_var: kv
+  tags:
+    - config
+
+- name: main | Add extra parameter to mule-esb wrapper.conf
+  include: "config.yml key={{ kv.key }} value={{ kv.value }} sep='='"
+  with_items: "{{ mule_esb_wrapper_opts }}"
+  loop_control:
+    loop_var: kv
+  tags:
+    - config
+
+- meta: flush_handlers
+
+- name: main | Deploy scripts
+  template:
+    src: "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: "{{ mule_esb_group }}"
+    mode: 0750
+  with_items:
+    - muleesb-app-deploy
+    - muleesb-app-undeploy
+    - muleesb-app-list
+  tags:
+    - script
+
+- name: main | Set max open files hard limit
+  pam_limits:
+    domain: "{{ mule_esb_user }}"
+    limit_type: soft
+    limit_item: nofile
+    value: "{{ mule_esb_limit_openfiles }}"
+  notify:
+    - Restart mule-esb
+  tags:
+    - config
+
+- name: main | Set max open files soft limit
+  pam_limits:
+    domain: "{{ mule_esb_user }}"
+    limit_type: hard
+    limit_item: nofile
+    value: "{{ mule_esb_limit_openfiles }}"
+  notify:
+    - Restart mule-esb
+  tags:
+    - config
+
+- name: main | Enable and start service
+  service:
+    name:    "{{ mule_esb_service_name }}"
+    state:   started
+    enabled: yes
+

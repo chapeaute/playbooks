@@ -1,0 +1,10 @@
+---
+# handlers file for genieacs-gui
+
+- name: Systemd reload
+  command: systemctl daemon-reload
+
+- name: Restart genieacs-gui
+  service:
+    name: genieacs-gui
+    state: started

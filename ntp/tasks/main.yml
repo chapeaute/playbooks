@@ -1,0 +1,55 @@
+---
+# tasks file for elasticsearch
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | Set the correct timezone.
+  file:
+    src: "/usr/share/zoneinfo/{{ ntp_timezone }}"
+    dest: /etc/localtime
+    state: link
+    force: yes
+
+# Debian family OSes also have an /etc/timezone file.
+- name: main | Set timezone in /etc/timezone file.
+  template:
+    src: timezone.j2
+    dest: /etc/timezone
+    force: yes
+  when: ansible_os_family == 'Debian'
+
+- name: main | Install NTP (RedHat).
+  package:
+    name:  "{{ ntp_package }}"
+    state: installed
+
+- name: main | Ensure NTP is running and enabled as configured.
+  service:
+    name:    "{{ ntp_daemon }}"
+    state:   started
+    enabled: yes
+  when: ntp_enabled
+
+- name: main | Ensure NTP is stopped and disabled as configured.
+  service:
+    name:    "{{ ntp_daemon }}"
+    state:   stopped
+    enabled: no
+  when: not ntp_enabled
+
+- name: main | Generate ntp.conf file
+  template:
+    src:  "{{ ntp_package }}.conf.j2"
+    dest: "{{ ntp_conf_file }}"
+  notify: Restart ntp
+  when: ntp_manage_config

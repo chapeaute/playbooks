@@ -1,0 +1,24 @@
+; {{ ansible_managed }}
+
+{% for transport in asterisk_default_transports %}
+[transport-{{ transport }}]
+type=transport
+protocol={{ transport }}
+bind=0.0.0.0
+{% endfor %}
+{% for transport in asterisk_transports %}
+[transport-{{ transport }}]
+type=transport
+protocol={{ transport }}
+bind=0.0.0.0
+{% endfor %}
+
+{% for pjsip in asterisk_pjsip %}
+
+[{{ pjsip.id }}]
+type={{ pjsip.type}}
+{% for config in pjsip.configs|default([]) %}
+{{config}}
+{% endfor %}
+{% endfor %}
+#include pjsip_custom.conf

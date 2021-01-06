@@ -1,0 +1,25 @@
+#!/bin/bash
+
+TMP_FILE=$(mktemp)
+ETCD_PREFIX=/traefik/backends/
+
+chmod 600 $TMP_FILE
+
+etcd-ctl --write-out=json get --prefix $ETCD_PREFIX > $TMP_FILE
+
+SITE_LIST=$(for site64 in $(cat $TMP_FILE | jq ".kvs[].key" | sed 's/"//')
+do
+	site=$(echo $site64 | base64 -di | awk -F'/' '{print $4}')
+	if [[ $site =~ -except ]]; then
+		echo $site | sed 's/-except$//'
+	fi
+done | sort -n | uniq)
+
+for site in $SITE_LIST
+do
+	key=$(echo -n "/traefik/backends/${site}-except/servers/server/url" | base64 -w0)
+	remote_host=$(cat $TMP_FILE | jq ".kvs[] | select (.key == \"${key}\")" | jq .value | base64 -di)
+	echo "$site $remote_host"
+done | column -t
+
+rm -f $TMP_FILE

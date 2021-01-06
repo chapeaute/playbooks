@@ -1,0 +1,71 @@
+---
+
+# Setting up firewall rules
+
+- name: Firewalld | Open firewall ports for Mailboxd service
+  firewalld: 
+    port: "{{item}}"
+    permanent: true
+    state: enabled
+    immediate: yes
+  with_items: 
+    - "5222/tcp"
+    - "5223/tcp"
+    - "7047/tcp"
+    - "7072/tcp"
+
+
+# Installing ZIMBRA-STORE Service
+
+- name: keystrokes-store | Uploading keystroke file for community version on STORE
+  tags: keystroke
+  template:
+    src: community-keystrokes-store.j2
+    dest: "{{ zimbra_tmp_dir }}/keystrokes-store"
+    mode: 0640
+  when: "zimbra_license_file is not defined"
+
+
+- name: zimbra-store.conf | Uploading installer configuration file | STORE
+  template:
+    src: zimbra-store.conf.j2
+    dest: "{{ zimbra_tmp_dir }}/zimbra-store.conf"
+    owner: root
+    group: root
+    mode: 0640
+  when: "zimbra_license_file is not defined"
+
+
+- name: keystrokes-store | Installing Zimbra OSE | STORE
+  shell: "./install.sh -s < {{ zimbra_tmp_dir }}/keystrokes-store"
+  args: 
+    chdir: "{{ zimbra_tmp_dir }}/{{ zimbra_package }}/"
+
+
+- name: zimbra-store.conf | Configuring Zimbra OSE's services for use | STORE
+  command: "./zmsetup.pl -c {{ zimbra_tmp_dir }}/zimbra-store.conf"
+  args: 
+    chdir: /opt/zimbra/libexec/
+
+
+- name: Restart Zimbra services
+  shell: su - zimbra -c "zmcontrol restart && echo Running || echo failed"
+  register: zmcontrol_status
+
+
+- name: zmconfigd.pid | Delete zmconfigd_file
+  file: 
+    path: "{{ zmconfigd_file }}"
+    state: absent
+  when: "'failed' in zmcontrol_status.stdout"
+
+
+- name: Restart Zimbra services
+  shell: su - zimbra -c 'zmcontrol restart'
+  when: "'failed' in zmcontrol_status.stdout"
+
+
+- name: zimbra-store | Removing Zimbra configuration file | STORE
+  command: "rm -f {{ zimbra_tmp_dir }}/zimbra-store.conf"
+  args: 
+    removes: "{{ zimbra_tmp_dir }}/zimbra-store.conf"

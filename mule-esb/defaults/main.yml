@@ -1,0 +1,22 @@
+---
+# defaults file for mule-esb
+mule_esb_service_name: mule-esb
+mule_esb_user: "{{ mule_esb_service_name }}"
+mule_esb_group: "{{ mule_esb_service_name }}"
+mule_esb_logs_dir: /var/log/mule-esb
+mule_esb_version: 3.8.0
+mule_esb:
+  source_url: "https://repository-master.mulesoft.org/nexus/content/repositories/releases/org/mule/distributions/mule-standalone/{{ mule_esb_version }}/mule-standalone-{{ mule_esb_version }}.tar.gz"
+  subpath: "mule-standalone-{{ mule_esb_version }}"
+mule_esb_java_version: 8
+mule_esb_java_impl: openjdk
+mule_esb_memory_size_prct: 0.75
+mule_esb_memory_size: "{{ (ansible_memtotal_mb*mule_esb_memory_size_prct)|int }}"
+mule_esb_root_dir: /var/lib
+mule_esb_env:
+mule_esb_limit_openfiles: 8192
+mule_esb_wrapper_opts: {}
+#  - key: -opt1
+#    value: val1
+#  - key: -opt2
+#    value: val2

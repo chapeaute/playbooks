@@ -1,0 +1,33 @@
+---
+
+- name: ssl | Stat /etc/httpd/conf.d/ssl.conf
+  stat:
+    path: /etc/httpd/conf.d/ssl.conf
+  register: ssl_file
+
+- name: ssl | Disable the SSL v3.0 Protocol
+  lineinfile:
+    dest:   /etc/httpd/conf.d/ssl.conf
+    regexp: '^SSLProtocol .*'
+    line:   'SSLProtocol "{{security_apache_ssl_protocol}}"'
+  notify:
+    - Restart Apache
+  when:
+   - ssl_file.stat.exists
+   - security_level >= 2
+
+- name: ssl | Restrict Weak SSL Ciphers
+  lineinfile:
+    dest:   /etc/httpd/conf.d/ssl.conf
+    regexp: "^#?{{ item.key }} .*"
+    line:   "{{ item.key }} {{ item.value }}"
+  with_items:
+    - key:   "SSLHonorCipherOrder"
+      value: "on"
+    - key:   "SSLCipherSuite"
+      value: "HIGH:MEDIUM"
+  notify:
+    - Restart Apache
+  when:
+   - ssl_file.stat.exists
+   - security_level >= 2

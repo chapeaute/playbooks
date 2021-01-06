@@ -1,0 +1,41 @@
+---
+- name: deploy_template | Wait for web installation ending http://{{ inventory_hostname }}
+  wait_for:
+    path: /usr/share/centreon/www/install/index.php
+    state: absent
+    timeout: 1200
+
+- name: deploy_template | Check web installation
+  stat:
+    path: /usr/share/centreon/www/install
+  register: install_dir
+
+- name: deploy_template | Download configuration
+  get_url:
+    url:  "{{ centreon_conf_url }}"
+    dest: /var/tmp/centreon-conf.txt
+    mode: 0600
+  register: get_conf
+  when: install_dir.stat.isdir is undefined
+
+- name: deploy_template | Set {{ centreon_clapi_user }} user service notification command
+  shell:  "{{ centreon_clapi_bin }} -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o CONTACT -a setparam -v 'admin;svcnotifcmd;service-notify-by-email'"
+  when: get_conf.changed and install_dir.stat.isdir is undefined
+
+- name: deploy_template | Set {{ centreon_clapi_user }} user host notification command
+  shell:  "{{ centreon_clapi_bin }} -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o CONTACT -a setparam -v 'admin;hostnotifcmd;host-notify-by-email'"
+  when: get_conf.changed and install_dir.stat.isdir is undefined
+
+- name: deploy_template | Check if central poller Central is rename
+  shell:  "{{ centreon_clapi_bin }} -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o INSTANCE -a show | grep ';Central;' || :"
+  changed_when: false
+  register: poller_central
+  when: get_conf.changed and install_dir.stat.isdir is undefined
+
+- name: deploy_template | Set default poller name to {{ ansible_fqdn }}
+  shell:  "{{ centreon_clapi_bin }} -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o INSTANCE -a setparam -v 'Central;name;{{ ansible_fqdn }}'"
+  when: get_conf.changed and install_dir.stat.isdir is undefined and poller_central.stdout|length != 0
+
+- name: deploy_template | Import configuration
+  shell:  "{{ centreon_script_dir }}/centreon-conf-import /var/tmp/centreon-conf.txt > /dev/null 2>&1"
+  when: get_conf.changed and install_dir.stat.isdir is undefined

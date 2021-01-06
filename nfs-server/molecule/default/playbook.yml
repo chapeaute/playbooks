@@ -1,0 +1,10 @@
+---
+- name: Converge
+  hosts: all
+  roles:
+    # - role: basic-firewalld
+    - role: nfs-server
+      nfs_exports:
+        - directory: "{{ nfs_data_dir }}/incidents_img"
+        - directory: "{{ nfs_data_dir }}/videos_image"
+          hosts: "{{ groups['all'] }}"

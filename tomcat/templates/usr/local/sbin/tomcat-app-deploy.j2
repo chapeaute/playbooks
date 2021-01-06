@@ -1,0 +1,74 @@
+#!/bin/bash
+
+USER="{{ tomcat_user }}"
+GROUP="{{ tomcat_group }}"
+APP_DIR="{{ tomcat_root_dir }}/webapps"
+
+APP_FILE=""
+
+function syntax() {
+    cat <<EOF
+Script to deploy new Tomcat application
+
+Usage: ${0##*/} [-h|-f <archive_file>]
+    -h                Display this message
+    -f <archive_file> Archive file with .war extension
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Abording..."
+    exit 1
+fi
+
+while getopts "hf:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        f)
+            APP_FILE="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+
+if [[ -z $APP_FILE ]]; then
+    syntax
+    exit 1
+fi
+
+if [ ! -r "$APP_FILE" ]; then
+    echo "$APP_FILE: No such file or directory"
+    exit 1
+fi
+
+if [ ! -d "${APP_DIR}" ]; then
+    echo "Application directory ${APP_DIR} not found."
+    exit 1
+fi
+
+echo -n "Waiting while removing application"
+rm -f ${APP_DIR}/`basename ${APP_FILE}`
+
+while [ -d ${APP_DIR}/`basename ${APP_FILE%%.*}` ]
+do
+    echo -n "."
+    sleep 1
+done
+
+echo done
+
+echo Deploy `basename ${APP_FILE}` on ${APP_DIR}
+cp ${APP_FILE} ${APP_DIR}
+chown ${USER}:${GROUP} ${APP_DIR}/`basename ${APP_FILE}`
+
+echo done
+

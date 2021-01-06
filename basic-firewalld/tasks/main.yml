@@ -1,0 +1,93 @@
+---
+# Include per-environment variables
+- name: Include vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family }}.yml"
+
+- name: main | Install firewalld packages
+  package:
+    name:  "{{ item }}"
+    state: present
+  with_items:
+    - "{{ firewalld_packages }}"
+  when:
+    - firewalld_enable
+  notify: "Reload systemd"
+
+- meta: flush_handlers
+
+
+- name: main | Start and enable firewalld services
+  service:
+    name:    "{{ item }}"
+    state:   started
+    enabled: yes
+  with_items:
+    - "{{ firewalld_services }}"
+  when:
+    - firewalld_enable
+
+- name: main | Add firewall services
+  include: "firewalld_service.yml zone={{ rule.zone }} services={{ rule.services }} state=enabled"
+  loop: "{{ firewalld_rules_add | default([]) }}"
+  loop_control:
+    loop_var: rule
+  when:
+    - rule.services is defined
+    - firewalld_enable
+  tags:
+    - rule
+
+- name: main | Add firewall port
+  include: "firewalld_port.yml zone={{ rule.zone }} ports={{ rule.ports }} state=enabled"
+  loop: "{{ firewalld_rules_add | default([]) }}"
+  loop_control:
+    loop_var: rule
+  when:
+    - rule.ports is defined
+    - firewalld_enable
+  tags:
+    - rule
+
+- name: main | Remove firewall services
+  include: "firewalld_service.yml zone={{ rule.zone }} services={{ rule.services }} state=disabled"
+  loop: "{{ firewalld_rules_remove | default([]) }}"
+  loop_control:
+    loop_var: rule
+  when:
+    - rule.services is defined
+    - firewalld_enable
+  tags:
+    - rule
+
+- name: main | Remove firewall port
+  include: "firewalld_port.yml zone={{ rule.zone }} ports={{ rule.ports }} state=disabled"
+  loop: "{{ firewalld_rules_remove | default([]) }}"
+  loop_control:
+    loop_var: rule
+  when:
+    - rule.ports is defined
+    - firewalld_enable
+  tags:
+    - rule
+
+- name: main | Assign interface to zone
+  include: "firewalld_interface.yml zone={{ itf.zone }} interfaces={{ itf.interfaces }} state={{ itf.state | default('enabled') | replace('present','enabled') | replace('absent','disabled') }}"
+  loop: "{{ firewalld_interfaces | default([]) }}"
+  loop_control:
+    loop_var: itf
+  when:
+    - firewalld_enable
+  tags:
+    - interface

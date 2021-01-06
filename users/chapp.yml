@@ -1,0 +1,24 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users_groups:
+        - name: exploit
+      sudoers:
+        exploit:
+          state: present
+          lines:
+            - "%exploit ALL=(ALL) NOPASSWD: ALL"
+        default:
+          state: present
+          lines:
+            - 'Defaults    env_keep += "SSH_AUTH_SOCK"'
+      users:
+        - login: chapp
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQChIX1+gUiKgMU7TW3ICN+mZfPodGY0vj/y8RvpLh/DAtaaIZCrqhpX6z3riG/zfWcByq4YTGHjEW4HnjV8f7jH62+sV6IxwwAQvAOqTDBpKOMx/akoF+ca8dnUB5iZVdTi3UWuJO6wO/0UNm0uKcEddCcclS0GkIRaEskxHGmn5G6Q1FRbOoRLLE0a1HgPvkrMmv3V5HuTh1BZaXmK60M6RRLO3/llBJ5h5GFS4xC7ei/jeSGI93AQ/C8oVEsNdZ0ypUc1UkAE8+E7QFVHLj24OHqgb3Ct188QtLHuz1m16zOqHS2QFYHbdwFFtq7jVnOVjAPQ5K9gncKCMNokfAfn christian.apprakou@smile.ci
+
+

@@ -1,0 +1,86 @@
+---
+# tasks file for odoo
+- name: Include vars
+  include_vars: "{{ item }}"
+  with_first_found:
+    - files:
+        - "{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml"           # CentOS-6.5
+        - "{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml"              # RedHat-6.5
+        - "{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml"     # CentOS-6
+        - "{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml"        # RedHat-6
+        - "{{ ansible_distribution }}.yml"                                              # CentOS
+        - "{{ ansible_os_family }}.yml"                                                 # RedHat
+        - "main.yml"
+      paths: "../vars"
+  tags: always
+
+- name: main | Check for failure
+  fail:
+    msg: "Insufficient memory available for {{ odoo_workers }} Odoo workers, needed at least {{ (odoo_memory|int/1024/1024)|int }}MB of memory for Odoo, but only {{ (odoo_available_memory|int/1024/1024)|int }}MB are available (odoo_memory_prct). Solution 1) Increase server memory (actually {{ ansible_memtotal_mb }}MB, needed RAM > {{ (odoo_memory|int/1024/1024/odoo_memory_prct)|int }}MB). Solution 2) Reduce Odoo workers count (actually odoo_workers set to {{ odoo_workers }} workers). Solution 3) Increase memory allocated for Odoo (actually odoo_memory_prct set to {{ (odoo_memory_prct*100)|int }}% of available memory of server = {{ (odoo_available_memory|int/1024/1024)|int }}MB). More informations: https://www.odoo.com/documentation/{{ odoo_version }}/setup/deploy.html#builtin-server"
+  when: odoo_needed_memory | int > odoo_available_memory | int
+
+- include: preconfig.yml
+  tags: config
+
+- include: "{{ odoo_db_driver }}.yml"
+  tags:
+    - config
+    - config_db
+
+- include: "{{ ansible_os_family }}.yml"
+  tags: config
+
+- name: main | Install dependences
+  tags: install
+  package:
+    name: "{{ odoo_dependencies_common }}"
+    state: present
+
+- include: install_from_package.yml
+  when: odoo_version | int < 11
+
+- include: install_from_source.yml
+  when: odoo_version | int > 10
+
+- name: main | Deploy odoo logrotate file
+  template:
+    src: etc/logrotate.d/odoo.j2
+    dest: /etc/logrotate.d/odoo
+  notify:
+   - Restart odoo
+  tags:
+    - config
+
+- name: main | Create odoo directories
+  tags: config
+  file:
+    name: "{{ item }}"
+    state: directory
+    owner: "{{ odoo_user }}"
+    group: "{{ odoo_group }}"
+  with_items:
+    - "{{ odoo_conf_dir }}"
+    - "{{ odoo_data_dir }}"
+    - "{{ odoo_log_dir }}"
+    - "{{ odoo_addons_dir }}"
+
+- import_tasks: script.yml
+  tags: script
+
+- name: main | Deploy odoo configuration file
+  template:
+    src: etc/odoo/odoo.conf.j2
+    dest: "{{ odoo_conf_dir }}/odoo.conf"
+  notify:
+   - Restart odoo
+  tags:
+    - config
+
+- name: main | Enable and start Odoo
+  service:
+    name: odoo
+    state: started
+    enabled: yes
+  tags:
+    - install
+    - config

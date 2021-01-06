@@ -1,0 +1,233 @@
+{% set vhost_name    = item.value.vhost_name|default(item.key) %}
+{% set vhost_params  = item.value %}
+{% set location_proxies  = vhost_params.location_proxies|default([]) %}
+{% set ssl_enabled   = vhost_params.ssl is defined and vhost_params.ssl.enabled|default(false) %}
+{% set document_root = vhost_params.document_root |default(vhost_params.data_dir|default(apache2_data_dir) + '/' + vhost_name + '/htdocs')  %}
+{% set _logpath = vhost_params.data_dir|default(apache2_data_dir) + '/' + vhost_name + '/logs' %}
+
+{% if ssl_enabled %}
+{% if vhost_params.ssl.redirect_to_https|default(true) %}
+<VirtualHost *:80>
+
+    ServerName   {{vhost_params.server_name|default(vhost_name)}}
+{% for alias in vhost_params.server_aliases|default([]) %}
+    ServerAlias  {{alias}}
+{% endfor %}
+
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule (.*) https://{{ vhost_params.server_name|default("%{HTTP_HOST}") }}$1 [R,L]
+
+</VirtualHost>
+{% else %}
+
+<VirtualHost *:{{ apache2_port }}>
+
+    ServerName   {{vhost_params.server_name|default(vhost_name)}}
+{% for alias in vhost_params.server_aliases|default([]) %}
+    ServerAlias  {{alias}}
+{% endfor %}
+    DocumentRoot {{document_root}}
+{% if vhost_params.directives is defined %}
+    {% for directive in vhost_params.directives %}
+{{ directive }}
+    {% endfor %}
+{% endif %}
+{% if vhost_params.environment_vars is defined %}
+    {% for env_var_name, env_var_value in vhost_params.environment_vars.iteritems()|default([]) %}
+    SetEnv {{env_var_name}} {{env_var_value}}
+    {% endfor %}
+{% endif %}
+    Timeout 1200
+    ProxyTimeout 1200
+
+{% if  apache2_version|float >= 2.4 %}
+
+    <Directory {{document_root}}>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+{% else %}
+    <Directory {{document_root}}>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Order allow,deny
+        Allow from all
+    </Directory>
+{% endif %}
+
+{% for location_proxy in location_proxies %}
+
+    # Per location proxy {{ location_proxy.name }}
+    <Proxy balancer://{{ location_proxy.name }} >
+
+{% for backend in location_proxy.http_backends %}
+        BalancerMember http://{{ backend }}{% if location_proxy.http_backends_port is defined  %}:{{ location_proxy.http_backends_port }}{% endif %}  {{ apache2_backends_default_options }} {{ location_proxy.http_backends_options|default() }}
+{% endfor %}
+
+        ProxySet lbmethod={{ location_proxy.load_balencing_method |default(apache2_default_load_balencing_method)}}
+        ProxySet stickysession={{ location_proxy.stickysession | default(apache2_default_stickysession)}}
+    </Proxy>
+
+    <Location {{location_proxy.location}}>
+        ProxyPass           balancer://{{location_proxy.name}}
+        ProxyPassReverse    balancer://{{location_proxy.name}}
+        ProxyPreserveHost   On
+    </Location>
+
+{% endfor %}
+{% if vhost_params.enable_caching|default(apache2_enable_caching) %}
+
+    <IfModule mod_expires.c>
+        # Turn on the module.
+        ExpiresActive on
+        <FilesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|js|css|swf)$">
+            ExpiresDefault "access plus 4 weeks"
+        </FilesMatch>
+    </IfModule>
+
+{% endif %}
+{% if vhost_params.enable_gzip|default(apache2_enable_gzip) %}
+    <IfModule mod_deflate.c>
+        # Insert filter
+        SetOutputFilter DEFLATE
+        DeflateCompressionLevel {{ vhost_params.gzip_compression_level|default(apache2_gzip_compression_level) }}
+        <IfModule mod_setenvif.c>
+            # Don’t compress images
+            SetEnvIfNoCase Request_URI .(?:gif|jpe?g|png)$ no-gzip dont-vary
+        </IfModule>
+        <IfModule mod_headers.c>
+            # Make sure proxies dont deliver the wrong content
+            Header append Vary User-Agent env=!dont-vary
+        </IfModule>
+    </IfModule>
+{% endif %}
+
+{% if apache2_dontlog_proxy_healthcheck %}
+    BrowserMatch "^HAProxy$" healthcheck=yes
+{% endif %}
+{% if apache2_log_x_forwarded_for %}
+    LogFormat   "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %D" proxy
+    SetEnvIf    X-Forwarded-For "^.*\..*\..*\..*" forwarded=yes
+
+    CustomLog   {{ _logpath }}/access.log proxy expr=reqenv('forwarded')=='yes'
+{% endif %}
+    LogFormat   "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %D" direct
+    CustomLog   {{ _logpath }}/access.log direct expr={% if apache2_log_x_forwarded_for %}reqenv('forwarded')!='yes'&&{% endif %}{% if apache2_dontlog_proxy_healthcheck %}reqenv('healthcheck')!='yes'&&{% endif %}true
+    ErrorLog    {{ _logpath }}/error.log
+
+    IncludeOptional {{ apache2_confd_dir }}/custom/{{vhost_params.server_name|default(vhost_name)}}.con[f]
+</VirtualHost>
+
+{% endif %}
+{% endif %}
+
+<VirtualHost *:{{apache2_ssl_port if ssl_enabled else apache2_port}}>
+
+{% if ssl_enabled %}
+    # SSL Enabled
+    SSLEngine             on
+    SSLCertificateFile    {{vhost_params.ssl.certificate_file|default(apache2_default_ssl_cert)}}
+    SSLCertificateKeyFile {{vhost_params.ssl.certificate_key_file|default(apache2_default_ssl_key)}}
+ {% if vhost_params.ssl.certificate_chain_file is defined %}
+    SSLCertificateChainFile {{vhost_params.ssl.certificate_chain_file}}
+ {% endif %}
+{% endif %}
+
+    ServerName   {{vhost_params.server_name|default(vhost_name)}}
+{% for alias in vhost_params.server_aliases|default([]) %}
+    ServerAlias  {{alias}}
+{% endfor %}
+    DocumentRoot {{document_root}}
+{% if vhost_params.directives is defined %}
+    {% for directive in vhost_params.directives %}
+{{ directive }}
+    {% endfor %}
+{% endif %}
+{% if vhost_params.environment_vars is defined %}
+    {% for env_var_name, env_var_value in vhost_params.environment_vars.iteritems()|default([]) %}
+    SetEnv {{env_var_name}} {{env_var_value}}
+    {% endfor %}
+{% endif %}
+    Timeout {{ apache2_proxy_timeout }}
+    ProxyTimeout {{ apache2_proxy_timeout }}
+{% if  apache2_version|float >= 2.4 %}
+
+    <Directory {{document_root}}>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Require all granted
+    </Directory>
+{% else %}
+    <Directory {{document_root}}>
+        Options -Indexes +FollowSymLinks
+        AllowOverride All
+        Order allow,deny
+        Allow from all
+    </Directory>
+{% endif %}
+
+{% for location_proxy in location_proxies %}
+
+    # Per location proxy {{ location_proxy.name }}
+    <Proxy balancer://{{ location_proxy.name }} >
+
+{% for backend in location_proxy.http_backends %}
+        BalancerMember http://{{ backend }}{% if location_proxy.http_backends_port is defined  %}:{{ location_proxy.http_backends_port }}{% endif %} {{ apache2_backends_default_options }} {{ location_proxy.http_backends_options|default() }}
+{% endfor %}
+
+        ProxySet lbmethod={{ location_proxy.load_balencing_method |default(apache2_default_load_balencing_method)}}
+        ProxySet stickysession={{ location_proxy.stickysession | default(apache2_default_stickysession)}}
+    </Proxy>
+
+    <Location {{location_proxy.location}}>
+        ProxyPass           balancer://{{location_proxy.name}}
+        ProxyPassReverse    balancer://{{location_proxy.name}}
+        ProxyPreserveHost   On
+    </Location>
+
+
+{% endfor %}
+{% if vhost_params.enable_gzip|default(apache2_enable_caching) %}
+
+    <IfModule mod_expires.c>
+        # Turn on the module.
+        ExpiresActive on
+        <FilesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|js|css|swf)$">
+            ExpiresDefault "access plus 4 weeks"
+        </FilesMatch>
+    </IfModule>
+
+{% endif %}
+{% if vhost_params.enable_gzip|default(apache2_enable_gzip) %}
+    <IfModule mod_deflate.c>
+        # Insert filter
+        SetOutputFilter DEFLATE
+        DeflateCompressionLevel {{ vhost_params.gzip_compression_level|default(apache2_gzip_compression_level) }}
+        <IfModule mod_setenvif.c>
+            # Don’t compress images
+            SetEnvIfNoCase Request_URI .(?:gif|jpe?g|png)$ no-gzip dont-vary
+        </IfModule>
+        <IfModule mod_headers.c>
+            # Make sure proxies dont deliver the wrong content
+            Header append Vary User-Agent env=!dont-vary
+        </IfModule>
+    </IfModule>
+{% endif %}
+
+{% if apache2_dontlog_proxy_healthcheck %}
+    BrowserMatch "^HAProxy$" healthcheck=yes
+{% endif %}
+{% if apache2_log_x_forwarded_for %}
+    LogFormat   "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %D" proxy
+    SetEnvIf    X-Forwarded-For "^.*\..*\..*\..*" forwarded=yes
+
+    CustomLog   {{ _logpath }}/access.log proxy expr=reqenv('forwarded')=='yes'
+{% endif %}
+    LogFormat   "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %D" direct
+    CustomLog   {{ _logpath }}/access.log direct expr={% if apache2_log_x_forwarded_for %}reqenv('forwarded')!='yes'&&{% endif %}{% if apache2_dontlog_proxy_healthcheck %}reqenv('healthcheck')!='yes'&&{% endif %}true
+    ErrorLog    {{ _logpath }}/error.log
+
+    IncludeOptional {{ apache2_confd_dir }}/custom/{{vhost_params.server_name|default(vhost_name)}}.con[f]
+</VirtualHost>

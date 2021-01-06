@@ -1,0 +1,273 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      root_password: $6$KMIRRAAT6LxZR$vhtssoKovLuKCsxjIJJJ2pi1/.JeVWClFJcbAbhVCpn9v8IN.BgsC.9kAc3TNjFsKeI6QHZcZS7171fyey0760
+      extra_packages:
+        - epel-release
+      manage_firewalld: False
+      promptcolor: red
+      users_groups:
+        - name: dev
+      users:
+        - login: dikou
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQD97lC1zDqw5d/vOssK4HWlcOLFFMKoX4n/vvPapjmWi6TUTak42fI3nkZAetOuxvQ5TWjY2xGjHhI208YIoHAlj9CSNdvbf+aPoNZ2e3j/g+bS00oEHwwFKo+b/mvmepTCGtXFMNYZS0Cg0sTkCTsVtt5Sgvx259AX/hWssVXPcbIcOSGUJpMcFwsplbaA68KcWvu7Ia6e++5jX4GAfawUMM5ZzA2/HlpD/va4aKLPQ7WPY5QeHKuNFRE8AsUkf90FV3cwXbW1O5GzEnyfte1S4TMfZHthUKK4dizU1q9Um2a+ieKrY7Eg3oVK1XYW1sL8cKT5fcjkt1vD7vg2f09N didierk@smile.ci
+        - login: ulfos
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC9zN6t6wsYlv+xvZ49qngyCWM4Ig1SIzCY3nEofscl4wYdGFCv4/Q31FtVfbetfpdcKs29N/uOflvu3YbAv5nSfIibxemVprBYoWmEU5kVpGnXw9qZ8rYVI7g1gUfMIDUyzL1hUXhAKhYfF4Bo7FvEWqR7XNWQuaIvBVzs0fcjfxbmUpNsTMEkE+rI/IqDkHoNFs/XlfW8DUjMypWh4GD9Pe/6xxBJCRQkU/ucXrypZhspW9anp/kOnMSfvlYW9kHQPRTk3UIn1W6ecyEbxm9Ij0tcxhs8dAtkVJDnSQHAt7StNw9eIjrEBagVIoEWK3ExE35AoaYe+uEQNne5OaMjCLVUHB9u0P06KEmdI47xElQ7eFl4Q4vgM4Xtg0ZCC08KGKg/ePsyimXJ7oRxZyUViSMcpE2kXAd7w9XIDjUCoXx8CpnvbvHHMJ9VfFRk3JfaM9XMLRr37e3Vmmh77XrmXSvcugcqlALAWWdH69zeSy+9dStltZIDxC9bu4XeFv03d2fgMDykR8o/0KPbnhYMK4b/pIcY6zeODJCEmWvHpooF3UOGO871cHJU6YjHNPBaW+2NKJDqCzXwC5bF8H+UdgNEYtXc+aSKw2gqW6nULTrTbvxlJ+sB78lvOdL/Ui6Dnl1s99ugSD+9fNAjTEd/viyTFfwLEM4/JdA7Qg9iAQ== ulrich.fossou@smile.ci
+        - login: layao
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCXwycAv8AIfPaBbAMzjduw7EhyQv2Viimp8+FTb1UaxUX/Qci4KP1Z6/X1L32zsMv5z7jV2h6Sd8UoehPikySkgr5DfwvI7LDCKFLnVQLjyMXL2dYwcni+H5jCO1HoRDCh4pkKPFKWtX3wN2Xk1O7bmOwcQt16al7XHq033CGHPRZAPiOHEILJwZf5JKD1rvBV/CqWLVeJcHmP0ihx0GL4k3MXp2nShCYw/3jWa/SjO0Ndrtj1m6vZI5sUU84zT5/59+8cFrf8z2Gnvg9A4YJecwSy/Ut5eHBW444YPBIP16UNW2I6OHDLqHm7ePlPJF66LRKomNnybd6ciA1EaxGhtGN7hEpub0ab9c+JDjQSjY+6RRMfybGEAbOhM7nfE+dkEkRNo3yIx0efxS5UtgEqEQrSWSPPEZdEyVZTWbfm1I7NJau400d7OvwvygIT0gP2f2gI4IKIz4BdWdDJW/ybxVnLL6iPLZO6+8nXalbFxoXUB9oq4Y2iFTNm4xosVZMb8mzWnBmuOjomIfby9F9vTfk+3X7x2EHlDkiDpGitj/5tbGzeUM3B1LAY8Svsy1c11I/9j1W+ybScdqYAX+6IJz0u9+NKnhJm6/7UJzLbnUG+4mmqTSWDuzJb8O0KJb59qhMD2SEl/QiCeTt9xFeVROYveIXDZ4px0DN2NKnGQQ== lazare.yao@smile.ci
+        - login: layeb
+          groups: dev
+          state: absent
+          sshkeys: []
+            
+        - login: jedje
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDvQgq4zN7Xh7U60SnTngMPXxz0klrynoSpfe5hpvl8LUDaYQ5Nirbos+Wx1DqBnrjuSiSEVaR/KLwE96ovDjw2r7FG/cpnLgOOpc8chm4DEFT9YRrncu1Ovb1cm7Qk9jp4rTzx+y3tdcaYT9MpAIWqWB2MYYngmyhUgELRbymEEdJ9k0+6EyPPVCTb9bD+ZX+ZhAKtvqIax4FjOnr0tqK4ucq13nWnouVkR8truZsMhStS+Oacdixoiqx5aODSLTWE2P2Y0+xHDPzBIPRArrZG9b60kLDJ4U2eILXNQs/9LbfwrndKxhAPg3dZEMBlZL2ufvlfJIGK+NIbm01xCg/R jedje@smile.ci
+        - login: moyou
+          groups: dev
+          state: present
+          sshkeys: 
+            - AAAAB3NzaC1yc2EAAAADAQABAAABAQCvaU6ckDP61bayMeGAfEDKr8tQd1vC7Nc1zO2v1tZRN6DQhg+uBpBE24x3QEJq+e7YfwNgqeJZpuLr5Gk6eAcMAZ91DV4IjBwQgNH3ehW5NZKB/NR6NbaOt1YRxnKxCvUyEnswplTZslzWblfeb/eiiS2MSsiLy+NUM+Bc87QGpbhFrMQmHQj/Vk0egbGuo7qba65LSDW9hVLqp8mQ0ydu7njrWXQmJnuUFrWiZ0Ul1p1IWkF+etQcAxUHVPPFmbLanVHpi/MhYCpLp490JA63dMV/feVLBYlwkRzTKMDgh+dYkB6TrY2Pyl1dlO2ZOZvGvhtTqot2FePv6S3LmxXl smile@smile-HP-250-G5-Notebook-PC
+            
+        - login: hebon
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDNLr/ohvI1fkh7eV5OI9xk1cPzbyRufyqCs7u9wR2bHPYU3kvjcGvw1Y0KzsH3RHDUoXgrgJGJMnSatmzUYYMdduIuzgOuUyeBYMGbz5wolHEkDiy1NIgQunQSyUB0e68L19DxCsZane+LtwTNS2SDWqc27ELhlGDChXZYXHidpHoAEsXwN8JUdlaBMWWlk1xCjd93AjhQyQsE1aDG9boVKXsGtPsagrbEM4DFUe20S0JQsbCIUwJWn7Vy7Y5YMutO+9dl0JTxvUVIlO0fTcR/+5F/5nCHsOOGJhp6ZiBS29cWFNAiWggP5jEQjZbfKVLQ32nGHeWy4zzN40uDFors48FDQUSfGLHLW+QWQZ7oB2CSyFplh9JbT8uoG7T8cxrdjV+o6cCA/KB/Qu35vxNzL6cN41vy6IaToI8YxuS54d3AmR3dhHLrAizBbHNcfYH5VBeQhqHGQOEXMceZFNuMG5nvm7oXPrthtI/7pm3j5K0b/vbQTmPanyekVT+6ipa5P1oRj7Fp76E0qDC04QM/eDj98psp6UeuNRu+GCOb9ILiAtnPimLpk+gWnzosaMjNpDjNT9qcdHyrYeR5mQNgL2fo7DMPPLMzrYF6gRRiqE/MA26cGznjWI/9fFRu9HwlawL/6pI388cdm2CiamTCwthYFyrOEp7oz/H9IaRRbQ== hermance.boni@sfl.ci
+        - login: wikak
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDsNS7Spub3MnS8EV08GeZQUaeah51Dh6jTI2EubCLqA2rS4o2H0SJ8NsRQh07Zz3MyhxGXldggd/YCWSaBDu7nYlG0gi2i0EOoUYPip+m/RJVt52AzC6aK9LVnyR9X2JOm7hl0VRxOZxQNoDNtWp+ufPZFwIH2gCgHzIDm1RmK8sGxD5X/H67ZDc61OJQevfsKPnMI0nnlZ5Tmd5vQKDm44p8lMc+pptnSNeUk5H4ErUvo8yjtovRMObFTg3CQG3hhRMNNyYN1BotpKr6yGMSU4j0A1LuzU261RYd0+fStaqW2bLZoyC01kYlGvQLwWwk/DuP16HtWsewXxrsBKKx3 wilfried.kakou@sfl.ci
+        - login: hagba
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDsylSASvWEt3/fMxKX9CZscvjxvzsobeipoY7JqeyqLxqjOHnsDns4mxrFzwPwAss5bEC0VRz9ShkK6MVhYxcvFHtcev1wn+8/RsZLzrxDyD0kvnPW2egH3eF5YRkKsI+70Qi67+svAQAM7m3Lnr2t4XKsHIGFWg6jXZJEcURtDu3PqrvYzfuD4REpZd/MElF+pTP/bjkOdX8GWhotAieloR4Y2Oe1vn8rfWgX+Cx0codSVmcM7cpEeU4Mhd1xXsRACySKs7TP+pSJwzAeeTBoimWxpxv3Ua+0witq3AXro4ZuN2N3vRVSIsYtR4ZAjVdgFSchkyIbxU6/OquRzHZEysqGwq34kceR9it6QqmcpbUSa0v43m0wGB/mzfr7PWyiqUDSofBFJoGnj6F+vSGqKJUm7/25v1Ad3+EOrOXnA5zA7RV2KJAf4tJ5T/1AQuPtpndguA1xoFhcilybygCm8RfrCYmxajeTJeksKYy8iFjskMOAvmuS0XI5UHM9WlJdd1PsCGYh1PGCVzKaADyPdpTZIRPlTHnrz4N1XAkjDBCzPsPihmihFGcMHQZlk2Xw+KycMPx7fxuRLQAqgElF7XkjdjdNtjildVkYDC2LLGHMmcZZRXQddM1S2sQNCTZZQ5Xsm06/vu7l66q9PXSdr04nF3WS9jVYe42TbU0EzQ== harold.gbadie@smile.ci
+        - login: ersit
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC4kJe291dKEDQSFGtK2goJV1IsFYJCEfK2V51KbYxjhqps1vMdzZdLFQWcoLUWhXut9e1H+Xt7VI4i6s1H7q2OuqNSHmV94c8as6PEbLG6PVGFbe1IJ8OGeF/qAZMkXMWiHFwEu/k4vdp7li+MdfpHd0qnCFr4cOXXR3GDhwauGkn7w/noQgp7B6tMWE93cCege5pmzWWfcRk9Ug4JcCQD191Aw1J/DXqC0n63GJIlnwjupAiQjlzWt2C+JJVkcrS3KxC7BMThCDHhgu0W9KDQ/1H/r9Y19C+Jt8hMGHYuAvgEpmMyD9ENqlqwEy/FERx04DLSkhNvDE7TPf1NkSXN erwin.sittie@sfl.ci
+        - login: botib
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQChCizFDI7UJY+tlyUX4ZbY539UTJL5sxrwwWSFw1XqDA/jmYhAWXKitRHo2qfcO6SOu0eGj27ec0pnOtMikj2sdBGhC6sam7v7Lb4MCuXKgoJAAvag3fK89vA374ZIUxu38EYbHkrWFRY+ze4m8D3suDg3TkyZLYwus25OgnY3X1H80n1OKKt4knBT7OKhc55dWVZlYUMK0uApltjqBnLqvrfUqAxjRkhr0ye/iXA77avmJtOs+aZw0ybouJKemBZ2oZVPiAePbi8rBCUv6oKGQheVaFpvxBb/eSrGwQD2iP6F0YStM111YJUqheht8GewUpgCDPxjlWZKsKEGUw+d+nfloO2uvbmkv0OxH6aISdKHepP94wjef+O6WCPR7uy7AzpuKVVuE3uPbC8tI8Tl2Y5kCzsr82uXZulVJ6I2pF3joKPBU3jExN/wyHzbxHWsaDwrjMjiRxR/s8YDVDEddatu6sxSHeiXoN2YiCWM8J3bh3a5CSeEu+qbjJLomsMWCR5vuq0q0UHx6phD+QuEZQDus0cskNk2tL6JVHOUp7ku53cM6zYXoWY5qCFPk2yIkzCMHVMQrBydbVuS7+FpcXWIEJ78eegTUfxzOITiUfMIGfLOXil3O/DjzNLBWdSveRkfh/eM3WPKxRcjEnZWFesGja5OJVHYSvG9DBL6/w== boris.tibe@smile.ci
+        - login: manan
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC84HTSGf9rLL2VzZDKR6wz6yyrxsGHC5/KZHAPTffY2poTM45a2KFp7iIXlDF4Ci8csUlUNQhoUh67d7W8CvTH+e9Um+ogp0a8FtWV91drr6E15XzJ/0GEghOTDtsZzrTFzfp9vG8qfipAWYlzLFI+jwlwThO0UpPa4nFNEsInatT0atPImg4iLO7w6NnNBVs9ud10ymtwMmSD/PvwTa+E/E54TjbluHU7WtdTSs7Xc2WImlmr4sUOSb9sI8BUbphg4PV8m3t0btC0DwVJC4WZXZysAMsG+zbx+hEsd7dMQO7ks+WFR7VhRiDa8CR4K2UFXSueEfghOdQ1rPvocFRT fullstacksdev@theLabo
+            - login: jendj
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCjo+Hztkj2cW4E9zWCJj43AnZNzNv10Oh14znmSFDa9k4Nd1jn1L1ddofGhmx/TBEYvRymCzTz766+CML4Cd1/DYSIQoh+NfSf4MJug+EIixXDmkdZd4hT26/RpFdA4nFCSnQ8HMo5W2Z+5nqJzPq61DvTTX8T3rcI50n64lcHw/+TA61dyneT+v9w03iXMqugYovi0+rWy8L7XQaQjmJr8iz9UaxRGnEIsKf5h+1oq4QP8YubH8vyl6rkI6ty67v7z7tFpG1ecedZfb+E7URAo1MobT4Yr81RbCVF53pXBbwrvl/e8J0BU07EyVJn/RURrlUEBUmpN6MgnjVuAeqj jean-marc.ndja@smile.ci
+        - login: joban
+          groups: dev
+          state: absent
+          sshkeys: []
+            
+        - login: inkou
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC8jEhFXenijwaGB36c7FcdUwA+Geq7oG9UVV+rA+GkO7bsoIsCG1qCLmr8eexhgkQNvdwZNoBsJQw/WuYTdxkNNtmBylCLuz//kl46G9gGI0QM8VArKmzNmICf3Ga1L77fDWGYs0fM1jbkdJ9kCslys3P5nWszDG8NdoqdF1LLCap5mtfO5M2/CP3wvrwHDSSyqJ9DD0NN7xxxyd/BUjlF9sHc9Jnq7hHkt3gbRyx0GX8olLix0zI6vGwzdNmTwVUA1GQvBctrzwY/PjkEp+U+mTY5myy9DKxLCjXRb0nGQIwD5ih/N5+Eih0uBIdjLA5O2ikdNadiyYyZRIyrjJqIzvGtwmWLqnQpsSWKKEr0Ii3A0Xo+aQB3l3+bF98ETWKivu4PKEkctLF6v49awBRMrbNxDF/3XMZbXUmubYSDXGSe9xURkwsUlAOtn5iEHERBrPD/ue6TGL/jfdYZuONFH8ok9JAjc1EERyDkHssHJ2ieDu9zCguaCFnmlXqmAxbByLLZ+7p0LFIOSCy0ytHZJH1PDIzyiCmhb2Z11OgfnfK1K8FnFh0TCW9gaTlnmpYzu5TPbPP36a26M2q7xM58nve2eGXzhIzCOFo95U2F3QDc3Daso4JFFwRZwI5NMhnZTJa+ZKC2FqIhCBhGm9lqFpDhBzxyv6E5L7e6n0EPnQ== innocent.kouame@objectif-libre.ci
+        - login: thsan
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCyTal2pAbM2gx7eiizgxsy0Hrchf8IboqHVOdiWJZImPWJQ47vsqv6kCUsdwmPONn4NqSYuMMzx+CCZfD0b3MRAmE+gNW/MZ2gbBe/6TMz3koUjtcE1uol8PZBp6uvk+6OFwSzrNyMFD9/IE0848n8PsqoB9oA1t4fORBBjJZvszifI3PU3piEbQJlxvzPWj7VzPZEPBNALBOTXDvl65EaDzrMNrCv36gWoYo9uslouwyJhG6VwbFeCl2x1OTZmq8Pwiuacs7wcuXburmdc9Ovqg3haMew6orOUrMqUWhsEtDAtk8Cga6/anaC1FunvShY33ns+EpxC/2uhgEk6tbIWZqZkwsKmCnJVNKqxsZHKSi18iHqUfucD74EeE5sPpr8cE0Jlndr6hKtRgqHo9nqIP3nu9trVlSA73RqnW2b3JBPdx+6pznEtCbP04pqtQo5vy1V5wyciusBah7rANXqJv1pC+JdkdLOl48pK5R8Li8FA5ZUz1X2KtTp7Pm3LTwefdxtgU+2Fr8fHyLi28mujMfqoTnv17j/2NkYVPuHevOUyrtaFvt917d6sK8VfoLGJ8DN8L/l8Nb7tpur2y0d86J7ggVXUkOKb9ze3LFqM2W4kRuwGPDSDlcQAF8CEhXIsQ37viwVbe2WlTlxZXe3BEpzyHxzdnt2bt1AssVEyw== thomas.nguessan@smile.ci
+        - login: pabeu
+          groups: dev
+          state: absent
+          sshkeys:
+            - []
+        - login: genan
+          groups: dev
+          state: absent
+          sshkeys:
+            - []
+        - login: stoua
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDIZzEfW2hilp52V2hYfkKdxdBAhVDYqYFdtAe8KHDG/78DlfTQnO2tt3keYZkDdjqbX2k5Betl6H+vBMAKb/Hsj8C3D1XxMEUYKi+FYk/zLRHKOS0TIXL7R9BdLM837PBE/eEvVl2ouUCCFTmnosa80RlqhQ/aR6RWYzVxw3B5dU1RcX/6xYjJYTmAs7K0AyxkMFOSFWq32A1IKHyT5b/TPAVfTid41Yv+Noa5Rjx1sC+zncT4rJ0tZNScHrKsr+0HOWCgFnTxIMrX9iCa8nwub/KiqMI0BaaER5sx9+lMlDaVQHMLGEs09lxP5eb6R0n6UlvMJ8Uy40yZUQpHphZy3v88lxs2/TxEjGU3Bn/LpjnynbNSJvGganWysFUTlY/Rxnv63Lfm2+nmFcMh4/eWvHS/1vo/Hy6m4ZPC8W7flCXLJzuubhT1yxKbuLE7cJkHSoJkvj+PqehcYlKbvQ8S+eVpCPRtSS1NvnPVMH6UjwMwVNUvUQDYWu0nmIh8XnM9soVE1y0ey/+Wu4BzdIegWh+0HZYLwpgZluQq6NN+Y7cULjBsR6Xg1fWkCnOCf7cEN1k9XnJLvlpgzebiX731GzCO8uEW+LqiesVrrUGu8N9T/PCAmJuuRpDCcOd62tjffubeEn9lplWdu1YSIP//8jsjozkyFFrPlsuIrm2tKQ== stephane.ouattara@smile.ci
+        - login: sioua
+          groups: dev
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCsoCy5Z5EMi22BLNdOxOXWU9U6iDJ737Fy6xTy7ngejykZjQyzv88mczobIodW7l71L+oFWD64OXB/Nd+cAKJti843yaT0uj2CgzzDpi/ZiDHZlRxUM1yJRhOKfYzEYpN+A/+1ZeB8ze+0J28xGRsdVb2lC7utTkz/g9oJhPqYUKc+/XRXvhg8HDv8FOcax7L8vaGysa1Kb201v/MPeTlZMGTLsBpY3xg85a5hPgvKQNdz3jEF9DjaPRjjyEvYzemGxCPc/gXZhvWyfdroNItOE72CPlPupV1Lq5bpgYbTq102a8IYqMM9rRDj6q7GAIeWyC9djbnmQv4ftMyrfp/7 sidik.ouattara@smile.ci
+        - login: noadi
+          groups: dev
+          state: absent
+          sshkeys:
+            - []
+        - login: veado
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC9LjZ/VFgvJIywd7SoY8/C0oJDXS/+RFSFqVQpq6QjO0aqwsy0JHPeA/YzWLnkIlp/HxEHvcW3q4pLyejtMeyKKDVMniv0CI0KqGxyGfyry4utni9szschhbwBcWSeenZbrgRpCYknqRDCamy5kk4WpLmbY9g6Cjf0UFEW4nya/htHnQo6Y9KhFEbYlDPppN1CHQprnoT73snLeN5ibOhVkSc/bIP6+cvqyNHKBCH/PuBx/G1Wdpj6K9seS0P15xbruWSzVXGKU1J1mItNFNPhVrOkunfdClg9VL97LdRjt9MDMvr6WITgb01g4yBHiyRVDFju8j+OOj6/0+liuF8B VENANCE
+        - login: sitou
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC1+hKIfjs52jmcf5q+5UZj71k2tz4wZYEa5d0sH1jdE/tEYo53j+DyvI5xfD3xvDKqEMDfxl8b3ZRFCl2YhmaMb9Nj5cfE/p68VEbiPvStndp11QlS2zp/w5PVwYMiO+woSv/yPReV4n7QmVH0pGeDeTY1tIRxcayoIg+eBrW9GVjM6vm3Bc1VhMYEkpogl5lToACSyBPXWLbe05nLeyBxXDDCEbXhgoyl47kNZevhUaJcoSSEial1Us8p/Qh188erAWPpXI59mkjZXPBMil7UZbSK3FO5PcMH7Ju6NIKVPRnYFbmdMkd0JeeZOI1EgE7yNgrX5qtJv6eAp5DIHtXl sie.toure@objectif-libre.ci
+        - login: abcou
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDZoYnzImww/kZUeYkpjJ6Zk5bBlFND+9JDAG8NAjjC7hlHFdnQCH9ddA37B6ZBFd+jcPlrgbMSjS1YHIqf5Rg4EnK6NHcqdbLM8UeYhFC6oYqOalLWG3Onh+KLfKzQa6VWS9JvEXsSFmgR+lzQR7qNmZpQPXSROwyK/eXS/viA/HsF6euufvhivP5s1/ZLu1/PP/tvOT4nanwo1jz7Xm6OWAkhz/JW44VdlHa+q6fZAIT2qsZLKOjgz5+kVBonvfdOtEiS8s/l88Pmukan3z74qlFeuul/o91OaLil32Jz3mXBX0eOuoHOWA4Or+D98Sj8hzLiloF7In22zZ8Cxksv abou.coulibaly@sfl.ci
+        - login: eukou
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDIRaCtmaVOc/SxG/55DAISM8a+o1tEyfwV2bta2dwirGsfRXJYD/iN9N9TurH8819sf5+G5+QqwNLufKqhlGTNb6o+PBlYJYvRHewyff2szmHXaJxZr0BUl1+tJklKuhFY0Xzsckc8B53zJ/2BJ0ZqLv0byNjLFn4e/RMvrZ3wm8vA0PHpNnXuko9qS1cJC0vErgdk8ou0KqUjnsipDBdIqBXUFcsP8NGWu1yqgBZomgwza3d73XGv14vbyfAPxazEuJ9QdYaCMqfgufw00xhzueQ87I74BlodNOH7u+PogFjTjo7LHx9bluWJRRFKnvoDsFS+FJJ9XXbTUKTRZBTEfkYtcvpulaAyuAXBM/CttjA7qNX6MG4+Tlw0uXNRmPNCEYYe3d9IGFpUHdh5O4Uu5WMd6HtXlGnuFmCdsEIU/mO9RIOAaxKLV889gG6ccHcnSHIq/5PSuOKUYnsNEaDVwZk7vj3Z3/B21B8J5BCpVg/ZCtZ8S0mATyZoeycyBapNGj9XWExMmJ2/f/yTxZtrGSXmJeQD5Ksb7qwi0QfZN5rQMf86tluJsNd6R27bjFtBKOuVGN//FcRKYTqwoQDWx28VSSxmABFYE9Vk4du6pD4i3rpb6tnteAWlIzDLZ+QrS9FCCMBi1lCA3giaJYlkrttig9dO7irkfTVG3ZcE3w== eunice.kouame@objectif-libre.ci
+        - login: arass
+          groups: dev
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDWJc+Cgh4wDyLg8kfpaGCk+pvxskm8iwb1mx23NO8F4vKAje1DkAmyTsbjzmSePpa8Y3n5iske9m6Z4mND2QQx+ULnF3IElhdfNs1BZx3NqbfKMtLewZFyITdryKmI4ICTGgHscuwT33wQHNc0HXsgW9XlPV4mmKJj0lHnKQSpQ1JLltObM5DqprpTPMq6hirD9gul/Kng7cwMv0f78kuNaFTrBQA99XJP+ojuzUO5+mYChg0bMEZ1IPD3IApTExfwWuhekYvDzvTw2Kj5i7Xy9W+Q8HJKASotFFrFFcoHSiYPDOzUiFy3FQOQpnhnoHfkf8fUILJH8r2SJ2WVeBUwuO2WVeajjI8DqzlXTpOGN2gdHoc18DkHUHpDS3mDHf0/HfZRNL5OvwbMb4FBt92Zr1xTNCARVHBiZ2JhZbV/cwBC4RKDi/JZsb/tDteESU4vOgp4VLDHY++Qu+54Qx2hGU52Hu+3CopBRAMTxO1/NdlNZSgRBqIAnLVC1VP3FFUxxz20kWKbDpdmtvvbwIrTahOqu9yaTvGWALjKqXSKU3PM5ntT5sfunSsQWtDF6hPRJnJUZCYi0Cje5/XEANN3Qvlrqrez2UGIwcWxaucblX0QirV9yRY5vJOtczocku4OEzq1nYJa8VP03h/aZTqHXNVRQpJWKg1QgcWLNAewCw== arauld.assamoi@objectif-libre.ci
+        - login: abdou
+          groups: dev
+          state: absent
+          sshkeys: 
+            - []
+        - login: paozi
+          groups: dev
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDGq0KdyVEGHCo1CWj3DMPJdKmi/CO1YAiZsivE0KJo0trvep11favyfWRgqyTZ4gFaxARPEOijiXKoI/GxdZtCzd6s1QYI1tHS6Vy5/bdkgPrHPncCYq143PvftvU8qjUtl7z5xNPBcknsP1Du3u3uv7WfQ+Z0pZeeEduHdsOpg9toKRi9gT32IjjLfPBpprHx9he1dXTiEXMxCsfBo1mBLdV7OTJBFd2alQDPFbzJ4yqBN90zET/b27ocj+hXjQJ3QBAprYpRXY1OzNd+nkl+7D7weQXM0dAysc1aoOkOyP+FeB5kN/szjOhjC2/DE5aR613n5PRR8HuGD32Xmek4kfsyhGeHyfXsJVZWNtNdo7mu3Z+zGkd4t2T+czKRilq+FrFgqkMmm56Q0+MeLNMYvom1qAmKargJYKEM5dcznja9ewns1EOCLiBAu50w7boOZJecK0MJegIrHYAw14ukLAhzyU8ToVkbkeg9n9Ju8wACwSfi3lWkeNGgFG/fo7xj+7EJ4AeqfYsEFIWHHVtPgAU3ukSw2bkt6yRyQNphuyDTXxLVUkdEa5x+bEfZIhQbxABCSowpnu6HbPY0v9caMzrHSC/2rhALhDz4aK+h1QxhSAT/kKWQNF84vbMTlb/3bAsmrzr5JKsx8APRwfTXYEmC5hfsavlf+KPgZ+ETtw== patrick.ozigre@smile.ci
+        - login: modou
+          groups: dev
+          state: absent
+          sshkeys: 
+            - []
+
+        - login: mokoi
+          groups: dev
+          state: present
+          sshkeys: 
+            - ssh-rsa mohamed.koita@objectif-libre.ci            
+        - login: abkam
+          groups: dev
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDfPZ/iuFSsZGzMqhqEt62qKIyAScKkqVDh/ycvWRHMi/fVfoYp5TpvqhsSCQ/p8KgNK7M+9mA3+mHsea5xmk/jO8TlAVwsjN6DHwW/UMiNzihrgP2fCAwwZpdAPFYwARtWbi7YueL0aBE2r3vfpmrfAB68Yie8iN1//OUKMnR5QOfBTtLnA+WlJshhhG+1REilVtWTFs1c4w957LgXdWYruVyZh3aB11npCrf0vFRV9K9jr+1OIimlvKWyKk51ZeBCfhwUwp0v4C1dWqhPSo81wVVEDJr4aPkgsgNjOJbUBRyl3MyVaZXPHda1SVHQp93zgcaoz1GYREDFLwau6Bbl abdoukarim.kamagate@objectif-libre.ci
+        - login: markou
+          groups: dev
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDNhxpMgKy3YRh791HewiA2FWP711scq2wY1JPvMS3i3x+FXdQ5t5UQxBnHsjogTA0Z5kEFnZmZqdxI+Sfo/4W1XmvkFc1ZXB9JLgZiHfENoshbOtwR8au4Nrl7tRaM3A1vuA2LXK3Kc0BjkLmwBlqQ1Xt0ZrYYrxhyxS1VwDBd+KZuipIXCtgAT4H82y7Kh6uzA0qb9HJHQrwydmTXKZSwE5PAyncHIH9G1wyKVbY5ad5/+EFQus6XwTk08ppgNeg1ktDGoVR7bNzYwbzUp0MfcZpxqupVBoLyo2rvvW2rvRbQUQuRte/iVY0IjHvGWrio5zuw0CLZ8M6EhlXKsRtZ martin.kouame@objectif-libre.ci
+        - login: danou
+          groups: dev
+          state: absent
+          sshkeys: 
+            - []
+        - login: ladia
+          groups: dev
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDBYeY4yQ/PJrW3EWywLoLKMpQhjsCrlBq95i81ieItDaQXlaIxXemcX2e6A43U5yb50WCy3st4RKkazyGebcsRFR0ba2aR9iwULv/gVe8kzFuUNvTAtnnhmVZE176UV0zty0zZgJh/yUvdQlZHDUVcFnkFSHQbPLnhlPip4HuuSb6E65RI0tWH4gemziLdp1qCxgm4K0PvRoQiGt3ruWWsDViPzF2Fb58n7O8SOqmSSVql8lMk+NcC1v76RShvvFLIDyyqj/4FURTMUZ2CqoIdx1T0wPwtaPGyr+6DdNldqJuwFurx2876SQwrH7wSExqIuIOTGKu5C4GjtheEVbUT lacina@lacina-HP
+        - login: yadou
+          groups: dev
+          state: absent
+          sshkeys: 
+            - []
+        - login: stgou
+          groups: dev
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCtbHMkbfZ3ya2p61kihmGB+AUTQGgN7pmrOs2uR4Fczg4FdmRrRlI6VOgj9nKGwwwiMWgdtBXRp10R4WKWEcc4pIMGrwbIsuLXBGAKwYwLcz8W3RBfrc+LUHUJ1FTOq+t4IQlL02Gz58C7T0ycwpPj3zsdhmwEJdze7G9a8EVqS0ndcZNku/rA3X90JU/eGcAWJUt24JSg271TmlYs5mFuAhBLdWGcL5Y74RZ9HiGfMVGi6iQpjj733uadM6Vvh22TnRTmmi9IG1Qk1YC8dbbHCdjG7uJBQLEX5wnrGX1l73MGYN7gvqsOkv/Rmc6/DHdSzxQc80+H2MQMT1kjs7R7nh/Qq42zzVIcdhI43uRcBnmR7mF+G9uXdnctlFwF5nUEF2joheCXyg7/0SQzejFg1p4VPT+X71v2Kvc5MrEkxaSlY/ANJHF/HtTf6ZyI1i+JTdy8DDhdD5BBkn2w3ivOFuM9plM9mAFg4njLp5zC6XO63dQ88Kwcg5QdqVv1plpGS1O+c5at9BlK+JW8X8lIdZm7fSTmVX+VCkxeF0TiOG/TwTgYhHPqC49jEqlYolyhwtLGGKrvZRkWPTcmLjP+l+rTMCG1CZeDa2d9s/wV0OpkclXdrioCk/VJ2pcIgP3OreKFuflxeCH9rJ1KTpNn5aUeqO5CZOld8oJ7Y1i0hw== stephane.goure-bi@smile.ci       
+        - login: emgau
+          groups: dev
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCgsH/42iLWMVy0mwrdbMVRDIAlDbdmXlhkmVvuel2aqHLEdLWqRdZ0glmtq3lYmAiF5S9UNZw0SUcwR9XgfyW8Czs8F7WeMHIFLSdcdy2lcwfvgS44SxuNeObXOE0lUtE3ZnaLNU3lcxrgK9cxXgZdST+cEQwnZdimQWs3xA7sCyTCxdQ3yZYkjR+htiu0LDMDO8I3zMwc73WAodkofTW4IT/fJpIokgQCYDwTxiVNrpQt2EWDXydyunL4J0qkH7qLc3HYWMtIndYs30hkWyBQ3xsTz0bxfJbZ6W5eEywy58IpGPurc/XiA/4NPdiRpQp8q2gNRu74Xo81hD9lvOV57IgHpws68j5x1oq5EEkfyENBZ8XT7VbxzDnubY2vto6y4moAevCsHjVmYIWasoeR8pZrWVsX247PzN9EpoizG1ZOPPV6/V4IHHUqXyUKXi+WHSW4NafvHBy2Fm7NWK9yGSsoqzcmzdUZ17ghAwQ+Fjp3ZwroN7ni8mKuKCMTPhJsvMmqPDPzXq2yI9vyliePpzDot9E2D3rQghIzMhhd5Zz6wtcekvPzOPA1Tw2GXPLNKJqKozkn15F/iYoEHhUGS4hQ7+aK72CwGqbbs/+bwlUhL5Ny8sSuw5qzpuif1bZaER0okSrRDW63l7/Zi33pDIOUweW2BfuSXhN5O8wdnQ== emmanuelle.gautho@smile.ci
+        - login: adbak
+          groups: dev
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDVI9LS2slP4shCL20PmxmT3DEAiNf/qsFMkjbOwQKF6INjFnTx+xeYg0o1OcpXj6FObHMbA7eXkdgjrVPYzNRhFdH8OiMDZvc3/traCzPnWzK9Z9t4WKsShjGXCTfRfbEjNj7S0eXaBa7kukij8S1FDbWefeT5kcwo4admmM8MS1VxPymBOT8ExYMGL7FrIXZjaUQ5HJOQaFMdZHtJsI54clBTrwlft7sphjWye9MkquuWuGB3Y7dE9b47dH5cityUeehtWB9c31fnmenf+T0452KmQnj6pDGoLvWbTdD5o0Pb4NUz0iPBGvwmI3m8euBJZALun6FiE+2d5eY6Z8ftGPGd2iRVIsX7syySnDUS3TcYfgTCm4bBJM9q98yIOwaMXtk9Jr1YubHlYIFBYahK2rJeG9bTD3gp6sMNQLQTuCaGO2vRxxKcA1Oxte9gtPxDgajU5VMPybXDTD/jb+04nJXnwIxmJ38Slt/71XiX/ml6Ctz57mc6F5jEPQL2Kk/KEJ7roURiScuV/bCkDOqkzhFCLfnfgFWfX891/C++/ZWeIxCzTA0U/vIfOcKfQzz8xPy0VDRfp+ywT3Q1l+ZD6+jeBakF/ojCG1iq9ahGb6ewNS4Geozf5Hp5BReMGc8dPhdD9swdsFIRxq7ybbjQZG1R+tD7pFCz1RHv1dUHHQ== adama.bakayoko@smile.ci
+        - login: yadia
+          groups: dev
+          state: present
+          sshkeys:
+           - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCutEjFoIoPauPMBLYFmj/IxeAs5WkF6kfK4p4IPqIJiJ3rN4XTYMPNEJwDwzmMNOOh4d+lY9wVzswn1X6jZYO9TB0jkC/+cN8FuufrZ1ULx4Ppd/hIbUWYQBS6kPI9jzz3m5RNGvUSxIiHKvZYGjldUC7Gu81Vov5IcU3QT8YKykanUjrl3TAFDc787ecPDSs+OwfSKvjpvpyLG2BN+VHN4i+Uu7n8rxvmYA8xg2asmYBJy0spQz3j4YvPzKLgKYyMZw7pS8uZEBV1pthPcI1KQpcI1BdKHVL/DGigwzKH5dJKAGV/6ii0jT3JyTTQvm4Gx9+zIwyYmqhAvSiLWdtD yasmine.diaby@sfl.ci
+        - login: mague
+          groups: dev
+          state: present
+          sshkeys:
+           - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDbT1zbzEiQoUar+HVhqeZQnND73LykoUUNml6y56Y6URLIM1Kb2AaKCoKRLdE/Udldj79u7L9IJlKqcI5VbryaDTtfti+Y/+3OhWR2VTL4EzGomwMGppZWrr4eKRLX+HyBB/TeWW6qlLJvHH9bkWssixldYL+MDws4K5UH7nWiQRj0rjpsTuDcugbVWR8GnXyQAMOTJ0dGDF14i3Z64zYgqr3sArNKbLXajezY06n+IVX5pbmMdyLTvMx2nVGOeBpq97mlHZXDtSD5DhXGVSUxm7O5z8LiXvqiWoURQv3t324W/4q5Xek9ACu2VY6I5LXAUdoZUOx6f+5NnNVT+MpSPUeFAcSyW+QgBmeH2B5pgO01AiQMbfc3Spf/IpeZFPxKoDzjQY/LDp4nV3Fb0ZXBIPii6RnLbNczy1rTz3yVy1hk5YJVvJZDoKI422STU88/Gkov7YeFAIcIh3LS5ioZ8wVuQOOcNIX01haO3rsvYVSzzKcsGuaUCG1VFaOn/mU= marlu@marielu-laptop
+        - login: leanj
+          groups: dev
+          state: present
+          sshkeys:
+           - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQClJjzTHxSv9c9ri7DEbTOeTXivEdbxjg4knGFHtO2oXOJ6AmzM2pYL1+FybUcM4qeOGe4VulQJJyRSF3qMFWR2iV+p68e24NohnSjXWMbWv4dMCkpJfjom9f5a5vwH4E9J/uZ9l5sQnKBwLk3aOaxI8fkZOD/7JfrKAcCKkG+otj/8U5Fqm+BNjyRB90SzXE5hDoqFLRV2sdD1Nn9/qz4ATUjfMGHgmf7euAq2leMD3MA5Lq4BBVdjmDDZKJ5hBuraG8aJ4nf3pf6G2wjqKhDD3hJlGqPdjit0tCIK1Kn8ec6Cr/vvPNw27D7J5iuKC0O/gaIMotNWAMoz/fgeaAUL l’éclaire.anjipu@smile.ci
+        - login: jetib
+          groups: dev
+          state: present 
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDPhDB4csZyZosuP0RVLjtgxdE9Tym67+VzFj3fivLXrt99JmUrFlH8OqM9SvjE6bBijO/NTcH9uAFaYMsnuokCUm9nM27ZMcuWO8Xda/ffs7XtwoDrb3+yGKwXnYQcfK85RVtj6pPC2YaHgQrVZfS6gi5Ak1lREIIV4jhvn+jiLMx6oeN6vWMXg/sDA8fxpkbGDN9XmgOXTQh/ZCHL1dH3aC0GtnlZr0L3n+EgtL3GzNHg7jO/qGV7Rs6C4xq0VWbRHz2iFNYN/hiIGdrmEj0dogT2pvzIXTwylM8lWH/3ACIehvd/PlsAJ6ExmaCvnhjcgfHTWr/DVnj+qdGbd0RR tibejeanluc2015@gmail.com
+        - login: rokou
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDLzOeYCPdWtRTqmfQ/bPmV4v4lN7vJeAL6PAuROoQU5TQV8TQ7Bb3VBgN4foUHCbpk9PJdwiY/mJvTSEwN9DppDQw6TarpJRRFP3oDuE5aO+0f55L0fwcaNcocDqkFQwiBVJ1PHIpibJl8xK6ycAhQtWo0Kuj8wyAn/QoRwIljsPy2Z2KqugJYA+U9HEOwRLHztKugF+dz5lBJCuO83J6C9xk81KBo4eb8TZKcV0NMI4nQZqLjUNcIvtiACzOLOThlFtlyRlgvQUO7bGY/8FaoILuUeKrIPs32i3SDC+eUHErwqySZNy2dMxNMwS/UJRT7vDJIETtPHB5Xmve53dku6//I8vs+zmW+aPD8QTRKTivKgVP3Zt/W6Kd3AGDI+Q22BI3YNZ+YRRer91h/Hgk5+z0T9Wj8/MxJfn6IlMhOCT6KtrFrkbx31NlU+YlO1GKgj6HFHJJa3KfD5n9H+yFGyrmvr+rY7EVwdLsOqT8M7u+X2YesbmfdH3Ebf9EBsDrcc/CjA5fsMfkfq8HsIaiDXFvtZGZZK4Ff4bfOvGj+6EkG8CzlSMjpc3i6NDssmH+jzRj1xgmfXLtmAV9keOZ4FYKDcQPqz8qXeDMazA8Q8IZkX9hPYlEHeXyaqyWzxtnThjokdwVwQ7bqiP/9Br81qrVrFLZZEAwxCTWc/Yufcw== romaric.kouame@swanpro.net
+        - login: ahmea
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC0qX0CjILC2rHQS+JwId5OBSgD1JkG3CqaJDYXOSQxCxTHx1uVDrXfu5kP4r7OTPia7JsoRJZ/zzqQFFRYjdHg8/jIP95yCtrZ5Dp9DRjGiyMCRrPKWoPhvc/azxv79VgsQKychMjJtkQOMf6D6BDal+h77kyxgLccA0nX1omToCxt4/p5lyyatODIyoFPWTBpUtwzjIQlfi50Qjp+z92od4xik+K0U5Sxz7OYPearHi3Zr9CEndwsUMEaC+gEGJPMwcEcfkk/97KHNRT72f8hXN4J5LwHUOchYcPwvSpk9xc8N3OoJPf/nm6Rj+FVR4fPbRdbLRIHiIhA18tPEvt22/6NqfcDdosn2I+mMCCW4Dvh7BIUTjukuhTNWorn4ZHdAqATWqryAzjfwrvN8VnpWaocf3srpw4SKpZbmsSjEK7LZ10vMn8ZtGcNEmXlzuOh2AvBlI6FFFjDF7lE39+41v/y0DVN3Fp5r1aahnCel1XWSFRyVj+kxj2VJR9maOIuB8+mNwsSzAlYhCS7PuJmgcXMqqmVYPQJsfgwkcXLkNvTBPF0xyebdmEKV3LLFareo1UGPJtLEcQaCzaFUY/DpguD5HSMEOIRJaL+l/S1CHx7mWtt2zENhcTIsBxiWsvrBAUQLsLwGSXz/rqhV1kQqdjDcmITeSnQMsU/osiBTQ== ahoussi.mea@swanpro.net
+        - login: sekon
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDYna0GT12dMKhO98NHr0v0M/p40eYjY+1+h/sMcJbqLCL2rQ6dkp/2gE0GfGkU6y2uPmKxpK34ilgCAwqKYWqYRbcMU8jmpnD7zA9vHfml6FYb7SxnGgr3OwuKYF+3oPL+jNHYnIAtlLu7Tfdoke5aSfcg4CDsO5FHSNQYe9Lx0mC2d/IzEVsPZ00qG/7GEPJEkoSjsWCdM+a6lzgdww7MVip8J6/usygQ/mNaF9/Cjji+s729d3sfSTasS77CQCtRghEbBqlbBE+SEqDI51T9+Vupz0CSs1NFBpssYaSsBmFIEcnRLFoAjsTuUqhx8nbTmsHWSZ8Fj8vESGNlfgPGQvp1Fm4oJ0zaay+ekSaK7rR1K1YppFy46LN7Xa0K6jsoUp5Hj14+GAuNufDvCVE1hxj6VXB0J9lyQylwsQsewsN8QDqG3/dj5Q8wtL3DGol10smqRuIthdgIwc3hADRzFECF8m2CHwK8s3norFjpKofQuJ93Y4lrsu7VVXL7Q6DO3sV/LjDoYJkYTwX/SMY5dabHzBu86GTCp5J0DfVFfKBF/zJWIA4sHQl2Z5cH8J6wVIMdXpNE00NCLu3AYeH+i3mpyXVvYMkNjvZR08h/IbcaPG6cgQdicgXL5A0iZ3+gYB52K3utVsrOVCvRwLefFic8r7OviVUzZnxiky7Guw== serge.konan@swanpro.net
+        - login: wiano
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCrFv4x6Hlz0OTuIDj9cxcN+muI0QAGMqySsZF9+XgFx/+INzwkjpV4snIoyx0CqNFzpU87XGUZGnAlHwVogulKSp5W6qPlGPxfvGZ4wQUv5uyU1IFXJVzfv7/kRBpKuk1HWk9zxOqcgD2b7wxOht0O1sDFEsyChw2cO4dBbNemZIoeukuRw9Jyfe6afo0TXtBMsAYsLq8KlE6OD7R4m68U+0hxHjHM/lVjon6G3LOBpLqX+3Hq64U7Prz2o1H58KSS0jZHkyaMg/qte4Q9/C5kf+9p4ru49bkGKFqWjMwyZLjaN4cVonmemcrFqhuFQ6AyH/LBiODl0avnz72PsOQxtLlvVwgGqZDDawBeFRT4JM3FkE+Rb4Kf/35AdUlL8iaTs8kEPE9rCP/53L5WBkpBwpMRzdl/U1QHys9a3NGhks8GoZJQpmDPgQYE3/kMPc2XKkvweP/90Eh4YumKzpfc3igWNel0lK4iTFNwi9wMdukMpZXNvsUL4v699G60ZzKCGnIBZ1Rkk7D7lQyE8tysKvg5XJcDKXp6owwCzwI8U8nkH99mrcLQsDeAIRdxQKsmQu3NDLH5NJt3MB5ueM8vj7bl63v0XwpHKbJyB2sZtUI8/S2/60WT8df+Kn3AlLz9Z4r/0okstQS3rYA5t7423iwVVHDoMH+ANPi2oG6R/Q== williams.ano@swanpro.net
+        - login: adfof
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDoebymsmICi+FHexyAP1OGmKsQBOFXP/Dp2g+kUV0SHn8P8oyCbnKyuGR2fZtJllhIrzex8KvnGiH6hPQNwiQM8/9KnZRXpTmWBw86IcfgPw+wxKKes6rMAsUTO3Uopil4pEFZ6xKuAvVwAMEVP2SbZ6qtsMUjVDdCgXjlTUpKTc4/DM38kNN57fIA+bPX8GwMyT8CWKyTdchWLJD9N9K4wlAAiYdO/0+oeCIK5oG9OsQEnD1gHvpyluuy7Vjax8X2wUGFQAdDe3BSv4AssWe7wp+vXl1gFDLwZ9wT3b4sWHnV4n9t8r3EV5owhfIb6z9Q/QOxs4HYqPqdyKA7m8Oj adjamassara@icloud.com
+        - login: ikoua
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQCcf7aGXdVPuepOb/WfcVWBRzKWerj8zYFmx7A5N3JG/iGdbFyjyg5YhcK0NaLPmY51fuyft6ghQhAjBLsxZcSIlVIpu/mln+g+WgvdtrqRhlHwCpG8FE0Kv/8QgciqICj39wpODH9rmEFrTE6LhoeDc5ebwj5oaugrTsgKZ6CI4ObzsYefE44CrPos7lpvFIOYOs3XVwb7a+O9ZAJuaK7wsnNoZQwa1nEZ+zQLx8QxYqo8MSCrzs//Yv6guBHeBo85k6P62fbyfNohh6CLmXnSjd5GWRCLDr5pWmoL6WLGJuk3eVQsLMLudqoeAq1FBT5GKb3qe/Adm7dFa7fdXzzF innocent.kouadio@smile.ci
+        - login: sodio
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDjbtYM0Uci+2IMDn9H+q38dW+goq9cDQODYiZFNtMjBiA0jmyOsji0ohIRcVHlDgtx3wqQ6oFB7p6ieCk6tld6x0U/WCvzhLJPF6uwXbgrggfAr6paNV290N+sqXrwNyCunI3GP8Su4NHv8CpIX+LLn6AauNa0aF5ypWCUDWEsd4ZN3dDEPmMvO6ceVK5xHIafG9Mxog5kTdBONUlFKXqzk0E20xzqnGibrK+fb5HwkMdgrpihaEooZ5nK7RxKZdK9hsDDt1W0mb8OH8etXGlRK0y3uSFzFxWr7URa7RyDTTwJ0CuKVU4U5jh+zXseBshaR1cj2m440wNZgEw3COcfGu+8Jl41Li9QVHrMOS+bmFTnhxYjGL86eBlx9vZ7sUHUNENqfQ4D2P00gEuLEq/8yq4aeAiXvNTKTsrMI8agXhgRta9A+ActVOEJeSxVALstdmeRfmZu2eRiJXStekuYjfow4ayAlY6HycGiqIbpHlRkCdAQw7Ff7TKTReo0snxokTeyoLagxZDwBsxfPlODqO7PkCsBlpb4mQG2KU+Fpii5vKziwQwAccz8u0iPVOjIddBJRR2QjiysF4iBEmzM7opSjd81ZKU8SAuRqYSiLfB1sidSGK9pWIw/O24PBVCNftSofCCUTFo5f5tAJ8B6cOgqk0u6ONzBj+ho0vyIWw== souleymane.diomande@smile.ci
+            
+            
+        - login: yobak
+          groups: dev
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDngcwIqqIwIao1gNEkSJX5qlW2WHoDbfLZLDYE3LE/EcjTfce/q1v9jeebytb1er9Q4qF+M8pGmUjfxbxBZTFgEkRljzlmxbDuRtsx9H5XvnaTjCNmdcHZT9CqosmYD7Ka6WUFdLoHqG+rvaC+RTpXEkdquBqJa7bUE2PGKp88uoQV0COxyYQtS52UFoToH78itnrStaW68hZM3YsqQnRSODSUCj/55haGzLOd65vVjRozoVYNQ74S0JXwkpMywqAnFJT8Ztk70BZ+a5OAwrVBD96qavhwtYSpOjotfGx02WcHBJwMxQp6xVI5SwXdWu51SB97YKDZLp6uKgyfnk4rbFIZ4lzK7p1oaxdNs9dYya1tuw5uYHCKEzRWAVTKedSOenKJ8EGrDKnYuCX631Y8YL9iBSgA2YQAkhjim67UPtEsumJJ6FlFNUpvPjHvun6v63nHmMGJz/y4wxqqatIH9A6n1k+Puz4ygHZ0i6Pi8ag0EoYbzfudf3kPxci7OLU= bakus@bakus-Satellite-C55D-B
+            
+            
+        - login: cykpe
+          groups: dev
+          state: present 
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAoa6OMcLdX4XqGR3CySsdNNb2JHqgmfw49DfbncF6xU6URukGivACsPd0ZoBeyoOMECoHw1G+ZBjAxY/DQVUEypFRixVlgKLJBzteLQUUQ6QwvoFIWywHbLF62rUF0k7odyJhbiZBI4f6BgsEKk3RgNLrw9rCZaCvc/hi9Fg3dtpDQ4ebcpS+z5QOdBUyQ1HjRmy3g1FHU4NNfc+WfMlkbipoZkhr7H6dHn6NxjA8WlIO8jOkqVrVCorRnrYoPZm1Wn6iQf6Pm2Abiv/STwumuE3X84KGvdsdtrONGuuSPERcY76puviEWmEaIm5/sHOHvtJ/wUnwnetfkOiP9cdHTw== rsa-key-20201126

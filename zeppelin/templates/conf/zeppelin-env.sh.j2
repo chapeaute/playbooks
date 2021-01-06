@@ -1,0 +1,69 @@
+#!/bin/bash
+#
+# Licensed to the Apache Software Foundation (ASF) under one or more
+# contributor license agreements.  See the NOTICE file distributed with
+# this work for additional information regarding copyright ownership.
+# The ASF licenses this file to You under the Apache License, Version 2.0
+# (the "License"); you may not use this file except in compliance with
+# the License.  You may obtain a copy of the License at
+#
+#    http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+
+{% if zeppelin_java_home | default %}
+export JAVA_HOME='{{ zeppelin_java_home }}'
+{% endif %}
+
+{% if not((zeppelin_spark_master is undefined) or (zeppelin_spark_master is none) or (zeppelin_spark_master|trim == '')) %}
+export MASTER='{{ zeppelin_spark_master }}'   # Spark master url. eg. spark://master_addr:7077. Leave empty if you want to use local mode.
+{% endif %}
+{% if not((zeppelin_java_opts is undefined) or (zeppelin_java_opts is none) or (zeppelin_java_opts|trim == '')) %}
+export ZEPPELIN_JAVA_OPTS='{{ zeppelin_java_opts }}'  # Additional jvm options. for example, export ZEPPELIN_JAVA_OPTS="-Dspark.executor.memory=8g -Dspark.cores.max=16"
+{% endif %}
+{% if not((zeppelin_mem is undefined) or (zeppelin_mem is none) or (zeppelin_mem|trim == '')) %}
+export ZEPPELIN_MEM='{{ zeppelin_mem }}'    # Zeppelin jvm mem options Default -Xmx1024m -XX:MaxPermSize=512m
+{% endif %}
+{% if not((zeppelin_intp_mem is undefined) or (zeppelin_intp_mem is none) or (zeppelin_intp_mem|trim == '')) %}
+export ZEPPELIN_INTP_MEM='{{ zeppelin_intp_mem }}'   # zeppelin interpreter process jvm mem options. Default = ZEPPELIN_MEM
+{% endif %}
+{% if not((zeppelin_intp_java_opts is undefined) or (zeppelin_intp_java_opts is none) or (zeppelin_intp_java_opts|trim == '')) %}
+export ZEPPELIN_INTP_JAVA_OPTS='{{ zeppelin_intp_java_opts }}' # zeppelin interpreter process jvm options. Default = ZEPPELIN_JAVA_OPTS
+{% endif %}
+
+#### Spark interpreter configuration ####
+
+## Use provided spark installation ##
+## defining SPARK_HOME makes Zeppelin run spark interpreter process using spark-submit
+##
+{% if not((zeppelin_spark_home is undefined) or (zeppelin_spark_home is none) or (zeppelin_spark_home|trim == '')) %}
+export SPARK_HOME='{{ zeppelin_spark_home }}'   # (required) When it is defined, load it instead of Zeppelin embedded Spark libraries
+{% endif %}
+{% if not((zeppelin_spark_submit_options is undefined) or (zeppelin_spark_submit_options is none) or (zeppelin_spark_submit_options|trim == '')) %}
+export SPARK_SUBMIT_OPTIONS='{{ zeppelin_spark_submit_options }}'     # (optional) extra options to pass to spark submit. eg) "--driver-memory 512M --executor-memory 1G".
+{% endif %}
+{% if not((zeppelin_spark_app_name is undefined) or (zeppelin_spark_app_name is none) or (zeppelin_spark_app_name|trim == '')) %}
+export SPARK_APP_NAME='{{ zeppelin_spark_app_name }}'   # (optional) The name of spark application.
+{% endif %}
+
+## Use embedded spark binaries ##
+## without SPARK_HOME defined, Zeppelin still able to run spark interpreter process using embedded spark binaries.
+## however, it is not encouraged when you can define SPARK_HOME
+##
+# Options read in YARN client mode
+{% if not((zeppelin_hadoop_conf_dir is undefined) or (zeppelin_hadoop_conf_dir is none) or (zeppelin_hadoop_conf_dir|trim == '')) %}
+export HADOOP_CONF_DIR='{{ zeppelin_hadoop_conf_dir }}'  # yarn-site.xml is located in configuration directory in HADOOP_CONF_DIR.
+{% endif %}
+# Pyspark (supported with Spark 1.2.1 and above)
+# To configure pyspark, you need to set spark distribution's path to 'spark.home' property in Interpreter setting screen in Zeppelin GUI
+{% if not((zeppelin_pyspark_python is undefined) or (zeppelin_pyspark_python is none) or (zeppelin_pyspark_python|trim == '')) %}
+export PYSPARK_PYTHON='{{ zeppelin_pyspark_python }}'   # path to the python command. must be the same path on the driver(Zeppelin) and all workers.
+{% endif %}
+{% if not((zeppelin_pythonpath is undefined) or (zeppelin_pythonpath is none) or (zeppelin_pythonpath|trim == '')) %}
+export PYTHONPATH='{{ zeppelin_pythonpath }}'
+{% endif %}

@@ -1,0 +1,8 @@
+---
+
+# Manage databases
+- import_tasks: dbs.yml
+
+# Manage users
+- include: users.yml user="{{ item }}"
+  with_items: "{{ mysql_users }}"

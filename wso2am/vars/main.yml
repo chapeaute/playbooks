@@ -1,0 +1,27 @@
+---
+# vars file for wso2
+wso2am_service_name: "wso2am"
+wso2am_data_dir_list:
+  - "repository/deployment/server/synapse-configs/default"
+
+wso2am_default_deployment_conf:
+  database.apim_db:
+    type: "{{ wso2am_db_type }}"
+    url: "{% if wso2am_db_host is defined %}jdbc:mysql://{{ wso2am_db_host }}:3306/{{ wso2am_db_app_name }}{% else %}jdbc:h2:./repository/database/WSO2AM_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000{% endif %}"
+    username: "{{ wso2am_db_user }}"
+    password: "{{ wso2am_db_pass }}"
+
+wso2am_configs:
+   data-bridge/data-bridge-config.xml:
+      - regexp: .*keyStorePassword.*
+        line: '<keyStorePassword>{{ wso2_generic_keystore_pass }}</keyStorePassword>'
+   identity/EndpointConfig.properties:
+      - regexp: Carbon.Security.KeyStore.Password.*
+        line: Carbon.Security.KeyStore.Password={{  wso2_generic_keystore_pass}}
+      - regexp: Carbon.Security.TrustStore.Password.*
+        line: Carbon.Security.TrustStore.Password={{ wso2_generic_keystore_pass }}
+   broker.xml:
+        - regexp: <password>.*
+          line: '<password>{{ wso2_generic_keystore_pass }}</password>'
+      #  - regexp: '.*amqp enabled.*'
+      #    line: '<amqp enabled="false">'

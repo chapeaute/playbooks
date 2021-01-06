@@ -1,0 +1,8 @@
+---
+- import_playbook: user/admin-smile.yml
+- import_playbook: user/admin-deploy.yml
+- import_playbook: user/admin-ocit.yml
+- import_playbook: postfix.yml
+- import_playbook: filebeat-agent.yml
+- import_playbook: monitoring-agent.yml
+- import_playbook: bacula-agent.yml

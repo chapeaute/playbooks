@@ -1,0 +1,31 @@
+---
+# defaults file for alfresco
+alfresco_service: tomcat
+# Alfresco version 5.1
+alfresco_version: 201612
+alfresco_build: "00014"
+alfresco_archive_name: "alfresco-community-distribution-{{ alfresco_version }}"
+alfresco_archive_sha256: sha256:39548b029e490f5d265056e88b85097e7611969e20a552a51eeac111c5e0befe
+alfresco_archive_url: "http://download.alfresco.com/release/community/{{ alfresco_version }}-build-{{ alfresco_build }}/{{ alfresco_archive_name }}.zip"
+alfresco_port: 8080
+alfresco_user: "{{ tomcat_user }}"
+alfresco_group: "{{ tomcat_group }}"
+alfresco_root_dir: "{{ tomcat_root_dir }}"
+alfresco_heap_size_prct: "{{ tomcat_heap_size_prct }}"
+alfresco_purge_tomcat_webapp:
+  - host-manager
+  - manager
+
+alfresco_ooo_enabled: true
+alfresco_jodconverter_enabled: true
+
+# Database configuration
+alfresco_db_driver: mysql
+alfresco_db_host: localhost
+alfresco_db_port: 3306
+alfresco_db_user: alfresco
+alfresco_db_pass: changeme
+alfresco_db_name: alfresco
+alfresco_db_remote_host: "{{ alfresco_db_host }}"
+alfresco_db_admin_user: root
+alfresco_db_admin_pass: changeme

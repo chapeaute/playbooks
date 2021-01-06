@@ -1,0 +1,5 @@
+#!/bin/bash
+
+DOCKER_ID=$(docker ps -f name="{{ docker_swarm_stack_name }}_etcd" -q)
+ETCD_RUN="docker exec -e ETCDCTL_API=3 -t $DOCKER_ID etcdctl"
+$ETCD_RUN "$@"

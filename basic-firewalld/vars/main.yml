@@ -1,0 +1,7 @@
+---
+# vars file for basic-firewalld
+firewalld_packages:
+  - firewalld
+  - python-firewall
+firewalld_services:
+  - firewalld

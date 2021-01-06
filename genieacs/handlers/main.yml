@@ -1,0 +1,13 @@
+---
+# handlers file for genieacs
+
+- name: Restart genieacs
+  service:
+    name: "{{ item }}"
+    state: restarted
+  with_items:
+    - "{{ genieacs_services }}"
+
+- name: Systemd reload
+  systemd:
+    daemon_reload: yes

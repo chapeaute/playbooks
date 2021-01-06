@@ -1,0 +1,13 @@
+---
+
+- name: Add Ambari repository key (apt)
+  apt_key:
+    data: "{{ lookup('file', ambari_repo_keyfile) }}"
+    id: "{{ ambari_repo_key }}"
+
+- name: Add the Ambari repository (apt)
+  apt_repository:
+    filename: ambari
+    repo: "deb {{ ambari_repo_url }} Ambari main"
+    state: present
+    update_cache: yes

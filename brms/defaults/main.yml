@@ -1,0 +1,18 @@
+---
+# defaults file for brms
+brms_service_name: brms
+brms:
+  source_url: http://archive.smile.ci/brms/jboss-brms-6.4-all-in-one.tar.gz
+  source_checksum: sha256:99cd81a418b6061c00e500716b8e83d831178e2a46756d326c12849fb5d0c0a2
+  subpath: jboss-brms-6.4-all-in-one
+brms_java_version: 8
+brms_java_impl: openjdk
+brms_user: brms
+brms_password: P@ssw0rd
+brms_dir: "{{genericservice_root}}"
+
+# JVM Heap Size
+brms_heap_size_prct: 0.85
+brms_heap_size: "{{ (ansible_memtotal_mb*brms_heap_size_prct)|int }}"
+brms_heap_size_xmx: "{{ brms_heap_size }}m"
+brms_heap_size_xms: "{{ ((brms_heap_size|int)*0.8)|int }}m"

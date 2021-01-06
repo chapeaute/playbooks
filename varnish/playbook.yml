@@ -1,0 +1,10 @@
+---
+- hosts: varnish
+  roles:
+  roles:
+    # - role: apache
+    #   apache2_disabled_default: []
+    #   apache2_port: 8080
+    - role: varnish
+      varnish_default_backend_host: 127.0.0.1
+      varnish_default_backend_port: 8080

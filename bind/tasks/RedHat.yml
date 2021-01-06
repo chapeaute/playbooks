@@ -1,0 +1,198 @@
+---
+# tasks file for redhat bind
+- name: RedHat | Install package
+  package:
+    name: "{{ item }}"
+  with_items: "{{ bind_packages }}"
+
+- name: RedHat | Create Bind log and run directory
+  file:
+    path:  "{{ item }}"
+    state: directory
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode:  0755
+  with_items:
+    - "{{ bind_run_dir }}"
+    - "{{ bind_log_dir }}"
+
+- name: RedHat | Create Bind cache directory
+  file:
+    path:    "{{bind_cache_dir}}/data"
+    state:   directory
+    owner:   root
+    group:   "{{ bind_group }}"
+    mode:    0775
+    recurse: yes
+
+- name: RedHat | Create zone configuration directory
+  file:
+    path: "{{ bind_conf_dir }}/zone"
+    state: directory
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode:  0750
+
+- name: RedHat | Create custom configuration file
+  copy:
+    dest:    "{{ bind_conf_dir }}/named.conf.custom"
+    content: ""
+    owner:   "{{ bind_user }}"
+    group:   "{{ bind_group }}"
+    mode:    0640
+    force:   no
+
+- name: RedHat | Deploy main configuration
+  template:
+    src:   "{{ item.src }}"
+    dest:  "{{ item.dest }}"
+    owner: root
+    group: "{{ bind_group }}"
+    mode:  0640
+  with_items:
+      - src:  etc/named.conf.j2
+        dest: "{{ bind_conf_dir }}.conf"
+      - src:  etc/named/named.conf.options.j2
+        dest: "{{ bind_conf_dir }}/named.conf.options"
+      - src:  etc/sysconfig/sysconfig-named.j2
+        dest: /etc/sysconfig/named
+  notify: "Restart Bind"
+
+- find:
+    path:    "{{ bind_conf_dir }}"
+    pattern: "K{{ bind_ddns_key_name }}*.private"
+  register: keyfile_priv
+  check_mode: no
+
+- name: RedHat | Generate ddns key
+  command: "dnssec-keygen -r /dev/urandom -a HMAC-MD5 -b 512 -n HOST {{ bind_ddns_key_name }}"
+  args:
+    chdir: "{{ bind_conf_dir }}"
+  when: bind_ddns_enable and keyfile_priv.matched == 0
+
+- find:
+    path:    "{{ bind_conf_dir }}"
+    pattern: "K{{ bind_ddns_key_name }}*.key"
+  register: keyfile_key
+  when: bind_ddns_enable
+  check_mode: no
+
+- name: RedHat | Create generic link name to ddns key
+  file:
+    src:  "{{ keyfile_key.files[0].path }}"
+    dest:  /etc/named/Knsupdate.key
+    state: link
+  when: bind_ddns_enable and keyfile_key.files|length > 0
+
+- find:
+    path:    "{{ bind_conf_dir }}"
+    pattern: "K{{ bind_ddns_key_name }}*.private"
+  register: keyfile_priv
+  when: bind_ddns_enable
+  check_mode: no
+
+- name: RedHat | Create generic link name to ddns private
+  file:
+    src:  "{{ keyfile_priv.files[0].path }}"
+    dest:  /etc/named/Knsupdate.private
+    state: link
+  when: bind_ddns_enable and keyfile_key.files|length > 0
+
+- name: RedHat | Get ddns key
+  shell: "cat {{ bind_conf_dir }}/K{{ bind_ddns_key_name }}.*.private | grep Key: | awk '{print $2}'"
+  changed_when: false
+  register: keyval
+  when: bind_ddns_enable
+  check_mode: no
+
+- set_fact:
+    bind_ddns_key: "{{ keyval.stdout }}"
+  when: bind_ddns_enable
+  check_mode: no
+
+- name: RedHat | SELinux allow named to write on master zone
+  seboolean:
+    name:       named_write_master_zones
+    state:      yes
+    persistent: yes
+  when: bind_ddns_enable and ansible_selinux.status == "enabled"
+
+- name: RedHat | Deploy ddns admin scripts
+  tags: script
+  template:
+    src:  "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: "{{ bind_group }}"
+    mode:  0750
+  with_items:
+    - ddns-host-add
+    - ddns-host-del
+    - ddns-zone-import
+  when: bind_ddns_enable
+
+- name: RedHat | Deploy nsdiff scripts
+  tags: script
+  copy:
+    src: usr/local/sbin/nsdiff
+    dest: /usr/local/sbin/nsdiff
+    mode:  0755
+
+- name: RedHat | Deploy key configuration
+  template:
+    src:   "etc/named/named.conf.key.j2"
+    dest:  "{{ bind_conf_dir }}/named.conf.key"
+    owner: root
+    group: "{{ bind_group }}"
+    mode:  0640
+  when: bind_ddns_enable == true
+  notify: "Restart Bind"
+
+- name: RedHat | Deploy zone configuration
+  include: "bind-zone.yml key={{ zn.key }} zone={{ zn.value }}"
+  with_dict: "{{ bind_zone | default({}) }}"
+  loop_control:
+    loop_var: zn
+  tags:
+    - config_zone
+
+- name: RedHat | Set cache directory permission for ddns
+  file:
+    path: "{{ bind_cache_dir }}"
+    mode: "g+w"
+  when: bind_ddns_enable
+
+- name: RedHat | Add auto-restart on-failure - create directory
+  file:
+    path:  /etc/systemd/system/named.service.d/
+    state: directory
+    owner: root
+    group: root
+    mode:  0755
+
+- name: RedHat | Add auto-restart on-failure - deploy systemd config for named
+  copy:
+    src:  etc/systemd/system/named.service.d/override.conf
+    dest: /etc/systemd/system/named.service.d/override.conf
+    owner: root
+    group: root
+    mode:  0644
+  notify:
+    - Reload Systemd
+
+- name: RedHat | Service Bind
+  service:
+    name:    "{{bind_service_name}}"
+    state:   started
+    enabled: yes
+
+- name: RedHat | Setting firewall rules
+  firewalld:
+    port:      "{{item}}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - 53/tcp
+    - 53/udp
+  when: manage_firewalld

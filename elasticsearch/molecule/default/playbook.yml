@@ -1,0 +1,11 @@
+---
+- name: Converge
+  hosts: all
+  roles:
+    - role: basic-firewalld
+    - role: elasticsearch
+      es_heap_size: 512m
+      es_version: "7.5"
+      # es_path_data: /srv/elasticsearch/data
+      # es_path_logs: /srv/elasticsearch/logs
+      # es_path_repo: /srv/elasticsearch/repo

@@ -1,0 +1,40 @@
+---
+# tasks file for memcached
+
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: '{{ ansible_os_family }}.yml'
+
+- name: main | Install memcached server
+  package:
+    name:  "{{ item }}"
+    state: present
+  with_items:
+    - "{{ memcached_package }}"
+
+- name: main | Deploy memcached configuration file
+  template:
+    src:   etc/sysconfig/memcached
+    dest:  /etc/sysconfig/memcached
+    owner: root
+    group: root
+    mode:  0644
+  notify:
+    - Restart Memcached
+
+- name: main | Enable and start service
+  service:
+    name:    "{{ memcached_service }}"
+    state:   started
+    enabled: yes

@@ -1,0 +1,30 @@
+---
+# defaults file for sonarqube
+sonarqube_service_name: sonarqube
+sonarqube_user: sonarqube
+sonarqube_group: sonarqube
+sonarqube_version: 7.6
+
+sonarqube_log_maxfiles: 14
+sonarqube_root_dir: /var/lib
+sonarqube_install_dir: "{{ sonarqube_root_dir }}/{{ sonarqube_service_name }}"
+sonarqube:
+  source_url: "https://binaries.sonarsource.com/Distribution/sonarqube/sonarqube-{{ sonarqube_version }}.zip"
+  service_name: sonarqube
+  subpath: "sonarqube-{{ sonarqube_version }}"
+
+# JVM
+sonarqube_memory_size_prct: 0.8
+sonarqube_total_memory_size_mb: "{{ (ansible_memtotal_mb*sonarqube_memory_size_prct)|int }}"
+sonarqube_web_memory_size: "{{ (sonarqube_total_memory_size_mb | int / 3)|int }}"
+sonarqube_ce_memory_size: "{{ (sonarqube_total_memory_size_mb | int / 3 )|int }}"
+sonarqube_search_memory_size: "{{ (sonarqube_total_memory_size_mb | int / 3 )|int }}"
+
+# database
+sonarqube_db_name: sonarqube
+sonarqube_db_user: sonarqube
+sonarqube_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-sonarqube_db_pass chars=ascii_letters,digits') }}"
+sonarqube_db_host: "{{ inventory_hostname }}"
+
+# Apache Proxy
+sonarqube_reverse_proxy: true

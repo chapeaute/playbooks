@@ -1,0 +1,37 @@
+---
+# tasks file for nodejs
+- name: Include vars
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: config.yml
+  tags: config
+
+- include: "{{ ansible_os_family }}.yml"
+  tags: config
+
+- include: install.yml
+  when: nodejs_version is defined and nodejs_version != nodejs_installed_version.stdout|default('')
+  tags: setup
+
+- include: deploy.yml
+  tags: setup
+
+- name: main | Enable and Start nodejs service
+  service:
+    name:    "{{ nodejs_service }}"
+    state:   started
+    enabled: yes
+  when: nodejs_install_pm2
+
+- include: script.yml
+  tags: script

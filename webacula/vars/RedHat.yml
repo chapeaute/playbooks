@@ -1,0 +1,2 @@
+webacula_package_dependencies:
+  - epel-release

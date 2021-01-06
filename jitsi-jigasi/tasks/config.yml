@@ -1,0 +1,25 @@
+---
+
+- name: Config | Generate logrotate file
+  template:
+    src: etc/logrotate.d/jigasi.j2
+    dest: /etc/logrotate.d/jigasi
+    owner: "{{ jigasi_user }}"
+    group: "{{ jigasi_group }}"
+    mode: 0640
+
+- name: Config | Deploy jigasi configuration
+  template:
+    src: "{{ jigasi_etc_dir | regex_replace('^\\/', '') }}/{{ item }}.j2"
+    dest: "{{ jigasi_etc_dir }}/{{ item }}"
+    owner: "{{ jigasi_user }}"
+    group: "{{ jigasi_group }}"
+    mode: 0640
+  loop:
+    - jigasi.conf
+    - sip-communicator.properties
+    - logging.properties
+  notify:
+    - Register Jigasi XMPP user
+    - Restart jigasi
+  tags: jitsi

@@ -1,0 +1,9 @@
+---
+
+- name: service | Configuring service
+  service:
+    name: newrelic-daemon
+    state: "{{ newrelic_daemon_service_state }}"
+    enabled: "{{ newrelic_daemon_service_enabled }}"
+    use: sysvinit
+

@@ -1,0 +1,6 @@
+- hosts: all
+  roles:
+    - role: docker
+      docker_images: []
+          #        - "ansible/centos7-ansible"
+          #        - "docker.io/maven"

@@ -1,0 +1,40 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+platforms:
+  - name: mariadb-galera-cluster-1
+    image: centos/systemd
+    dns_servers: ['8.8.8.8']
+    networks: [{name: galera}]
+    privileged: true
+    volume_mounts:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    command: "/usr/sbin/init"
+    ansible_groups:
+      - mariadb-galera-cluster
+  - name: mariadb-galera-cluster-2
+    dns_servers: ['8.8.8.8']
+    networks: [{name: galera}]
+    image: centos/systemd
+    command: "/usr/sbin/init"
+    privileged: true
+    volume_mounts:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    ansible_groups:
+      - mariadb-galera-cluster
+  - name: mariadb-galera-cluster-3
+    dns_servers: ['8.8.8.8']
+    networks: [{name: galera}]
+    image: centos/systemd
+    command: "/usr/sbin/init"
+    privileged: true
+    volume_mounts:
+      - "/sys/fs/cgroup:/sys/fs/cgroup:ro"
+    ansible_groups:
+      - mariadb-galera-cluster
+provisioner:
+  name: ansible
+  lint:
+    name: ansible-lint

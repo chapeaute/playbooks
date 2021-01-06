@@ -1,0 +1,8 @@
+{
+  "index_patterns": "*",
+  "settings": {
+    "number_of_shards": "{{ es_shard_count }}",
+    "number_of_replicas": "{{ es_replica_count }}",
+    "refresh_interval": "{{ es_index_refresh_interval }}",
+  }
+}

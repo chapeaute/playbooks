@@ -1,0 +1,76 @@
+---
+# defaults file for wso2
+
+wso2am_version: 3.2.0
+wso2am_offset: 0
+wso2am_patch_version: #1565611426500
+wso2am_apictl_version: "3.2.1"
+wso2am_apictl_url: "https://product-dist.wso2.com/downloads/api-manager/cli/{{ wso2am_apictl_version }}/apictl-{{ wso2am_apictl_version }}-linux-x64.tar.gz"
+wso2am_ports:
+#  - 2379/tcp  # Persistent notifier port
+  - "{{ 4000 + wso2am_offset }}/tcp" # Clustering port
+  - "{{ 5672 + wso2am_offset }}/tcp" # JMS port for amqp communications via tcp
+  - "{{ 8672 + wso2am_offset }}/tcp" # JMS port for amqp secure communications via tcp/ssl
+  - "{{ 7611 + wso2am_offset }}/tcp" # Thrift TCP port
+  - "{{ 7711 + wso2am_offset }}/tcp" # Thrift SSL port for secure transport,
+  - "{{ 8243 + wso2am_offset }}/tcp" # HTTPS access for  Webservices
+  - "{{ 8280 + wso2am_offset }}/tcp" # HTTP access for Webservices
+  - "{{ 9443 + wso2am_offset }}/tcp" # Carbon management interface
+  - "{{ 9763 + wso2am_offset }}/tcp" # HTTP servlet Web Service
+  - "{{ 8099 + wso2am_offset }}/tcp" # Web Services endpoint
+  - "{{ 9099 + wso2am_offset }}/tcp" # Web Services Secure endpoint
+  - "{{ 9611 + wso2am_offset }}/tcp" # Throttling endpoint
+  - "{{ 9711 + wso2am_offset }}/tcp" # Throttling secure endpoint
+wso2am_java_version: 8
+wso2am_java_impl: openjdk
+wso2am_memory_size_prct: 0.6
+wso2am_memory_size: "{{ (ansible_memtotal_mb*wso2am_memory_size_prct)|int }}M"
+wso2am_root_dir: "/var/lib"
+wso2am_install_dir: "{{ wso2am_root_dir }}/{{ wso2am_service_name }}"
+wso2am_data_root_dir: "{{ wso2am_root_dir }}"
+wso2am_deployment_file: "{{ wso2am_install_dir }}/{{ wso2am_confs_dir }}/deployment.toml"
+
+# WSO2 Configs
+wso2am_hostname: "{{ inventory_hostname }}"
+wso2am_remote_hostname: "{{ wso2am_hostname }}"
+wso2am_url: "https://{{ wso2am_hostname }}:9443"
+
+wso2am_admin_create: "{% if wso2am_sso_server is defined %}false{% else %}true{% endif %}"
+wso2am_admin_user: admin
+wso2am_admin_pass: admin  # defines wso2am admin password
+
+wso2am_use_default_jks: false
+wso2am_keystore_pass: "{% if wso2am_use_default_jks | bool %}wso2carbon{% else %}{{ lookup('password', 'credential/{{ inventory_hostname }}-wso2am_keystore_pass chars=ascii_letters,digits') }}{% endif %}"
+wso2am_truststore_pass: "{% if wso2am_use_default_jks | bool %}wso2carbon{% else %}{{ lookup('password', 'credential/{{ inventory_hostname }}-wso2am_truststore_pass chars=ascii_letters,digits') }}{% endif %}"
+
+# Clustering
+wso2am_cluster_enable: "{% if wso2am_nodes|length > 1 %}true{% else %}false{% endif %}"
+wso2am_cluster_domain: wso2.am.domain
+wso2am_manager_nodes: []
+wso2am_worker_nodes: []
+wso2am_nodes: "{{ wso2am_manager_nodes  + wso2am_worker_nodes }}"
+wso2am_repl_method: lsyncd # One of lsyncd, nfs, none
+
+# Analytics
+#wso2am_analytics_server: localhost
+wso2am_analytics_enabled: "{% if wso2am_analytics_server is defined %}true{% else %}false{% endif %}"
+wso2am_analytics_user: admin
+wso2am_analytics_pass: admin
+
+# Database configuration
+wso2am_db_driver: mysql
+wso2am_db_port: 3306
+wso2am_db_user: "{% if wso2am_db_host is defined %}wso2am{% else %}wso2carbon{% endif %}"
+wso2am_db_pass: "{% if wso2am_db_host is defined %}{{ lookup('password', 'credential/wso2am_db_pass chars=ascii_letters,digits') }}{% else %}wso2carbon{% endif %}"
+wso2am_db_enable: "{% if wso2am_db_host is defined %}true{% else %}false{% endif %}"
+wso2am_db_type:  "{% if wso2am_db_host is defined %}mysql{% else %}h2{% endif %}"
+wso2am_db_remote_host: "{{ wso2am_db_host }}"
+wso2am_db_app_name: WSO2_APIM
+wso2am_db_shared_name: WSO2_SHARED
+
+# SSO
+#wso2am_sso_server: localhost
+wso2am_sso_enable: "{% if wso2am_sso_server is defined %}true{% else %}false{% endif %}"
+wso2am_sso_url: "https://{{ wso2am_sso_server|default('') }}:9443"
+
+wso2am_deployment_conf: {}

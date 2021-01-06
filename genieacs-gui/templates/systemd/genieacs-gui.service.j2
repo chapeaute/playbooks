@@ -1,0 +1,12 @@
+[Unit]
+Description=Genie acs gui server
+After=network.target
+
+[Service]
+Environment=RAILS_SERVE_STATIC_FILES=true
+Environment=SECRET_KEY_BASE={{ genieacs_gui_secret }}
+WorkingDirectory={{ genieacs_gui_data_dir }}
+ExecStart=/usr/local/bin/rails server -b 0.0.0.0 -p {{ genieacs_gui_port }} -e production
+
+[Install]
+WantedBy=multi-user.target

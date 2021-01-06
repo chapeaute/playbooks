@@ -1,0 +1,11 @@
+---
+- hosts: zimbra-stack-proxy
+  vars: 
+    zmbra_domain: example.com
+    _ldap_server: zm-ldap.example.com 
+  roles: 
+    - role: zimbra
+      zimbra_ldap_server: "{{ _ldap_server }}"
+      zimbra_services: 
+        - proxy
+        - memcached

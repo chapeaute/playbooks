@@ -1,0 +1,23 @@
+---
+
+- name: RedHat | Install firewalld
+  package:
+    name: firewalld
+    state: present
+
+- name: RedHat | Start and enable firewalld
+  service:
+    name: firewalld
+    state: started
+    enabled: yes
+
+- name: RedHat | Setting firewall rules
+  firewalld:
+    service:   "{{ item }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - nfs
+    - mountd
+    - rpc-bind

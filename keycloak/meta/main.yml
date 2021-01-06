@@ -1,0 +1,66 @@
+---
+galaxy_info:
+  author: Narcisse Konan
+  description: This role install keycloak server
+  company: SMILE CI
+
+  # If the issue tracker for your role is not on github, uncomment the
+  # next line and provide a value
+  # issue_tracker_url: http://example.com/issue/tracker
+
+  license: MIT
+
+  min_ansible_version: 2.7
+
+  # If this a Container Enabled role, provide the minimum Ansible Container version.
+  # min_ansible_container_version:
+
+  # Optionally specify the branch Galaxy will use when accessing the GitHub
+  # repo for this role. During role install, if no tags are available,
+  # Galaxy will use this branch. During import Galaxy will access files on
+  # this branch. If Travis integration is configured, only notifications for this
+  # branch will be accepted. Otherwise, in all cases, the repo's default branch
+  # (usually master) will be used.
+  # github_branch:
+
+  #
+  # platforms is a list of platforms, and each platform has a name and a list of versions.
+  #
+  # platforms:
+  # - name: Fedora
+  #   versions:
+  #   - all
+  #   - 25
+  # - name: SomePlatform
+  #   versions:
+  #   - all
+  #   - 1.0
+  #   - 7
+  #   - 99.99
+
+  galaxy_tags: []
+  # List tags for your role here, one per line. A tag is a keyword that describes
+  # and categorizes the role. Users find roles by searching for tags. Be sure to
+  # remove the '[]' above, if you add tags to this list.
+  #
+  # NOTE: A tag is limited to a single word comprised of alphanumeric characters.
+  #       Maximum 20 tags per role.
+
+dependencies:
+  - role : openjdk
+    java_version: 8
+  - role: generic-service
+    genericservice_root: "{{ keycloak_root_dir }}"
+    genericservice:
+      do_start: False
+      name: "{{ keycloak_service_name }}"
+      source_url: "{{ keycloak.source_url }}"
+      subpath: "{{ keycloak.subpath }}"
+      service_type: simple
+      start_command: bin/standalone.sh -b 0.0.0.0
+      start_command_opts: "{% if keycloak_env %}-M-Dmule.env={{ keycloak_env }}{% endif %}"
+      limitopenfiles: "{{ keycloak_limit_openfiles }}"
+      firewall_port:
+        - 8080/tcp
+      chowned_dirs:
+      log_glob: logs/*.log

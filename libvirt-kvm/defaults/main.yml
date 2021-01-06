@@ -1,0 +1,31 @@
+---
+kvm_version: "{{ kvm_default_version }}"
+
+# defaults file for libvirt-kvm
+#libvirt_networks:
+#  - client: smile
+#    vlanid: 101
+#    netif: em3
+#    ipaddr: 10.1.1.22
+#    prefix: 24
+#libvirt_pools:
+#  - name: hdd
+#    path: /var/lib/libvirt/pool/hdd
+
+libvirt_cron_backup_disabled: false
+libvirt_cron_backup_compress: false
+
+libvirt_backup_default_dir: /var/backup/libvirt
+libvirt_backup_default_retention: 3
+
+libvirt_backup_default_bandwith: 0
+
+libvirt_backup_daily_dir: "{{ libvirt_backup_default_dir }}/daily"
+libvirt_backup_daily_retention: 3
+
+libvirt_backup_weekly_dir: "{{ libvirt_backup_default_dir }}/weekly"
+libvirt_backup_weekly_retention: 2
+
+libvirt_backup_monthly_dir: "{{ libvirt_backup_default_dir }}/monthly"
+libvirt_backup_monthly_retention: 1
+

@@ -1,0 +1,19 @@
+# {{ ansible_managed }}
+
+WORKERS={{ jibri_workers  }}
+JIBRI_XMPP_PASSWORD={{ jibri_xmpp_pass }}
+JIBRI_RECORDER_PASSWORD={{ jibri_xmpp_pass }}
+XMPP_DOMAIN={{ jibri_xmpp_domain }}
+XMPP_SERVER={{ jibri_xmpp_server }}
+XMPP_AUTH_DOMAIN={{ jibri_xmpp_auth_domain }}
+XMPP_MUC_DOMAIN=conference.{{ jibri_xmpp_domain }}
+XMPP_INTERNAL_MUC_DOMAIN={{ jibri_xmpp_internal_muc }}
+XMPP_RECORDER_DOMAIN={{ jibri_xmpp_recorder_domain }}
+JIBRI_RECORDER_USER=recorder
+JIBRI_RECORDING_DIR=/config/recordings
+JIBRI_FINALIZE_RECORDING_SCRIPT_PATH=/config/finalize.sh
+JIBRI_XMPP_USER={{ jibri_xmpp_user }}
+JIBRI_BREWERY_MUC=JibriBrewery
+JIBRI_STRIP_DOMAIN_JID=conference
+JIBRI_LOGS_DIR=/config/logs
+DISPLAY=:0

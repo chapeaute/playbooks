@@ -1,0 +1,21 @@
+---
+
+# Global vars
+use_satellite_repo: false
+
+# defaults file for docker
+docker_images: []
+docker_data_dir: "{{ docker_default_data_dir }}"
+
+# Storage driver
+docker_storage_driver: overlay2
+#docker_metric_bind_interface:
+docker_http_proxy: ''
+docker_https_proxy: ''
+docker_no_proxy: ''
+# Docker log drive. Can be json-file or journald
+docker_log_driver:
+docker_log_opts:
+  max-size: 256m
+  max-file: 4
+docker_log_journald_persit: false

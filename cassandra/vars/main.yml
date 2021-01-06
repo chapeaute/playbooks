@@ -1,0 +1,15 @@
+---
+# vars file for cassandra
+cassandra_package: cassandra
+
+cassandra_default_path_home: "/var/lib/cassandra"
+cassandra_default_path_backup: "/var/backup/cassandra"
+
+cassandra_firewall_port:
+  - "{{ cassandra_port }}/tcp"
+  - "7000/tcp"
+  - "7001/tcp"
+  - "7199/tcp"
+  - "9042/tcp"
+  - "9160/tcp"
+  - "9142/tcp"

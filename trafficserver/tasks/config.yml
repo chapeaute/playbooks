@@ -1,0 +1,45 @@
+---
+
+- name: config | Change owner of install dir
+  file:
+    path: "{{ ts_install_dir }}"
+    owner: "{{ ts_user }}"
+    group: "{{ ts_group }}"
+    state: directory
+    recurse: true
+
+- name: config | link
+  file:
+    src: "{{ ts_install_dir }}{{ item.src }}"
+    dest: "{{ item.dest }}"
+    state: link
+  with_items:
+    - src: /var/log/trafficserver
+      dest: /var/log/trafficserver
+    - src: /var/trafficserver
+      dest: /var/trafficserver
+    - src: /etc/trafficserver
+      dest: /etc/trafficserver
+
+
+- name: config | Set service file
+  template:
+    src: etc/systemd/system/trafficserver.service.j2
+    dest: /usr/lib/systemd/system/trafficserver.service
+    owner: root
+    group: root
+  notify: "Systemctl daemon-reload"
+
+- name: config | Confgure trafficserver
+  template:
+    src: "etc/trafficserver/{{ item }}.j2"
+    dest: "/etc/trafficserver/{{ item }}"
+    owner: "{{ ts_user }}"
+    group: "{{ ts_group }}"
+  with_items:
+    - bg.config
+    - cache.config
+    - plugin.config
+    - remap.config
+    - records.config
+  notify: "Restart traffic server"

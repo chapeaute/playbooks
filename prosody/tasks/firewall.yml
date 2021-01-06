@@ -1,0 +1,13 @@
+---
+
+- name: Firewall | Handle ports for prosody
+  firewalld:
+    port: "{{ item }}/tcp"
+    permanent: yes
+    immediate: yes
+    state: enabled
+  with_flattened:
+    - "{{ prosody_c2s_ports }}"
+    - "{{ prosody_s2s_ports }}"
+    - "{{ prosody_http_ports }}"
+    - "{{ prosody_component_ports }}"

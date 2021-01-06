@@ -1,0 +1,14 @@
+---
+
+- src: git@git.smile.ci:adminsys/ansible/role/apache.git
+  scm: git
+  version: v1.6.11
+
+- src: git@git.smile.ci:adminsys/ansible/role/composer.git
+  scm: git
+  version: v1.0.1
+
+- src: git@git.smile.ci:adminsys/ansible/role/php.git
+  scm: git
+  version: v2.2.2
+

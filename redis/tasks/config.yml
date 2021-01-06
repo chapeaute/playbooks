@@ -1,0 +1,68 @@
+---
+- name: config | Remove save from original config file
+  replace:
+    dest: "{{ redis_config_file }}"
+    regexp: '^(save [\d]+ [\d]+)'
+    replace: '# \1'
+  notify: "Restart Redis"
+  tags:
+    - install
+    - update
+    - update_config
+
+- name: config | Adjust settings into defaults file
+  template:
+    src: default.j2
+    dest: "{{ redis_default_file }}"
+  notify: "Restart Redis"
+
+- name: config | Append include file for local settings into {{ redis_config_file }}
+  lineinfile:
+    line: "include {{ redis_extra_config_file }}"
+    state: present
+    dest: "{{ redis_config_file }}"
+  notify: "Restart Redis"
+  tags:
+    - install
+    - update
+    - update_config
+
+- name: config | Append include file for custom settings into {{ redis_config_file }}
+  lineinfile:
+    line: "include {{ redis_custom_config_file}}"
+    state: present
+    dest: "{{ redis_config_file }}"
+  notify: "Restart Redis"
+  tags:
+    - install
+    - update
+    - update_config
+
+- name: config | Adjust settings into config file
+  template:
+    src:   etc/redis_ansible.conf.j2
+    dest:  "{{ redis_extra_config_file }}"
+    owner: redis
+    group: root
+    mode:  0640
+  notify: "Restart Redis"
+
+- name: config | Deploy empty custom configuration file if it does not exist
+  copy:
+    content: ""
+    dest:    "{{ redis_custom_config_file }}"
+    owner:   redis
+    group:   root
+    mode:    0640
+    force:   no
+
+- name: config | Deploy redis sentinel auth file
+  template:
+    src: etc/redis-auth.conf
+    dest: "{{ redis_sentinel_auth_file }}"
+    owner: root
+    group: root
+    mode:  0640
+  when:
+    - redis_sentinel_auth_file != ""
+

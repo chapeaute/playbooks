@@ -1,0 +1,19 @@
+---
+# Check if macro exist
+- name: define_macro | Check if ${{ mcr_name }}$ macro of object {{ mcr_template_name }} is already declare on centreon server {{ centreon_server }}
+  shell: '{{ centreon_clapi_bin }} -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o {{ mcr_template_type }} -a getmacro -v "{{ mcr_template_name }}" | grep "^{{ mcr_name }};{{ mcr_value }};" || :'
+  delegate_to: "{{ centreon_server }}"
+  delegate_facts: True
+  changed_when: false
+  run_once: true
+  register: rsc_properties
+
+# Define resource if not exist or change macro name value if different
+- name: define_macro | Declare resource ${{ mcr_name }}$ on {{ centreon_server }}
+  command: '{{ centreon_clapi_bin }} -u {{ centreon_clapi_user }} -p {{ centreon_clapi_pass }} -o {{ mcr_template_type }} -a setmacro -v "{{ mcr_template_name }};{{ mcr_name }};{{ mcr_value }};0;"'
+  notify:
+    - Reload configuration
+  delegate_to: "{{ centreon_server }}"
+  delegate_facts: True
+  run_once: true
+  when: rsc_properties.stdout|length == 0

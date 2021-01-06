@@ -1,0 +1,33 @@
+#!/bin/bash
+
+rc=0
+timeout=10
+
+# Check under replicated partitions
+output_under_replica=$(timeout 10 kafka-topics --under-replicated-partitions --describe --zookeeper localhost:2181 | wc -l)
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+	echo "CRITICAL: Can't connect to kafka !"
+	exit 2
+fi
+if [ $output_under_replica -ne 0 ]; then
+	output="WARNING: Somes partitions are not fully replicated !"
+	rc=1
+else 
+	output="OK: All partitions are replicated"
+fi
+
+# Check no leader partition
+output_no_leader=$(timeout 10 kafka-topics --unavailable-partitions --describe --zookeeper localhost:2181 | wc -l)
+if [ ${PIPESTATUS[0]} -ne 0 ]; then
+	echo "CRITICAL: Can't connect to kafka !"
+	exit 2
+fi
+if [ $output_no_leader -ne 0 ]; then
+	output="$output, WARNING: Somes partitions are no available leader !"
+	rc=2
+else 
+	output="$output, OK: All partitions have leader"
+fi
+
+echo $output
+exit $rc

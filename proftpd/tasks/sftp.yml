@@ -1,0 +1,16 @@
+---
+
+- name: SFTP | Create /etc/proftpd/ssh_host_keys/ directory
+  file:
+    path: /etc/proftpd/ssh_host_keys/
+    state: directory
+
+- name: SFTP | Generate new SSH keys (rsa)
+  shell: ssh-keygen -b 2048 -t rsa -f /etc/proftpd/ssh_host_keys/rsa -N ""
+  args:
+    creates: /etc/proftpd/ssh_host_keys/rsa
+
+- name: SFTP | Generate new SSH keys (dsa)
+  shell: ssh-keygen -b 1024 -t dsa -f /etc/proftpd/ssh_host_keys/dsa -N ""
+  args:
+    creates: /etc/proftpd/ssh_host_keys/dsa

@@ -1,0 +1,109 @@
+---
+use_satellite_repo: False
+
+# Firewall settings
+firewall_setup: true
+firewall_type: "firewalld"
+manage_firewalld: true
+
+# defaults file for elasticsearch
+es_version: "7.9"
+es_major_version: "{{ es_version.split('.')[0] }}"
+es_node_name: "{{ ansible_fqdn }}"
+es_cluster_name: default
+es_java_version: 11
+es_minimun_master_nodes: 1
+es_network_host: ["0.0.0.0"]
+es_hosts: ["{{ es_node_name  }}"]
+es_master_hosts: "{{ es_hosts }}"
+es_data_hosts: "{{ es_hosts }}"
+es_ingest_hosts: "{{ es_master_hosts + es_data_hosts }}"
+es_port: 9200
+
+# Node type
+es_master_node: "{{ (inventory_hostname in es_master_hosts) | ternary(True, False) }}"
+es_data_node: "{{ (inventory_hostname in es_data_hosts) | ternary(True, False) }}"
+es_ingest_node: "{{ (inventory_hostname in es_ingest_hosts) | ternary(True, False) }}"
+_es_node_roles:
+  - "{{ (es_master_node) | ternary('master','') }}"
+  - "{{ (es_data_node) | ternary('data','') }}"
+  - "{{ (es_ingest_node) | ternary('ingest','') }}"
+  - "remote_cluster_client"
+  - "ml"
+es_node_roles: "{{ _es_node_roles | select() | list }}"
+
+# Elasticsearch tunning options
+es_shard_count: "{{ es_data_hosts | length }}"
+es_replica_count: "{% if es_data_hosts | length == 1 %}0{% else %}1{% endif %}"
+es_heap_size_prct: 0.5
+es_heap_size: "{{ (ansible_memtotal_mb*es_heap_size_prct)|int }}m"
+es_java_opts:
+es_vm_max_map_count: 262144
+es_max_openfiles: 65536
+es_index_refresh_interval: 30s
+es_index_unassigned_node_left_delayed_timeout: 10m
+es_extra_config: {}
+
+# Directory location
+es_path_data: /var/lib/elasticsearch
+es_path_logs: /var/log/elasticsearch
+es_path_repo: /var/backup/elasticsearch-snapshot
+es_backup_dir: /var/backup/elasticsearch
+es_force_remove_backup_dir: False
+
+# Elaticsearch enable/disable some options
+es_script_inline: false
+es_script_indexed: false
+es_script_engine_groovy_inline_aggs: off
+
+# Elasticsearch scripts
+es_install_curator: true
+es_install_admin_scripts: true
+es_install_prompt_scripts: true
+es_install_elasticdump: true
+
+
+# Tuning
+es_ping_interval: 10s
+es_ping_timeout: 60s
+es_ping_retries: 3
+es_ignore_non_master_pings: true
+
+# XPACK
+es_xpack_enabled: false
+es_xpack_security_enabled: false
+es_xpack_monitoring_enabled: true
+es_xpack_graph_enabled: false
+es_xpack_ml_enabled: false
+es_xpack_monitoring_history_duration: 7d
+
+es_plugins: {}
+# Plugin for Elasticsearch 2.x
+# es_plugins:
+#   kopf:
+#     name: "lmenezes/elasticsearch-kopf"
+
+# Plugin for Elasticsearch 5.x
+# es_plugins:
+#   kopf:
+#     url: http://gitlab.smile.ci/adminsys/elasticsearch-kopf.git
+# es_plugins_path: /var/www/elasticsearch
+
+# ILM management
+es_ilm:
+  filebeat:
+    hot_age: 7d
+    hot_size: 50gb
+    cold_age: 3d
+    delete_age: 90d
+  logstash:
+    hot_age: 7h
+    hot_size: 2gb
+    cold_age: 3h
+    delete_age: 2d
+
+# Indice purge
+es_indice_purge: {}
+# es_indice_purge:
+#   - prefix: logstash
+#     age: 180

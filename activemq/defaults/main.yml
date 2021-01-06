@@ -1,0 +1,23 @@
+---
+# defaults file for activemq
+activemq_service_name: activemq
+activemq_version: 5.9.0
+activemq_log_dir: /var/log/activemq
+activemq:
+  source_url: "https://archive.apache.org/dist/activemq/apache-activemq/{{ activemq_version }}/apache-activemq-{{ activemq_version }}-bin.tar.gz"
+  subpath: apache-activemq-{{ activemq_version }}
+
+activemq_root_dir: /var/lib
+activemq_install_dir: "{{ activemq_root_dir }}/{{ activemq_service_name }}"
+
+# Activmq webinterface access
+activemq_admin_login: "admin"
+activemq_admin_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-activemq_admin_password chars=ascii_letters,digits') }}"
+
+# JAVA Memory percentage usage
+activemq_memory_size_prct: 0.6
+activemq_memory_size: "{{ (ansible_memtotal_mb*activemq_memory_size_prct)|int }}M"
+
+# Monitoring
+activmq_jmx_enabled: true
+activmq_jmx_port: 1099

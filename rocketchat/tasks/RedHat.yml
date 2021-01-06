@@ -1,0 +1,6 @@
+---
+
+- name: RedHat | Install epel release
+  package:
+    name: epel-release
+  when: not use_satellite_repo

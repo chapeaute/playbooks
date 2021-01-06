@@ -1,0 +1,28 @@
+---
+- name: grafana | Configure data source
+  grafana_datasource:
+    name:             "Prometheus"
+    grafana_url:      "http://{{ grafana_import_hostname }}/grafana"
+    grafana_user:     "{{ ogo_grafana_user }}"
+    grafana_password: "{{ ogo_grafana_pass }}"
+    ds_type:          "prometheus"
+    url:              "http://prometheus:9090/prometheus"
+  changed_when:       False
+
+- name: grafana | Create dashboard directory
+  file:
+    path:    "{{ ogo_grafana_dashboard_dir }}"
+    owner:   root
+    group:   root
+    mode:    0750
+    state:   directory
+
+# Ensure dashboard can be imported by settings in json file:
+#   - ".id": null
+#   - ".[].datasource": "Prometheus" (can already be set)
+#   - ".refresh": "[[ grafana_db_refresh_interval ]]"
+#   - ".time.from": "now-[[ grafana_db_time_period ]]"
+- include: "grafana_prov.yml dashboard_file={{ item }}"
+  with_fileglob:
+    - ../templates/etc/docker-swarm/configs/grafana-dashboards/*.json.j2
+

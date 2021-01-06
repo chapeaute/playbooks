@@ -1,0 +1,34 @@
+---
+# tasks file for basic-firewalld
+firewalld_enable: true
+firewalld_rules_add: []
+# firewalld_rules_add:
+#   - zone: public
+#     ports:
+#       - 161/udp
+#       - 9102/tcp
+#   - zone: external
+#     services:
+#       - http
+#       - https
+firewalld_rules_remove: []
+# firewalld_rule_remove:
+#   - zone: public
+#     services:
+#       - dhcpv6-client
+#   - zone: external
+#     services:
+#       - dhcpv6-client
+#     port:
+#       - 161/udp
+#       - 9102/tcp
+firewalld_interfaces: []
+# firewalld_interfaces:
+#   - zone: public
+#     interfaces:
+#      - eth1
+#     state: present
+#   - zone: external
+#     interfaces:
+#      - eth0
+#     state: absent

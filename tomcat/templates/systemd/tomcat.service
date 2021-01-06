@@ -1,0 +1,15 @@
+[Unit]
+Description=Tomcat Instance
+
+[Service]
+Type=forking
+Environment=CATALINA_HOME={{tomcat_root_dir}}
+Environment=CATALINA_BASE={{tomcat_root_dir}}
+ExecStart={{tomcat_root_dir}}/bin/startup.sh
+ExecStop={{tomcat_root_dir}}/bin/shutdown.sh
+User={{tomcat_user}}
+Group={{tomcat_group}}
+LimitNOFILE={{ tomcat_limit_open_files }}
+
+[Install]
+WantedBy=multi-user.target

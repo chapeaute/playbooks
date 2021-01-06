@@ -1,0 +1,13 @@
+---
+- name: "mount_point | Set filesystem {{ path }} mount options {{ opts }}"
+  mount:
+    path:   "{{ path }}"
+    src:    "{{ dev }}"
+    fstype: "{{ type }}"
+    opts:   "{{ opts }}"
+    state:  present
+  register: update_fs
+
+- name:  "mount_point | Remount filesystem {{ path }}"
+  command: "mount -o remount {{ path }}"
+  when: update_fs.changed

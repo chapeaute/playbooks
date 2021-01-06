@@ -1,0 +1,75 @@
+--- 
+
+# Setting up firewall rules 
+- name: Firewalld | Setting up firewall rules
+  firewalld:
+    port: "{{item}}"
+    permanent: true
+    state: enabled
+    immediate: yes
+  with_items:
+    - "11211/tcp"
+    - "9071/tcp"
+
+
+# Installing ZIMBRA-PROXY Service 
+
+- name: keystrokes-proxy | Uploading keystroke file for community version on PROXY
+  tags: keystroke
+  template: 
+    src: community-keystrokes-proxy.j2
+    dest: "{{ zimbra_tmp_dir }}/keystrokes-proxy"
+    mode: 0640
+  when: "zimbra_license_file is not defined"
+
+
+- name: zimbra-proxy.conf | Uploading installer configuration file | PROXY
+  template: 
+    src: zimbra-proxy.conf.j2
+    dest: "{{ zimbra_tmp_dir }}/zimbra-proxy.conf"
+    owner: root
+    group: root
+    mode: 0640
+  when: "zimbra_license_file is not defined"
+
+
+- name: keystrokes-proxy | Installing Zimbra OSE | PROXY
+  shell: "./install.sh -s < {{ zimbra_tmp_dir }}/keystrokes-proxy"
+  args:
+    chdir: "{{ zimbra_tmp_dir }}/{{ zimbra_package }}/"
+
+
+- name: zimbra-proxy.conf | Configuring Zimbra OSE's services for use | PROXY
+  command: "./zmsetup.pl -c {{ zimbra_tmp_dir }}/zimbra-proxy.conf"
+  args:
+    chdir: /opt/zimbra/libexec/
+
+
+- name: Restart Zimbra services
+  shell: su - zimbra -c "zmcontrol restart && echo Running || echo failed"
+  register: zmcontrol_status
+
+
+- name: zmconfigd.pid | Delete zmconfigd_file
+  file:
+    path: "{{ zmconfigd_file }}"
+    state: absent
+  when: "'failed' in zmcontrol_status.stdout"
+
+
+- name: Restart Zimbra services
+  shell: su - zimbra -c 'zmcontrol restart'
+
+
+- name: zimbra-proxy | Removing Zimbra configuration file | PROXY
+  command: "rm -f {{ zimbra_tmp_dir }}/zimbra-proxy.conf"
+  args: 
+    removes: "{{ zimbra_tmp_dir }}/zimbra-proxy.conf"
+
+
+- name: Configuring Proxy service
+  command: ./zmproxyconfig -e -w -C -H "{{ zimbra_server }}"
+  args:
+    chdir: /opt/zimbra/libexec/
+  become: yes
+  become_user: zimbra

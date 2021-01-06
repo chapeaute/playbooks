@@ -1,0 +1,36 @@
+#!/bin/bash
+
+SERVICE_NAME="nodejs"
+APP_DIR="/var/lib/nodejs/apps"
+APP_CONFIG_FILES=( config.env .env )
+APP_PORT="HTTP_PORT"
+
+nodejs_dir=$(systemctl show $SERVICE_NAME | grep Environment= | sed -e 's/.*PM2_HOME=\(\S\+\).*/\1/g')
+
+[[ -n $nodejs_dir ]] && APP_DIR="$nodejs_dir/apps"
+
+if [ ! -d "$APP_DIR" ]; then
+    echo "Could find Node.js working directory. Or no sufficient permissions on $APP_DIR."
+    exit 1
+fi
+
+for app in $(find $APP_DIR/* -maxdepth 0 -type d)
+do
+    APP_NAME=$(basename $app)
+
+    for CONF_FILE in "${APP_CONFIG_FILES[@]}"
+    do
+      nodejs_prop_file="${APP_DIR}/${APP_NAME}/${CONF_FILE}"
+      if [ -f $nodejs_prop_file ]; then
+          port=$(egrep "^${APP_PORT}=" $nodejs_prop_file | cut -d= -f2 | tr -d '\r')
+          if [ -z $port ]; then
+            >&2 echo "Port not found for application $APP_NAME"
+          else
+            echo "$APP_NAME $port"
+          fi
+      else
+          >&2 echo "No $nodejs_prop_file properties file found for $APP_NAME"
+      fi
+    done
+
+done

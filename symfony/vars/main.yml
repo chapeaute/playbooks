@@ -1,0 +1,13 @@
+---
+# vars file for symfony
+symfony_default_php_extensions:
+  - curl
+  - opcache
+  - pdo
+  - gd
+  - mysql
+  - mcrypt
+  - xml
+  - redis
+  - mbstring
+  - zip

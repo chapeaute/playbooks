@@ -1,0 +1,92 @@
+#!/bin/bash
+
+USER_FILE="~/.my.cnf"
+MYSQL_CMD="mysql --defaults-extra-file=$USER_FILE -NB -e"
+DB_NAME=""
+
+confirm=0
+rc=0
+
+function syntax() {
+    cat <<EOF
+Script to create new database application
+
+Usage: ${0##*/} [-h|-d <db_name>][-y]
+    -h                 Display this message
+    -y                 Force remove without confirmation
+    -d <db_name>       Database name
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Abording..."
+    exit 1
+fi
+
+while getopts "hd:y" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        d)
+            DB_NAME="${OPTARG}"
+            ;;
+        y)
+            confirm=1
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+
+if [[ -z $DB_NAME ]]; then
+    syntax
+    exit 1
+fi
+
+if [[ ! `command -v mysql` ]]; then
+    echo "Client \"mysql\" not found. Try to install it with :
+    \"apt-get install mysql-client\" on Debian system
+    \"yum install MariaDB-client\" on CentOS"
+    exit 1
+fi
+
+if [ "$DB_NAME" == "mysql" -o "$DB_NAME" == "information_schema" -o "$DB_NAME" == "performance_schema" ]; then
+    echo "'$DB_NAME' can't be deleted"
+    exit 1
+fi
+
+$MYSQL_CMD "SHOW DATABASES" | grep -q "^${DB_NAME}$" 
+
+if [ "$?" -eq 0 ]; then
+    if [ $confirm -ne 1 ]; then
+        read -p "Are you sure to delete database $DB_NAME and all its data (yes/no) ? " validate
+        case $validate in
+          y|yes)
+              confirm=1
+          ;;
+          n|no)
+              echo "Abording..."
+              exit 0
+          ;;
+        esac
+    fi
+
+    echo -n "Deleting database '$DB_NAME'. "
+    $MYSQL_CMD "DROP DATABASE \`$DB_NAME\`"
+    rc=$?
+    
+    [[ $eq -eq 0 ]] && echo "done" || echo "failed"
+else
+    echo "Database '$DB_NAME' doesn't exist !"
+    exit 1
+fi
+
+exit $rc
+

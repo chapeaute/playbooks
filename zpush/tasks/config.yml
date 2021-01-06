@@ -1,0 +1,42 @@
+---
+
+
+- name: Install | Create zpush folders
+  file:
+    path:  "{{ item }}"
+    state: directory
+    mode: 0755
+    owner: apache
+    group: apache
+  with_items:
+    - "{{zpush_log_dir}}"
+    - "{{zpush_state_dir}}"
+
+- name: Install | Download zpush and backend
+  get_url:
+    url: "{{ item }}"
+    dest: "{{zpush_tmp_dir}}"
+    owner: apache
+    group: apache
+  with_items:
+    - "{{zpush_download_url}}"
+    - "{{zpush_backend_download_url}}"
+
+- name: Install | Unarchive zpush and backend
+  unarchive:
+    src: "{{zpush_tmp_dir}}/{{ item }}"
+    dest: "{{zpush_tmp_dir}}"
+    remote_src: yes
+    owner: apache
+    group: apache
+  with_items:
+    - "{{zpush_backend_archive_name}}"
+    - "{{zpush_archive_name}}"
+
+- name: Install | Copy zpush dir
+  command:  cp -rf "/tmp/{{ item.src }}" "{{zpush_html_dir}}/{{ item.dest | default('')}}"
+  args:
+    creates: "{{zpush_html_dir}}/{{ item.dest | default('')}}"
+  with_items:
+    - { src: "{{zpush_dir}}" }
+    - { src: "{{zpush_backend_dir}}", dest: "backend/{{zpush_bakend}}" }

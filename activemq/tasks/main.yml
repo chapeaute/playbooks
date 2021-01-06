@@ -1,0 +1,11 @@
+---
+# tasks file for activemq
+
+- include: config.yml
+  tags: config
+
+- name: main | start activemq
+  service:
+    name: activemq
+    state: started
+    enabled: yes

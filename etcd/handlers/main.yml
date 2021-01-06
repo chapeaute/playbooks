@@ -1,0 +1,6 @@
+---
+# handlers file for etcd
+- name: Restart Etcd
+  service:
+    name:  etcd
+    state: restarted

@@ -1,0 +1,14 @@
+---
+
+- name: install_from_package | Install python dependencies
+  package:
+    name: ['python2-psycogreen']
+    state: present
+
+- name: install_from_package | Install odoo
+  tags: install
+  package:
+    name: odoo
+    state: present
+  notify:
+   - Reload systemd

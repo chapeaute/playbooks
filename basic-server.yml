@@ -1,0 +1,96 @@
+---
+- hosts: all
+  roles:
+    - role: basic-server
+      root_password: $6$KMIRRAAT6LxZR$vhtssoKovLuKCsxjIJJJ2pi1/.JeVWClFJcbAbhVCpn9v8IN.BgsC.9kAc3TNjFsKeI6QHZcZS7171fyey0760
+      extra_packages:
+        - epel-release
+      manage_firewalld: true
+      rootpromptcolor: red
+      userpromptcolor: green
+      copy_admin_scripts: true
+      ssh_enable_passwd_auth: "no"
+      ssh_enable_root_login: "yes"
+      ssh_use_dns: "no"
+    - role: basic-user
+      tags: user
+      users_groups:
+        - name: exploit
+      sudoers:
+        exploit:
+          state: present
+          lines:
+            - "%exploit ALL=(ALL) NOPASSWD: ALL"
+        default:
+          state: present
+          lines:
+            - 'Defaults    env_keep += "SSH_AUTH_SOCK"'
+      users:
+        - login: hekou
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDMKI3QGYeCGWP6xVS6dVr4ORl/nfitV3UraAC1+NNZ5I5gEufxvtgniaw6Wt2fJ1XV6sUGhYC7FYq8gU2W8y0J11/zyhdHd3iHf8WarjtQ2je4LMDchzIadGz3SWdMML8uW3WeVurIwSYfccWjFMN9InxUtirI1xhYNjXjemnFbPrXFCROeyq/rn/ohJZBfkoezZHlECBSdH1mcQ7rKKb8R6Q8cQuuRI5y5IQ6K98Z1+RMhNQ6Y1Xk88AL9JBKvNaa7xO+xW50tqTqAuNonvGfSITo7nJ6vxHFkqEtzsXmYKFYbDg7TDvdWz6ZXCV/a+0cAXoKFYkvUg+g4vFiTDZb hermann.kouassi@smile.ci
+        - login: jekas
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCxFFp+2zNSVEHV62bMrs8MUL0KjBphcPubHc/+XMBUZSpRVr2VkJhlwkrOG4KHzbo77VmJWftx2IYbBZ7FrXejWpPQZmas/SlVCGjahrj3qxvYAwSvTqJfRxF1klVCD/qXL35cc4qXPdnPb4iTOOQfMiCm6yTkZdZvMbpCUFtXbQg9hS240hXnY5YHg6Zt6AAhjqmxtjFLsvmFi/VCkZ94zTrk4lHYU8A1WBtjkE5txbKyFkQiAVwCc4ZuzXiOOWPrtbtCnYSVvWm74t9Lr1IX6GDpFEDNDtvdOrRkDUFHbGTmCttFiWkRh7aeb6k3yCr1WvoCM6M6g5ifxU8hFtpwhsRGAzM7jOvcn7yWEjBK+SwnWNVwOHOxdcjwR2WI1GMQF6aKvzFKRI2nXq2SaIJvdNStIb4+Fyodgu7gR5s1NqIqmns0ri0grumMmWMwjMXEI4g32e/l8izqUAkrf4IQPuIwAuHTrhLGn3VIG0IgMQm0lzxVYSOR6AwgSMkeuQx6YAYsez2Qd1V600k2hAtBRKQDx/HYudORoGsvKyomo7YjvRlChu4mofXSdflRfZgPZac1XMBqDV02WVOvf8cGDPWjNQSgg13yhTWeGy0lBdO8qfB6Cu8A5b+GVlWiK+edg5HdloE2mr46bFwWetiW6yxEDGEHBUD5bIT5DwWxWQ== jean.kassi@smile.ci
+        - login: juhou
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDo9aeWL5bfYmLLwRaYVb1ZTmT+W5RAGpc2UQ4Ro4KM3CMy37XPZH05AN9seIKZ3IOOwQy3QQuuqcnWjRH3EUDG977fBWKH6ElSCGuHx6SKkHmjioRFCznO3WOKWOJbLmhS8235ismC3K6XNm70LVrEKHXboaAcx9xGpyHHnGgeMrleI0svBJPp0ByZhZ3YMrNJGtximfgPsWTxdIShPLMO2YlPxkw4diinX/b72mA8LkFJhVQwaCsK+aTK/+tsfzsPPxm+yw1rFoyw9EGUQMbIvFhrRIzB9+neiAszgOxwfxw6r79GqThfpXkwuVmoEx/Vv+dczsZooJJPPyiurKVH7RFLJJxI5wb5+8GYyIonfeOSoRiaxwQqgXVopcHVvLpa43RLEv71nAeqdEuliU+X1ZX1Bu9lx/swmtq5QBipiE8qhss13wdeyfrLyTGmi1ZcF9MT0raWmObqsXCl2mWEJ31aAqGUpKlg+AumXxdonIvr55HHsZfBLbNdQPXukvZao+EyFkZMMIhT3GLNnFT9OGvVtbMakRcWm6teCQy3zxlhplNuMWFLTc1nEytp/aKXaPNvtFgeR0RaNHOqT+vvwuetKtagXnRUjqBzJV9u5Ta3bdljuz6bzitV8ovChoC47uKsGo6Gm8DEhFwpmXO5U2/TtCktLyaRXRgH68PpCw== jules.houantonon@smile.ci
+        - login: rogam
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC3o/24cSJnOUrZ1bI3yuLFsbOnj1lgyx6Nfq6X4/9SJ4+nq371JGYF/2o8DwHkhhx2XntewFgNZ/5r3Vl5lwL3NRnVQSh+oaeUxCPDKO8hKLZ5GjL2XJkfk0wU5FS/P49CAjgxLqbGaX6mRznLX9OLVY6XdAJvLrZ9fYJdvx+TRr2SXBesyimLb1WbtleAzerVzZgQIg4WxACD4/Ya8hD6GSEQtzl7B/O2LQPfOpU9fFxS2+QcPMbTdrlfjdl0gkp0NkkjMghDS2L6mj03L2d94Rzn91lVKutefZFofIuqr7agKSNrChzoIuGJdyVt9WDvS0BJFkXIjAEpKHTfInicsKy1kMdNFj2dFU8cMt12MdCpuF80E666+DjATJbm79GSJ5LuN4eZOWppbOz5PB8HQwY8m7+m7AMgjwq6odz8svicIEXhdmpjfrmQpWg4JONa5Ue2FCB/XIJeuiLu5I602w1o+whbrVVAIH9psbfm1yw3LXKyq3Cdd0qbfrj3ovGes7Hblm57p01wmGC7U+WjcM1mEV26ndT8gcNi73iimvWA63xgXrCY8yFIjh/Xxh7Seijoi+E0PSbD4dn+asXVCp/PKZW6MmLtRKIJwUzwwTnZYCOMK9XgIe2BGvnGSmTZP5+o7zLnHHuAvh4se6/O1tyf/HWsk3Z4fv4bjopeDw== rodrigue.gami@smile.ci
+        - login: segir
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAAEAQC6u0lKa1y1bvKIjk4EbkehOutmc9SB/D20fYxPnhH92Md9pPHar/qZFWgK2+h8ssH9JbyLM1Uwm7dvD/3Qt/FphcTDF6fsWFpMTvo7KPK785y0SXacYRumnI5/sqT0u8+3qf/HhU3junigGRcxyL/1wBCYBaTTVt7FRebQ0f7CkoV82i4g8vFX3mmZFfRi8GzwRZjqd2miEiRJJ6YkIv0D3PPGJ9fFX5XOXfzV/+VupOsyoOYbkAVRz1AELlx5JPZ7I61HgJYoVKOGTlGwMmEjYlEKAktxmhl4EhyxZpjPt9ucV5wChP1Ct6SNzCVE8Pv7lgzx8oCXrsE8XixqAdrXhypeCYlfTFfP1Fo7mfAdDvDnxO8L6QJ2qQowHxIgN36MC2jMR+C+UKRXd3U8LbMp1whj4R9Sm3jdF6fH2UdJ+u1qgdU1xqEImKYeqbIRNk0F5N1mrLrpMwx4OiDJ8n4mLuRo+7qKQ3LkpHTSL2h4EcpUEtXbrSRyudvJA5zz2YxMb3mawpUjC2nApM3o84w7d1+hPwINwW78o6a6iHEMxYrUIN4IFnI1QcrjGcVYXHFVqG8HkRiNdq+QQbnoC+AcyAnpiS4ASs8FjmyJuesa1d9I9zrq7k9jIO+2H97WutFyEd9e6McvgpHWZOF6KXdUOibukytz6OQIXHMv+IhqddttKpbJuCIdFLu3jA4GrPbw+ErVuXNksWtAe3FdDc8eAHa0A9MWLk48wF2wFzC8Y1MOjKOUQzt8z6nWbHCVowS/WppUq7IUaftZ2ICFC4z44KImSuaDi3GjuVSJiRitEJ/Z9w6En/ox/KwPJbWXfdigPJw+kRCyyBuhn77SHGtxQ46Djs2LHG+5TrJVxHEGY4i+QV0gv0OOpxfWQCAICIoxMmkWttip2BgPcCtKAb4xBrtqnt3tLxwoxGJhjJEAOKlANVq2XlW2Dz4GPl6gzZa3OoAxR+oXLOENfPkBfOnKlbO57WORUYzuoN9TSV7jGFZlBQdsk0h7Q1NvAtb2O/IFh3jjTIdTgz86UnhvWELiOiECP8CziFrrTwszIrX6xEYsEfcSUwKGOW5Y5vGKnIK8bx21gjaXIb8RMVcIVwG2/swBmGnI7xb3TgBl5BGw4u5KhqcjIN/LYn4nw1yykF1jyhsHnntfungXZMEZgsfDmgxIn90mRXfRWzOLPQLWtIZ6E07sMjAH4mi6/ci0r1l+eqk1Rgg2GN3Y4/Mgx36Nbm16RUL6C6YXhXoTb/P4cVjh874aBe+nNSOt+yPP8X2XKi6kDAzyaSLaMsbovYR7M6J1xWFgMbpnMd/HyEuqUNuMR2jbgUMEmpn5Sy1PTXzYHqG9A5TjkHA6RgzNQIRZ sebastien.giraud@smile.fr
+        - login: stlig
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDJwOZni4ctiIvy+IdNePQCtUwZIe9oqKIOoH6WaSqPWLhtSxgOAp7z8V3HcPYxlK6GzDo/WTtYgT8iXxnLWSiYY0yxY3T/3CUg4ue7qG6TUNE04HKqQGfYO7NWtBmfEKqDXSNbQNojCKdy7qju2Cj79e4sHYicw9As4cdW7U90yPpslu6RJyfV4hQf5gZGWQSWY01p9lHIQuO45ESt3iIRkdgarhGNQzk3XD3VNzXvDn/ZEuHSLJwNQAQdXEWasEF1FEyN+MOOgFueQuK6S5bcp65GSO0j8eVVfR3zK2Gv0OE7B2nTq9fQ/AjlyLVWi5Vj5Ibz8dCcutWlbIsfiLKJ stephen.ligue@smile.ci
+        - login: nakon
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC9Wvu5YevqGjUgSnaHI7V4+UdAqdsET1zb4+S4CCZ8L12+fL6g3S6Jd3cN0y+Xjhg+ZyQWskhgZYKWz6QHyC8Qw4MaVAriv97g5zDWy2r5RSHMUlxoj3QtHNiUemKiZ2QYwJlTtoqxJU6luKh3cZmAYmXHm7857PzgnipRpplDsZjSAkloirFetz23Ts5EH1NnwRBauY2MWUttVeHvk0gJZ5w5VE13VsTUB6zI1n7MAdL30F/N11udfUD2HOBi09oX74xFNYyEeGiGj/s5CxEvC18slbNJOmJi5REjEfVtYDD00hDvx/CpIB8kfPpzmYkE3DfbidHaubwj2H0oYQG9 narcisse.konan@smile.ci
+        - login: juboz
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDG23Y5607d1MOmQ1axRR8u42KVCaRlDdpMUbGxfLONSZQzuDOBVOzSa7OL0mQcdJsa5j2Nbri35ARzVk0bOpH9havsxB+3l8ozuCzZcYWoG+5xTB6vGThdPpBmpkVNa1eM4KG7KZWPEOruAE9PrxJP+omqGnhlLP8AaPkDm6Mj3J+gtgz906mGZJ10tRqowap+9EOsduzkccYtW793D6feGRWYH+LCQrccTlbIH+6bP7ICI7R3SSMNMVPaWTIhSM9SPSUXb4m/iaPkvn8OcaWvu/t0R2mculZplRbHbHo43kI765VsfENhGJyZOcx+94g77u2MM+K4kCUvTuO0gWbQ6NLPqIvtF+IvKoHZWQyepX+i967EkW2Xnonr9w9cna2KMVzqDvZ7cK0Uiv92kh7jIeB7RNWsig78W0XG9OfBADdLozRcin50ljf0ysBlRWdTjs6DLahfMGZnI6w+1NopigG/QLfgeGRVA1a9PQky4UQ7RJI58SOmXTLP9T0xFRaRQkAroSOaCX6z9pbrBO9tIZp3WhGeZ7ed4SvxUdQLP1cfEO7tyCNPQu2QSZ0bZfSONzKFbmVsfMekmAzyVbMQcCyVxlricY+ibOn93w1Ps/vuN1G86vlulbro1tWbF9jm+Cm2ar6iiT/jEMe/npfbozOQ/Up2kkP3ddJ2Qo4qQw== junior.bozambie@smile.ci
+        - login: tagla
+          groups: exploit
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDDqHKkvSUqqFSSdytL0zuaOcQ4FGy0CCxE0F1AUs2/dcETUKweCv/U0Net90Lv3ZPsxx+yMji4A2uWqbS1yNpmSnl5OEcSc0YjGi3fDb6XVy/hpgcAr4Gkk7WkrYI7pAcBWDDu0GBON8OhbrMikMWQczKwgO5otSzPZRN73DxUUihv7V+NptDqcaIUnym8fzsgWSZu7xLt/2OE19NQGIl9Lmfx3XGIzTrLXHJzs057XSnvPToXU7Fc+QcdHv9X4o0bjs2+0/Ro7Zo5lsfKOfCzZXrnDjK1mTjLabmGjhmo4gG10IHMFFWsV3NfO9JrqkYONAMQMt3G3H2Kz+A6+8fT tagla@prudence-HP
+        - login: frabo
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDG4akGhG9L6byx9ukMvH0ZnwQIaHYTGVSrXfwACui/HbcbA3pSaLFIxHfUbZS2X4XFSzKHbCeOaEVKD3GO9fM198+ilQdxBjnVkbkcIZvZkqdbim1tMuHDA5LTtMgFJV5M30UULh+/fYhV0EDofzrr3QfxHQ2vA2NTmgFg/LtfK+b6U7aGxrpDiwXr2jkZVM0kOa7C+qEBcFpCwDdqVUHYacxkippKpFUJ8ePbwhoGd+W0OpEkKLAfMzveIpAzaT9+ygArDcmGMbwjZw6Beq/cOeJLwbYdzzPR0LBdJHFQn42cZmkLPd3XB+SwMazoviTPb4gFVHKjvwQWGe1/sh8t franck.aboa@smile.ci
+        - login: chapp
+          groups: exploit
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQChIX1+gUiKgMU7TW3ICN+mZfPodGY0vj/y8RvpLh/DAtaaIZCrqhpX6z3riG/zfWcByq4YTGHjEW4HnjV8f7jH62+sV6IxwwAQvAOqTDBpKOMx/akoF+ca8dnUB5iZVdTi3UWuJO6wO/0UNm0uKcEddCcclS0GkIRaEskxHGmn5G6Q1FRbOoRLLE0a1HgPvkrMmv3V5HuTh1BZaXmK60M6RRLO3/llBJ5h5GFS4xC7ei/jeSGI93AQ/C8oVEsNdZ0ypUc1UkAE8+E7QFVHLj24OHqgb3Ct188QtLHuz1m16zOqHS2QFYHbdwFFtq7jVnOVjAPQ5K9gncKCMNokfAfn christian.apprakou@smile.ci
+        - login: herbi
+          groups: exploit
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDhfZByBuNn/i/NhL0zmVvIvj04aPoJEXsrf/iyQos+kRiGNGnk3kQngtcXA5Tsq9+41LH1+bBwbZoyO+dZuTdkg7UJG9/dz7j9Fo4/FDhqePOVdykobqejj/nmspmR0dIftWSiwpVDbcD6nmiG1rGgywhf8+/asE0flxmgi0NPBgU8XujZoM7cw2l1ojF538v3b7Dbe+RqflwMPSvd/3x6lk/AsCse47th5ZHa48CxoCmk/X3ZsfRNjLliA95fmG+ERhn9eLKIt1bLgvLDFQyCe6qjpuU6SJAT9gDO5X5AahOF+LxOYwxOlaV79F1O1+hJ4vAoLeqqKeT+9PN7+UtP hermann.bile@smile.ci
+
+      
+
+        - login: kepit
+          groups: exploit 
+          state: present
+          sshkeys: 
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQC5Ea3uD5vJWEt5eUg9wVeidLNe9lIuH2Mt3pf6ZNMfb5s1q/YiT2ulEYShXUJih7QpwZSlbJoV46KKBQxKBcXVKGH5bZXQOfyS1f2FjhIrK1n4/aixrvH/yrXA6LL3c+N2hlnJaOGODVT0y5GIe6BLQdm9lgVE8fcc7B3Vnw+XYN4nzqc/MmbTJOpOFbCZe07RH5/8Tf0g0yCOlwkvEWT2bOAWR07K3J/RufwhZYtdAXaI4CiSsD0dyG00IpMC5yd7HKwi83TwsmRYjltK2Y4SjPVrpQ9y+3KHPTA4AHFgQulzHymVr7mh+IIrQ8IH14CiBRTAYJzCXmLXMvzl2FyCQBZcPpmzm+Pvz+XicPyH0JDf0yNq27LkJpE1aB1k1IThA6Z7T4akyLDTVz7jImr6gy8XqQA8rAop9w6gBzLnY5AArqe10Vjwq2V5s0Wn+U/WhJ+Lm5YIBWDGFKf3ckzoqm9WA698h+BOzuBtf6YERzMj3p3OQvW9B6WIZTDi9qJcg/CxDaor3fB2OLIKUxmy7cZuKarL8PUEmRWNhESWZK+fYV/1RpUolGcYuEBbolI5iQ8oYc3N6KcZBGqy+oNFlpLf2wHxS/ym7V9TTJcfgKjCQKbDFy8UkUA3CHCf/em2642ismYZGv+izEtT5Ys9zdhUl+QDWA0kwVKUmqkWow== kevan.pitah@smile.ci

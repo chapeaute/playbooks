@@ -1,0 +1,11 @@
+[main]
+include=virtual-guest
+
+[vm]
+transparent_hugepages=never
+
+[sysctl]
+vm.dirty_ratio={{ mongodb_sysctl_vm_dirty_ratio }}
+vm.dirty_background_ratio={{ mongodb_sysctl_vm_dirty_background_ratio }}
+vm.swappiness={{ mongodb_sysctl_vm_swappiness }}
+

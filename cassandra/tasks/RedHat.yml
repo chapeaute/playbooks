@@ -1,0 +1,30 @@
+---
+
+- name: RedHat | Add cassandra repository GPG key
+  rpm_key:
+    state:  present
+    key:    https://www.apache.org/dist/cassandra/KEYS
+  when: use_satellite_repo == False
+  register: import_key
+
+- name: RedHat | Add cassandra repository
+  template:
+    src:   "etc/yum.repos.d/{{ item }}.j2"
+    dest:  "/etc/yum.repos.d/{{ item }}"
+    owner:  root
+    group:  root
+    mode:   0644
+  with_items:
+    - cassandra.repo
+  when: use_satellite_repo == False
+
+- name: Redhat | Setting firewall rules
+  firewalld:
+    port:      "{{ item }}"
+    state:     enabled
+    permanent: yes
+    immediate: yes
+  with_items:
+    - "{{ cassandra_firewall_port }}"
+    - "{{ cassandra_jolokia_port }}/tcp"
+  when: firewall_type == "firewalld"

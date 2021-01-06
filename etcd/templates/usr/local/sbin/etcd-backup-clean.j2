@@ -1,0 +1,29 @@
+#!/bin/python
+
+import sys
+import os
+import argparse
+
+backup_dir = "{{ etcd_backup_dir }}"
+
+parser = argparse.ArgumentParser()
+parser.add_argument("-d", "--dir", help="Directory to save backup file")
+args = parser.parse_args()
+
+if not args.dir and backup_dir == "":
+    print("No directory to purge")
+    parser.print_help()
+    exit(1)
+else:
+    if args.dir:
+        backup_dir = args.dir
+
+    if not os.access(backup_dir, os.W_OK):
+        print(backup_dir + ": Invalid directory. Check if directory exists and is writable.")
+        exit(1)
+
+    for root, dirs, files in os.walk(backup_dir):
+        for file in files:
+	    print("Remove file " + os.path.join(root, file))
+            os.remove(os.path.join(root, file))
+

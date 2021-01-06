@@ -1,0 +1,49 @@
+settings {
+    logident        = "lsyncd",
+    logfacility     = "user",
+    logfile         = "{{ lsyncd_log_file }}",
+    statusFile      = "{{ lsyncd_status_file }}",
+    statusInterval  = 10
+}
+
+{% if lsyncd_enabled -%}
+{% if csync2_config_per_group %}
+{% for csync2_group in csync2_groups -%}
+{{ csync2_group.name }} = {
+    delay = {{ lsyncd_delay }},
+    maxProcesses = {{ lsyncd_max_processes }},
+    onCreate = "nice /usr/sbin/csync2 -x -C {{ csync2_group.name }}",
+    onModify = "nice /usr/sbin/csync2 -x -C {{ csync2_group.name }}",
+    onDelete = "nice /usr/sbin/csync2 -x -C {{ csync2_group.name }}",
+    onStartup = "nice /usr/sbin/csync2 -x -C {{ csync2_group.name }}"
+}
+
+{% for include in csync2_group.includes -%}
+sync {
+    {{ csync2_group.name }},
+    source = "{{ include }}"
+}
+{% endfor -%}
+{% endfor -%}
+{% else %}
+
+csync2 = {
+    delay = {{ lsyncd_delay }},
+    maxProcesses = {{ lsyncd_max_processes }},
+    onCreate = "nice /usr/sbin/csync2 -x",
+    onModify = "nice /usr/sbin/csync2 -x",
+    onDelete = "nice /usr/sbin/csync2 -x",
+    onStartup = "nice /usr/sbin/csync2 -x"
+}
+
+{% for csync2_group in csync2_groups -%}
+{% for include in csync2_group.includes -%}
+sync {
+    csync2,
+    source = "{{ include }}"
+}
+{% endfor -%}
+{% endfor -%}
+
+{% endif -%}
+{% endif -%}

@@ -1,0 +1,12 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users:
+        - login: jekam
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDiEKwu578BDjPvTItC+sHN82fzmhNfs5kW0E+H0DeARNL+idffDSX4zr50tepuSadLNWkA/tDAPH/xy0ufO1NYREzoMzbdaDlRyT9SFrr8+1MQPC+/liz9fc1luRbpLuLskFnOv6fiszjQAavucWnpoGNTWCf/4/S6SiHf/gfAve0NDE+U5EPl4n0Pq7IDqEdyz3zxlaatuuZXApxVeBuxJCncCbd5w4PBUUvcQ5u1fiHm2pd2DwFoykJlP5Iz75m3kEw+ZF/sQA8ahqXmCNs+6WExfZ8MYnmUYvayst3FmNeiW49+URWJDyDAZTI3fpTUHwaFBz6qQbQLgqDrxFoD kam@kam-HP-ProBook-450-G4
+

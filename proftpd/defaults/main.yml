@@ -1,0 +1,27 @@
+---
+# defaults file for proftpd
+
+proftpd_conf_directory: /etc/proftpd/conf.d
+proftpd_user_daemon_name: proftpd
+proftpd_user_daemon_id: 110
+proftpd_group_daemon: nogroup
+proftpd_user_id: "{{ apache_uid|default(99) }}"
+proftpd_group_id: "{{ apache_gid|default(99) }}"
+proftpd_home_dir: /var/www
+proftpd_user_shell: /bin/bash
+# proftpd_user_shell: /sbin/nologin
+
+proftpd_auth_user_file: /etc/proftpd/proftpd.password
+proftpd_server_name: "{{ ansible_hostname }} Server"
+proftpd_max_instances: 30
+proftpd_ftp_port: 21
+
+proftpd_log_dir: /var/log/proftpd
+
+proftpd_enable_pam: false
+proftpd_enable_ftp: false
+proftpd_enable_sftp: true
+proftpd_sftp_auth_methods: password
+proftpd_sftp_port: 2222
+
+proftpd_users: []

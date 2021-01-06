@@ -1,0 +1,19 @@
+# v1.0
+---
+- hosts: all
+  vars:
+    
+  roles:
+  - role: bind
+    bind_ddns_enable: true
+    bind_ddns_key_name: dev.smile.lan
+    bind_zone_conf_manage: true
+    bind_soa_server: ocit.dev.smile.lan.
+    bind_soa_mail: admin.dev.smile.lan.
+    bind_zone:
+      dev.smile.lan:
+        servers: [ '192.168.122.181:-ns-int.dev.smile.lan', '192.168.22.182:ns2.dev.smile.lan', '192.168.122.183:', '192.168.12.183:yakro.aviso.ci' ]
+      122.168.192.in-addr.arpa:
+        soa_mail: exploit.dev.smile.lan.
+        soa_server: yakro.dev.smile.lan.
+        servers: [ '192.168.122.181:ns1.dev.smile.lan', '192.168.122.182:ns2.dev.smile.lan', '192.168.12.183:yakro.aviso.ci' ]

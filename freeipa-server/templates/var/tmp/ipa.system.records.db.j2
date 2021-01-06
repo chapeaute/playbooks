@@ -1,0 +1,12 @@
+_kerberos.{{ freeipa_domain }}.              86400  IN  TXT  "LABS.LAN"
+{% for h in freeipa_hosts %}
+_kerberos-master._tcp.{{ freeipa_domain }}.  86400  IN  SRV  0               100  88   {{ h }}
+_kerberos-master._udp.{{ freeipa_domain }}.  86400  IN  SRV  0               100  88   {{ h }}
+_kerberos._tcp.{{ freeipa_domain }}.         86400  IN  SRV  0               100  88   {{ h }}
+_kerberos._udp.{{ freeipa_domain }}.         86400  IN  SRV  0               100  88   {{ h }}
+_kpasswd._tcp.{{ freeipa_domain }}.          86400  IN  SRV  0               100  464  {{ h }}
+_kpasswd._udp.{{ freeipa_domain }}.          86400  IN  SRV  0               100  464  {{ h }}
+_ldap._tcp.{{ freeipa_domain }}.             86400  IN  SRV  0               100  389  {{ h }}
+_ntp._udp.{{ freeipa_domain }}.              86400  IN  SRV  0               100  123  {{ h }}
+ipa-ca.{{ freeipa_domain }}.                 86400  IN  A    {{ hostvars[h]['ansible_' + main_interface]['ipv4']['address'] }}
+{% endfor %}

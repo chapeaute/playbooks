@@ -1,0 +1,11 @@
+---
+
+jigasi_base_dir:  "{{ jitsi_base_dir }}"
+jigasi_root_dir: "{{ jitsi_base_dir }}"
+jigasi_install_dir: "{{ jigasi_root_dir }}/jitsi-jigasi"
+jigasi_etc_dir: /etc/jitsi-jigasi
+jigasi_log_dir: /var/log/jitsi-jigasi
+jigasi_install_tmp_dir: "/tmp/jigasi-{{ jigasi_version }}"
+jigasi_service_name: jitsi-jigasi
+jigasi_user: jigasi
+jigasi_group: jigasi

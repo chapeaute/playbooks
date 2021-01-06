@@ -1,0 +1,73 @@
+---
+
+# Global
+
+manage_firewalld: True
+ipv6_disable: True
+
+# Tomcat
+
+tomcat_version: 9
+tomcat_major_version: "{{ (tomcat_version|string).split('.')[0] }}"
+tomcat_full_version: "{{ tomcat_default_full_version }}"
+tomcat_java_version: 8
+tomcat_java_impl: openjdk
+tomcat_archive_basename: apache-tomcat
+tomcat_archive_file: "{{ tomcat_archive_basename }}-{{ tomcat_full_version }}.tar.gz"
+tomcat_download_url: "https://archive.apache.org/dist/tomcat/tomcat-{{ tomcat_major_version }}/v{{ tomcat_full_version }}/bin/{{ tomcat_archive_file }}"
+tomcat_libraries_download_url: "https://archive.apache.org/dist/tomcat/tomcat-{{ tomcat_major_version }}/v{{ tomcat_full_version }}/bin/extras/"
+tomcat_libraries: "{{ tomcat_default_libraries|default({}) }}"
+tomcat_extra_libraries: "{{ tomcat_default_libraries|default({}) }}"
+tomcat_limit_open_files: 65535
+tomcat_use_mysql: False
+
+# Install directory
+tomcat_install_dir: /var/lib
+tomcat_log_dir: /var/log/tomcat
+tomcat_root_dir: "{{ tomcat_install_dir }}/tomcat"
+
+# Port definition
+tomcat_http_port: 8080
+tomcat_ajp_port: 8009
+tomcat_jmx_registry_port: 10080
+tomcat_jmx_server_port: 10081
+
+
+# User definition
+tomcat_user: tomcat
+tomcat_group: tomcat
+tomcat_admin_user: admin
+tomcat_admin_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-tomcat_admin_password chars=ascii_letters,digits') }}"
+tomcat_centreon_enable: true
+tomcat_centreon_user: centreon
+tomcat_centreon_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-tomcat_centreon_pass chars=ascii_letters,digits') }}"
+tomcat_jolokia_version: 1.6.0
+
+# Tuning configuration
+tomcat_heap_size_prct: 0.75
+tomcat_min_heap_size: "{{(ansible_memtotal_mb*(tomcat_heap_size_prct|float))|int }}M"
+tomcat_max_heap_size: "{{tomcat_min_heap_size}}"
+tomcat_min_metaspace_size: 128M
+tomcat_max_metaspace_size: 128M
+tomcat_env_vars:
+tomcat_upload_max_size: 52428800
+
+# Directory and log files
+tomcat_gc_log_file: "{{tomcat_root_dir}}/logs/gc.log"
+tomcat_heap_dump_dir: "{{tomcat_root_dir}}/logs/"
+
+# Security
+tomcat_display_version: "Web Applications Server"
+
+# Logs Rotations
+tomcat_logrotate_days: daily
+tomcat_logrotate_rotate: 7
+tomcat_logrotate_size: 512M
+
+# APM config
+tomcat_apm_enable: false
+tomcat_apm_version: 1.9.0
+tomcat_apm_url: "https://search.maven.org/remotecontent?filepath=co/elastic/apm/elastic-apm-agent/{{ tomcat_apm_version }}/elastic-apm-agent-{{ tomcat_apm_version }}.jar"
+tomcat_apm_service: "{{ ansible_hostname }}"
+tomcat_apm_packages: org.example
+tomcat_apm_server: http://localhost:8200

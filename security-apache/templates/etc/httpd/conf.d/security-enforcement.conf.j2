@@ -1,0 +1,130 @@
+#
+# Custom Apache Security Rules
+#
+{% for line in security_apache_custom_enforcement %}{{ line }}{% endfor %}
+
+# ----------------------------------------------------------------------
+# | Set Access-Control-Allow-Methods                                        |
+# ----------------------------------------------------------------------
+
+<IfModule mod_headers.c>
+Header always set Access-Control-Allow-Methods "{{ security_apache_allow_methods}}"
+</IfModule>
+
+{% if security_apache_disable_x_powered_by %}
+
+# ----------------------------------------------------------------------
+# | Server-side technology information                                 |
+# ----------------------------------------------------------------------
+
+<IfModule mod_headers.c>
+{% for header in security_apache_strict_disable_default_headers %}
+Header unset {{ header }}
+Header always unset {{ header }}
+{% endfor %}
+{% for header in security_apache_strict_disable_headers %}
+Header unset {{ header }}
+Header always unset {{ header }}
+{% endfor %}
+</IfModule>
+{% endif %}
+
+{% if security_apache_x_frame_same_origin %}
+# ----------------------------------------------------------------------
+# | X-FRAME-OPTIONS in HTTP headers to prevent Clickjacking attacks                                |
+# ----------------------------------------------------------------------
+
+<IfModule mod_headers.c>
+    Header set X-Frame-Options SAMEORIGIN
+</IfModule>
+{% endif %}
+
+{% if security_apache_xss_protection %}
+# ----------------------------------------------------------------------
+# | X-XSS-Protection in HTTP headers to stop pages from loading when they detect reflected cross-site scripting (XSS) attacks                              |
+# ----------------------------------------------------------------------
+
+<IfModule mod_headers.c>
+    Header set X-XSS-Protection "1; mode=block"
+</IfModule>
+{% endif %}
+
+{% if security_apache_disable_trace_method %}
+# ----------------------------------------------------------------------
+# | Disable TRACE HTTP Method                                          |
+# ----------------------------------------------------------------------
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_METHOD} ^TRACE [NC]
+    RewriteRule .* - [R=405,L]
+</IfModule>
+{% endif %}
+
+{% if security_apache_disable_options_method %}
+
+# ----------------------------------------------------------------------
+# | Disable OPTIONS HTTP Method                                          |
+# ----------------------------------------------------------------------
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_METHOD} ^OPTIONS [NC]
+    RewriteRule .* - [R=405,L]
+</IfModule>
+{% endif %}
+
+{% if security_apache_disable_head_method %}
+
+# ----------------------------------------------------------------------
+# | Disable HEAD HTTP Method                                          |
+# ----------------------------------------------------------------------
+
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+    RewriteCond %{REQUEST_METHOD} ^HEAD [NC]
+    RewriteRule .* - [R=405,L]
+</IfModule>
+{% endif %}
+
+{% if security_apache_cookie_http_only %}
+# ----------------------------------------------------------------------
+# | Cookie HTTP Only {%- if security_apache_strict_transport_security -%} + SSL{%- endif -%}
+
+# ----------------------------------------------------------------------
+
+<IfModule mod_headers.c>
+Header edit Set-Cookie ^(.*)$ $1;HttpOnly;{%- if security_apache_strict_transport_security -%}Secure;{%- endif -%}SameSite=Strict
+</IfModule>
+{% endif %}
+
+{% if security_apache_content_security_policy %}
+# ----------------------------------------------------------------------
+# | Content Security Policy (CSP)                                      |
+# ----------------------------------------------------------------------
+
+<IfModule mod_headers.c>
+    {% if security_level >= 3 %}
+
+    #                                      (1)                 (2)              (3)                 (4)                (5)
+    Header set Content-Security-Policy "default-src 'self' 'unsafe-inline' data:; connect-src 'self' *; form-action 'self'; frame-ancestors 'none'"
+    {% else %}
+
+    Header set Content-Security-Policy "script-src 'self';"
+    {% endif %}
+</IfModule>
+{% endif %}
+
+
+{% if security_apache_strict_transport_security %}
+# ------------
+----------------------------------------------------------
+# | HTTP Strict Transport Security (HSTS)                              |
+# ----------------------------------------------------------------------
+
+<IfModule mod_headers.c>
+    # Header always set Strict-Transport-Security "max-age=16070400; includeSubDomains" "expr=%{HTTPS} == 'on'"
+    # (1) Enable your site for HSTS preload inclusion.
+    Header always set Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" "expr=%{HTTPS} == 'on'"
+</IfModule>
+{% endif %}

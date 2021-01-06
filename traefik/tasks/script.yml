@@ -1,0 +1,16 @@
+---
+- name: script | Install jq
+  package:
+    name:  jq
+    state: installed
+
+- name: script | Deploy admin scripts
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: "root"
+    group: "{{ traefik_group }}"
+    mode:  0750
+  with_items:
+    - traefik-healthcheck
+    - traefik-port-add

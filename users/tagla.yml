@@ -1,0 +1,9 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: tagla
+          groups: exploit
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDDqHKkvSUqqFSSdytL0zuaOcQ4FGy0CCxE0F1AUs2/dcETUKweCv/U0Net90Lv3ZPsxx+yMji4A2uWqbS1yNpmSnl5OEcSc0YjGi3fDb6XVy/hpgcAr4Gkk7WkrYI7pAcBWDDu0GBON8OhbrMikMWQczKwgO5otSzPZRN73DxUUihv7V+NptDqcaIUnym8fzsgWSZu7xLt/2OE19NQGIl9Lmfx3XGIzTrLXHJzs057XSnvPToXU7Fc+QcdHv9X4o0bjs2+0/Ro7Zo5lsfKOfCzZXrnDjK1mTjLabmGjhmo4gG10IHMFFWsV3NfO9JrqkYONAMQMt3G3H2Kz+A6+8fT tanguy.glaba@smile.ci

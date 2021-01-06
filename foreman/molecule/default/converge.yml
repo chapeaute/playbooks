@@ -1,0 +1,13 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - import_role:
+        name: basic-firewalld # Install pkg and libs for firewalld
+    - import_role:
+        name: postgresql
+      vars:
+        postgresql_version: 13
+    - import_role:
+        name: foreman
+      vars:

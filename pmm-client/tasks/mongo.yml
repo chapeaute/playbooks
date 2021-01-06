@@ -1,0 +1,10 @@
+---
+- name: mongo | Check if MongoDB service is enable
+  shell: pmm-admin list 2>/dev/null | grep -q "^mongodb:" && echo configure || echo unconfigure
+  changed_when: False
+  check_mode: no
+  register: pmm_mongo
+
+- name: mongo | Add MongoDB service to PMM Server
+  command: "pmm-admin add mongodb --uri mongodb://{{ pmmclient_mongo_user }}:{{ pmmclient_mongo_pass }}@127.0.0.1"
+  when: "'unconfigure' in pmm_mongo.stdout"

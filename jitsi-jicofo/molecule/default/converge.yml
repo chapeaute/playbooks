@@ -1,0 +1,9 @@
+---
+
+- name: Converge
+  hosts: all
+  roles:
+    - role: basic-firewalld
+    - role: prosody
+    - role: jitsi-jicofo
+      jicofo_memory_size: 0.1

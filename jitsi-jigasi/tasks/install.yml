@@ -1,0 +1,67 @@
+---
+
+- name: install dependencies
+  package:
+    name: "{{ jigasi_dependencies }}"
+
+- name: Install | Create jigasi user account
+  user:
+    name: "{{ jigasi_user }}"
+    home: "{{ jigasi_install_dir }}"
+    system: True
+  tags: jitsi
+
+- name: Install | Create install dir
+  file:
+    name: "{{ item }}"
+    state: directory
+    owner: "{{ jigasi_user }}"
+    group: "{{ jigasi_group }}"
+  with_items:
+    - "{{ jigasi_install_tmp_dir }}"
+    - "{{ jigasi_etc_dir }}"
+    - "{{ jigasi_log_dir }}"
+
+- name: Install | stats jigasi deb archive
+  stat:
+    path: "{{ jigasi_install_tmp_dir }}/jigasi_{{ jigasi_version }}_amd64.deb"
+  register: jigasi_deb
+
+- name: Download jigasi deb archive
+  get_url:
+    url: "{{ jigasi_deb_url }}"
+    dest: "{{ jigasi_install_tmp_dir }}/"
+  when: not jigasi_deb.stat.exists
+
+- name: Decompress archive to temporary directory
+  shell: ar x {{ jigasi_install_tmp_dir }}/*.deb
+  args:
+    creates: data.tar.xz
+    chdir: "{{ jigasi_install_tmp_dir }}"
+
+- name: Extract data archive
+  unarchive:
+    src: "{{ jigasi_install_tmp_dir }}/data.tar.xz"
+    dest: "{{ jigasi_install_tmp_dir }}/"
+    owner: "{{ jigasi_user }}"
+    group: "{{ jigasi_group }}"
+    creates: "{{ jigasi_install_tmp_dir }}/usr"
+    remote_src: yes
+  register: jigasi_decompress
+
+- name: Sychronize build with install dir
+  copy:
+    src: "{{ jigasi_install_tmp_dir }}/usr/share/jigasi/"
+    dest: "{{ jigasi_install_dir }}"
+    owner: "{{ jigasi_user }}"
+    group: "{{ jigasi_group }}"
+    remote_src: yes
+    directory_mode: true
+  when: jigasi_decompress is changed
+
+- name: Install | Set jigasi.sh to executable
+  file:
+    name: "{{ jigasi_install_dir }}/jigasi.sh"
+    owner: "{{ jigasi_user }}"
+    group: "{{ jigasi_group }}"
+    mode: 0750

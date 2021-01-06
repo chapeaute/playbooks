@@ -1,0 +1,41 @@
+---
+- name: tuning | Install service to Disable THP
+  template:
+    src: "templates/etc/systemd/system/disable-transparent-huge-pages.service.j2"
+    dest: "/etc/systemd/system/disable-transparent-huge-pages.service"
+    mode: 0644
+  when: redis_thp_disable
+
+- name: tuning | Enable service to Disable THP
+  systemd:
+    name:    disable-transparent-huge-pages.service
+    state:   started
+    enabled: yes
+    daemon_reload: yes
+  changed_when: False
+  when: redis_thp_disable
+
+- name: tuning | Create tuned directory
+  file:
+    path:  /etc/tuned/no-thp
+    state: directory
+    mode:  0755
+  when: redis_thp_disable
+
+- name: tuning | Install Disable THP Tuned Configuration
+  template:
+    src: "templates/etc/tuned/no-thp/tuned.conf.j2"
+    dest: "/etc/tuned/no-thp/tuned.conf"
+    mode: 0644
+  when: redis_thp_disable
+  register: tuned_conf
+
+- name: tuning | Enable new profile
+  command: "tuned-adm profile no-thp"
+  when: redis_thp_disable and tuned_conf.changed
+
+- name: tuning | Set overcommit_memory kernel parameter to 1
+  sysctl:
+    name:  vm.overcommit_memory
+    value: 1
+

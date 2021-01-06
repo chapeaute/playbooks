@@ -1,0 +1,15 @@
+fail2ban_dependencies:
+ - epel-release
+
+fail2ban_packages:
+  - fail2ban
+  - fail2ban-systemd
+
+selinux_module_packages:
+  - policycoreutils-python
+  - checkpolicy
+
+fail2ban_pidfile: /var/run/fail2ban/fail2ban.pid
+fail2ban_socket: /var/run/fail2ban/fail2ban.sock
+fail2ban_dbfile: /var/lib/fail2ban/fail2ban.sqlite3
+fail2ban_logtarget: /var/log/fail2ban.log

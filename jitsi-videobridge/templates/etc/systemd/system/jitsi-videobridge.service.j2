@@ -1,0 +1,29 @@
+[Unit]
+Description=Jitsi Videobridge
+After=network.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+SuccessExitStatus=143
+EnvironmentFile={{ jvb_etc_dir  }}/videobridge.conf
+Environment=LOGFILE={{ jvb_log_dir }}/jvb.log
+User={{ jvb_user }}
+Group={{ jvb_group }}
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=full
+ReadOnlyDirectories={{ jvb_etc_dir | dirname }} {{ jvb_install_dir }}
+Restart=on-failure
+StartLimitInterval=10
+RestartSec=30
+# more threads for this process
+TasksMax=65000
+# allow more open files for this process
+LimitNPROC=65000
+LimitNOFILE=65000
+ExecStart={{ jvb_install_dir }}/jvb.sh ${JVB_OPTS}
+
+[Install]
+WantedBy=multi-user.target

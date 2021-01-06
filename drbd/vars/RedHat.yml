@@ -1,0 +1,3 @@
+drbd_packages_name:
+  - drbd84-utils
+  - kmod-drbd84

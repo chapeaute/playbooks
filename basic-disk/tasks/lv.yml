@@ -1,0 +1,39 @@
+---
+
+- name: "lv | create lvol {{ lv.name }}"
+  lvol:
+    vg: "{{ lv.vg }}"
+    lv: "{{ lv.name }}"
+    state: "{{ lv.state | default('present') }}"
+    active: "{{ lv.active | default('yes') }}"
+    size: "{{ lv.size }}"
+
+- name: "lv | format lvol {{ lv.vg }}-{{ lv.name }}"
+  filesystem:
+    fstype: "{{ lv.fstype | default('ext4') }}"
+    dev: "/dev/mapper/{{ lv.vg }}-{{ lv.name }}"
+  ignore_errors: yes
+
+- name: "lv | check reserved block of {{ lv.vg }}-{{ lv.name }}"
+  shell: tune2fs -l /dev/mapper/{{ lv.vg }}-{{ lv.name }} | grep "Reserved block count" | awk '{ print $4 }'
+  register: check_reserved_block
+
+- name: "lv | tune reserved block to 0"
+  shell: "tune2fs -m 0 /dev/mapper/{{ lv.vg }}-{{ lv.name }}"
+  when: check_reserved_block.stdout != "0"
+
+- name: "lv | create mount dir {{ lv.mount_point }}"
+  tags: format
+  file:
+    path: "{{ lv.mount_point }}"
+    state: directory
+    recurse: true
+
+- name: "lv | mount {{ lv.vg }}-{{ lv.name }} on {{ lv.mount_point }}"
+  tags: format
+  mount:
+    name: "{{ lv.mount_point }}"
+    src: "/dev/mapper/{{ lv.vg }}-{{ lv.name }}"
+    fstype: "{{ lv.fstype | default('ext4') }}"
+    state: mounted
+

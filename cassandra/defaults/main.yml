@@ -1,0 +1,41 @@
+---
+
+# Other variables
+use_satellite_repo: False
+firewall_type: "firewalld"
+
+# Global variables
+cassandra_java_version: 8
+cassandra_bind_addr: "{{ ansible_default_ipv4.address }}"
+cassandra_version: 311x
+cassandra_port: 7199
+
+# Path variables
+cassandra_path_home: "{{ cassandra_default_path_home }}"
+cassandra_path_data: "{{ cassandra_path_home }}/data"
+cassandra_path_cache: "{{ cassandra_path_home }}/saved_caches"
+cassandra_path_hints: "{{ cassandra_path_home }}/hints"
+cassandra_path_commitlog: "{{ cassandra_path_home }}/commitlog"
+cassandra_path_backup: "{{ cassandra_default_path_backup }}"
+cassandra_backup_age: 0
+
+# Cluster variables
+cassandra_cluster_name: cluster-csdr
+cassandra_hosts: ['{{ cassandra_bind_addr }}']
+cassandra_enable_password: false
+cassandra_root_password: cassandra
+# cassandra_root_password: "{% if cassandra_enable_password %}{{ lookup('password', 'credential/{{ cassandra_cluster_name }}-cassandra_password chars=ascii_letters,digit') }}{% else %}cassandra{% endif %}"
+cassandra_root_user: cassandra
+cassandra_users: []
+cassandra_keyspaces: {}
+
+# Tuning parameters
+cassandra_num_tokens: 256
+cassandra_heap_size_prct: 0.5
+cassandra_heap_size: "{{ (ansible_memtotal_mb*cassandra_heap_size_prct)|int }}"
+cassandra_configuration: {}
+
+# Monitoring
+cassandra_jolokia_version: 1.6.2
+cassandra_jolokia_port: 8778
+cassandra_jolokia_host: 0.0.0.0

@@ -1,0 +1,23 @@
+---
+- name: modules | Get all filebeat modules
+  tags: config
+  shell: "ls -1 *disabled"
+  args:
+    chdir: /etc/filebeat/modules.d
+  register: fb_all_modules
+  check_mode: no
+  changed_when: False
+
+- name: modules | Enable filebeat modules
+  tags: config
+  command: "/bin/filebeat modules enable {{ item.split('.')[0] }}"
+  args:
+    creates: "/etc/filebeat/modules.d/{{ item }}.yml"
+    chdir: /etc/filebeat
+  when:
+    - "item.split('.')[0] in group_names"
+    - fb_deploy_modules
+  with_items:
+    - "{{ fb_all_modules.stdout_lines }}"
+    - "{{ fb_modules }}"
+    - "{{ fb_default_modules }}"

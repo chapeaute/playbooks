@@ -1,0 +1,7 @@
+---
+- name: Converge
+  hosts: all
+  roles:
+    - role: neo4j
+      neo4j_min_heap_size: 512m
+      neo4j_max_heap_size: 512m

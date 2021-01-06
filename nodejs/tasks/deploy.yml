@@ -1,0 +1,39 @@
+---
+- name: deploy | Install global packages
+  environment:
+    PATH: "{{ nodejs_prefix }}/bin:{{ ansible_env.PATH }}"
+  npm:
+    name: "{{ item }}"
+    global: yes
+  with_items:
+    - "{{ nodejs_npm_global_packages }}"
+
+- name: deploy | Verify if package.json exist
+  stat:
+    path: "{{ nodejs_default_data_dir }}/package.json"
+  register: package_json
+
+- name: deploy | Create symlink to node_module directory in nodejs home directory
+  file:
+    state: link
+    src:   "{{ nodejs_prefix }}/lib/node_modules"
+    dest:  "{{ nodejs_default_data_dir }}/node_modules"
+    force: yes
+
+- name: deploy | Install npm package
+  environment:
+    PATH: "{{ nodejs_prefix }}/bin:{{ ansible_env.PATH }}"
+  npm:
+    name: "{{ item }}"
+    path: "{{ nodejs_default_data_dir }}"
+  with_items:
+    - "{{ nodejs_npm_packages }}"
+  when: package_json.stat.exists
+
+- name: deploy | Install pm2 npm package globally
+  environment:
+    PATH: "{{ nodejs_prefix }}/bin:{{ ansible_env.PATH }}"
+  npm:
+    name: pm2
+    global: yes
+  when: nodejs_install_pm2

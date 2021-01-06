@@ -1,0 +1,8 @@
+# v0.1
+---
+- hosts: ioncube
+  vars:
+    ioncube_loader: "7.2"
+  roles:
+    - role: ioncube
+      ioncube_default_loader: "{{ ioncube_loader }}"

@@ -1,0 +1,6 @@
+flyway.locations=filesystem:{{ flywaydb_root }}/{{ flywaydb_subpath }}/sql/{{item.key}}
+{% for key, value in item.value.iteritems() %}
+{% if key not in ['locations', 'migration_dir'] %}
+flyway.{{ key }}={{ value }}
+{% endif %}
+{% endfor %}

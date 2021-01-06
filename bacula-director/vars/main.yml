@@ -1,0 +1,11 @@
+---
+# vars file for bacula_server
+bacula_packages:
+  - bacula-director
+  - bacula-console
+  - bacula-client
+
+bacula_services:
+  - bacula-dir
+
+bacula_conf_dir: /etc/bacula

@@ -1,0 +1,5 @@
+---
+
+- hosts: filebeat-agent
+  roles:
+    - role: filebeat

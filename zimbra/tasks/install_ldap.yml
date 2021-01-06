@@ -1,0 +1,77 @@
+---
+
+# Setting up firewall rules
+
+- name: Firewalld | Setting up firewall rules
+  firewalld:
+    port: "{{item}}"
+    permanent: true
+    state: enabled
+    immediate: yes
+  with_items:
+    - "389/tcp"
+    - "636/tcp"
+
+
+# Installing ZIMBRA-LDAP Service
+
+- name: keystrokes-ldap | Uploading keystroke file for community version on LDAP
+  tags: keystroke
+  template: 
+    src: community-keystrokes-ldap.j2
+    dest: "{{ zimbra_tmp_dir }}/keystrokes-ldap"
+    mode: 0640
+  when: "zimbra_license_file is not defined"
+
+
+- name: zimbra-ldap.conf | Uploading installer configuration file | LDAP
+  template: 
+    src: zimbra-ldap.conf.j2
+    dest: "{{ zimbra_tmp_dir }}/zimbra-ldap.conf"
+    owner: root
+    group: root
+  when: "zimbra_license_file is not defined"
+
+
+- name: keystrokes-ldap | Installing Zimbra OSE | LDAP
+  shell: "./install.sh -s < {{ zimbra_tmp_dir }}/keystrokes-ldap"
+  args: 
+    chdir: "{{ zimbra_tmp_dir }}/{{ zimbra_package }}/"
+
+
+- name: zimbra-ldap.conf | Configuring Zimbra OSE's services for use | LDAP
+  command: "./zmsetup.pl -c {{ zimbra_tmp_dir }}/zimbra-ldap.conf"
+  args: 
+    chdir: /opt/zimbra/libexec/
+
+
+- name: zimbra-ldap.conf | Enable LDAP Replication | LDAP
+  command: "./zmldapenablereplica"
+  args: 
+    chdir: /opt/zimbra/libexec/
+  become: yes
+  become_user: zimbra
+  when: "'zimbra_ldap_type' is defined"
+
+
+- name: Restart Zimbra services
+  shell: su - zimbra -c "zmcontrol restart && echo Running || echo failed"
+  register: zmcontrol_status
+
+
+- name: zmconfigd.pid | Delete zmconfigd_file
+  file: 
+    path: "{{ zmconfigd_file }}"
+    state: absent
+  when: "'failed' in zmcontrol_status.stdout"
+
+
+- name: Restart Zimbra services
+  shell: su - zimbra -c 'zmcontrol restart'
+  when: "'failed' in zmcontrol_status.stdout"
+
+
+- name: zimbra-ldap | Removing Zimbra configuration file | LDAP
+  command: "rm -f {{ zimbra_tmp_dir }}/zimbra-ldap.conf"
+  args:
+    removes: "{{ zimbra_tmp_dir }}/zimbra-ldap.conf"

@@ -1,0 +1,17 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - name: Install sudo
+      package:
+        name: sudo
+    - name: basic-firewalld
+      import_role:
+        name: basic-firewalld # Install pkg and libs for firewalld
+    - name: mongodb
+      import_role:
+        name: mongodb
+    - name: rocketchat
+      import_role:
+        name: rocketchat
+      vars:

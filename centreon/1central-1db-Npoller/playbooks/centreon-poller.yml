@@ -1,0 +1,8 @@
+---
+- hosts: centreon-poller
+  vars:
+    centreon_clapi_user: "{{ _monitoring_admin_user }}"
+    centreon_clapi_pass: "{{ _monitoring_admin_pass }}"
+    centreon_server: "{{ _monitoring_server_host }}"
+  roles:
+    - role: centreon-poller

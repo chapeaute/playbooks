@@ -1,0 +1,15 @@
+---
+- hosts: wso2ei
+  vars:
+    # WSO2 Version
+    wso2ei_version: 6.6.0
+    # WSO2 Password
+    wso2ei_admin_pass: changeme
+    # Address of MySQL host
+    wso2ei_db_host: "db_host_address"
+    # Percentage of total memory dedicated to jvm
+    wso2ei_memory_size_prct: 0.6
+    # WSO2 data directory
+    # wso2ei_root_dir: /srv
+  roles:
+    - role: wso2ei

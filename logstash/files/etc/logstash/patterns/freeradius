@@ -1,0 +1,33 @@
+FREERADIUS_DATE %{DAY} %{MONTH}  ?%{MONTHDAY} %{TIME} %{YEAR}
+FREERADIUS_LOGTYPE Auth|Info|Error|Proxy
+FREERADIUS_CLIENT %{NOTSPACE:freeradius_client}
+FREERADIUS_PORT %{INT:freeradius_port}
+FREERADIUS_CLI %{NOTSPACE:freeradius_cli}
+FREERADIUS_VIA %{DATA:freeradius_via}
+FREERADIUS_FROM \(from client %{FREERADIUS_CLIENT} port %{FREERADIUS_PORT}(?: cli %{FREERADIUS_CLI})?(?: via %{FREERADIUS_VIA})?\)
+FREERADIUS_USERNAME %{DATA:freeradius_user}
+FREERADIUS_REASON \(%{DATA:radius_reason}\)
+FREERADIUS_MODULE \brlm_[a-z]+\b
+
+# Auth log lines
+FREERADIUS_LOGINOK Login OK: \[%{FREERADIUS_USERNAME}\] %{FREERADIUS_FROM}
+FREERADIUS_LOGININCORRECT Login incorrect(?: %{FREERADIUS_REASON})?: \[%{FREERADIUS_USERNAME}\] %{FREERADIUS_FROM}
+FREERADIUS_INVALIDUSER Invalid user: \[%{FREERADIUS_USERNAME}\] %{FREERADIUS_FROM}
+FREERADIUS_AUTH (?:%{FREERADIUS_LOGINOK:freeradius_loginok}|%{FREERADIUS_LOGININCORRECT:freeradius_loginincorrect}|%{FREERADIUS_INVALIDUSER:freeradius_invaliduser})
+
+# Info log lines
+# (pull out lines beginning WARNING: ?)
+FREERADIUS_INFO %{GREEDYDATA:freeradius_message}
+
+# Error log lines
+FREERADIUS_ERROR_ID ID: %{INT:fr_packet_id}
+FREERADIUS_ERROR_CLIENT client %{FREERADIUS_CLIENT}
+FREERADIUS_ERROR_PORT port %{FREERADIUS_PORT}
+FREERADIUS_ERROR_REQUEST request %{INT:fr_request}
+FREERADIUS_ERROR_MODULE %{FREERADIUS_MODULE:fr_module}
+
+# Proxy log lines
+FREERADIUS_PROXY %{GREEDYDATA:freeradius_message}
+
+# Main match on whole log line:
+FREERADIUS_LINE %{FREERADIUS_DATE:timestamp} : %{FREERADIUS_LOGTYPE:freeradius_logclass}: +%{GREEDYDATA:freeradius_message}

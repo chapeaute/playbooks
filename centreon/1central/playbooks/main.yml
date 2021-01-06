@@ -1,0 +1,3 @@
+---
+- import_playbook: centreon-central.yml
+- import_playbook: centreon-agent.yml

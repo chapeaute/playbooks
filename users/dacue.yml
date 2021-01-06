@@ -1,0 +1,14 @@
+---
+- hosts: all
+  vars:
+    lookup_ldapkey_url: "ldap://ldap.abj.smile.lan/dc=groupe,dc=lan?sshPublicKey?sub?(uid=%s)"
+    lookup_ldapkey_binddn: "cn=manager,dc=groupe,dc=lan"
+    lookup_ldapkey_bindpw: "smileci0901"
+  roles:
+    - role: basic-user
+      users_groups:
+        - name: exploit
+      users_default_groups:
+        - name: exploit
+      ldap_users:
+        - dacue

@@ -1,0 +1,7 @@
+---
+# defaults file for trafficserver
+
+ts_version: 8.0.5
+ts_install_dir: "{{ ts_root_dir }}/trafficserver"
+ts_root_dir: "{{ ts_default_root_dir }}"
+ts_port: 8080

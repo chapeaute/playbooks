@@ -1,0 +1,19 @@
+#!/bin/bash
+
+NODEJS_USER="{{ nodejs_user }}"
+
+cmd="pm2 restart $1"
+
+if [ "$USER" != "$NODEJS_USER" ]; then
+    if [ "$UID" -eq 0 ]; then
+        su - $NODEJS_USER -c "${cmd}"
+        exit $?
+    else
+        >&2
+        echo "Script must be run with root or $NODEJS_USER user. Abording..."
+        exit 1
+    fi
+else
+    eval ${cmd}
+    exit $?
+fi

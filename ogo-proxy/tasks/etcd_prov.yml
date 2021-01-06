@@ -1,0 +1,12 @@
+---
+- name: etcd_prov | Ensure key {{ key }} is {{ state | default('present')}} => {{ val }}
+  command: "/usr/local/sbin/etcd-ctl put '{{ key }}' '{{ val }}'"
+  changed_when: false
+  when:
+    - state | default('present') == 'present'
+
+- name: etcd_prov | Ensure key {{ key }} is {{ state | default('present')}}
+  command: "/usr/local/sbin/etcd-ctl del --prefix '{{ key }}'"
+  changed_when: false
+  when: 
+    - state | default('present') == 'absent'

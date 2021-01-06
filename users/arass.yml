@@ -1,0 +1,12 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users_groups: 
+        - name: tomcat
+      users:
+        - login: arass
+          state: present
+          groups: tomcat
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDWJc+Cgh4wDyLg8kfpaGCk+pvxskm8iwb1mx23NO8F4vKAje1DkAmyTsbjzmSePpa8Y3n5iske9m6Z4mND2QQx+ULnF3IElhdfNs1BZx3NqbfKMtLewZFyITdryKmI4ICTGgHscuwT33wQHNc0HXsgW9XlPV4mmKJj0lHnKQSpQ1JLltObM5DqprpTPMq6hirD9gul/Kng7cwMv0f78kuNaFTrBQA99XJP+ojuzUO5+mYChg0bMEZ1IPD3IApTExfwWuhekYvDzvTw2Kj5i7Xy9W+Q8HJKASotFFrFFcoHSiYPDOzUiFy3FQOQpnhnoHfkf8fUILJH8r2SJ2WVeBUwuO2WVeajjI8DqzlXTpOGN2gdHoc18DkHUHpDS3mDHf0/HfZRNL5OvwbMb4FBt92Zr1xTNCARVHBiZ2JhZbV/cwBC4RKDi/JZsb/tDteESU4vOgp4VLDHY++Qu+54Qx2hGU52Hu+3CopBRAMTxO1/NdlNZSgRBqIAnLVC1VP3FFUxxz20kWKbDpdmtvvbwIrTahOqu9yaTvGWALjKqXSKU3PM5ntT5sfunSsQWtDF6hPRJnJUZCYi0Cje5/XEANN3Qvlrqrez2UGIwcWxaucblX0QirV9yRY5vJOtczocku4OEzq1nYJa8VP03h/aZTqHXNVRQpJWKg1QgcWLNAewCw== arauld.assamoi@sfl.ci

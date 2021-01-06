@@ -1,0 +1,10 @@
+---
+- hosts: kafka
+  vars:
+    zk_hosts: "{{ _kafka_hosts }}"
+    kafka_log_dir:  "{{ _kafka_log_dir }}"
+    kafka_data_dir: "{{ _kafka_data_dir }}"
+  roles:
+    - role: kafka
+      kafka_num_partitions: 64
+      kafka_default_replication_factor: "{{ zk_hosts | length }}"

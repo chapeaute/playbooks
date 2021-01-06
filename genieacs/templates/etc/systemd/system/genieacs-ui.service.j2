@@ -1,0 +1,13 @@
+[Unit]
+Description=Genieacs UI server
+After=network.target
+
+[Service]
+Restart=on-failure
+User={{genieacs_user}}
+Group={{genieacs_group}}
+ExecStart=/usr/local/bin/node {{ genieacs_install_dir }}/bin/genieacs-ui
+EnvironmentFile=/etc/default/genieacs
+
+[Install]
+WantedBy=multi-user.target

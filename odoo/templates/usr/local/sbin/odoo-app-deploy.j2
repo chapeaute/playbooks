@@ -1,0 +1,51 @@
+#!/bin/bash
+
+export PATH=$PATH:/usr/local/bin
+
+USER="{{ odoo_user }}"
+GROUP="{{ odoo_group }}"
+ADDONS_DIR="{{ odoo_addons_dir }}"
+
+APP_FILE=""
+
+function syntax() {
+    cat <<EOF
+Script to deploy new Odoo addons
+
+Usage: ${0##*/} [-h|-f <archive_file>]
+    -h                  Display this message
+    -f <archive_file>   Archive file in tar.gz format
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Abording..."
+    exit 1
+fi
+
+while getopts "h:f:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        f)
+            APP_FILE="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+if [ ! -r "$APP_FILE" ]; then
+    echo "$APP_FILE: No such file or directory"
+    exit 1
+fi
+
+mkdir -p ${ADDONS_DIR}
+tar xzf ${APP_FILE} -C ${ADDONS_DIR}
+chown -R ${USER}:${GROUP} ${ADDONS_DIR}

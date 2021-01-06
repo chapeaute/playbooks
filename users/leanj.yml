@@ -1,0 +1,10 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: leanj
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQClJjzTHxSv9c9ri7DEbTOeTXivEdbxjg4knGFHtO2oXOJ6AmzM2pYL1+FybUcM4qeOGe4VulQJJyRSF3qMFWR2iV+p68e24NohnSjXWMbWv4dMCkpJfjom9f5a5vwH4E9J/uZ9l5sQnKBwLk3aOaxI8fkZOD/7JfrKAcCKkG+otj/8U5Fqm+BNjyRB90SzXE5hDoqFLRV2sdD1Nn9/qz4ATUjfMGHgmf7euAq2leMD3MA5Lq4BBVdjmDDZKJ5hBuraG8aJ4nf3pf6G2wjqKhDD3hJlGqPdjit0tCIK1Kn8ec6Cr/vvPNw27D7J5iuKC0O/gaIMotNWAMoz/fgeaAUL l’éclaire.anjipu@smile.ci

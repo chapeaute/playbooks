@@ -1,0 +1,9 @@
+[all]
+activemq-1 ansible_connection=docker
+activemq-2 ansible_connection=docker
+activemq-3 ansible_connection=docker
+
+[activemq]
+activemq-1
+activemq-2
+activemq-3

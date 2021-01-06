@@ -1,0 +1,32 @@
+---
+# tasks file for neo4j
+# Include per-environment variables
+- name:  Include per-environment variables
+  include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  tags: always
+
+- include: "{{ ansible_os_family }}.yml"
+
+- name: main | Install neo4j
+  package:
+    name: "neo4j-{{ neo4j_version }}"
+    state: present
+
+- include_tasks: config.yml
+  tags: config
+
+- name: main | Start and enable neo4j service
+  service:
+    name: neo4j
+    state: started
+    enabled: yes

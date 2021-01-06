@@ -1,0 +1,10 @@
+{{ jicofo_log_dir }}/jicofo.log {
+  daily
+  missingok
+  rotate 7
+  compress
+  delaycompress
+  notifempty
+  copytruncate
+  su jicofo jicofo
+}

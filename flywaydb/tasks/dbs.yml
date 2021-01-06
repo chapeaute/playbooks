@@ -1,0 +1,14 @@
+---
+- name: "Create migration configuration files"
+  template:
+    src: "flyway.conf.j2"
+    dest: "{{ flywaydb_root }}/{{ flywaydb_subpath }}/conf/{{ item.key }}.conf"
+  with_dict: "{{ flywaydb_databases }}"
+
+- name: "Retrieve database SQL dump (from local copy)"
+  copy:
+    src: "{{item.value.migration_dir}}/"
+    dest: "{{ flywaydb_root }}/{{ flywaydb_subpath }}/sql/{{item.key}}"
+    directory_mode: '0755'
+  when: item.value.migration_dir is defined and item.value.migration_dir != ""
+  with_dict: "{{ flywaydb_databases }}"

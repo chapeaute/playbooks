@@ -1,0 +1,11 @@
+---
+- name: main | Set admin password in framework.properties configuration file
+  lineinfile:
+    dest:   "{{ rundeck_config_dir }}/realm.properties"
+    regexp: "admin:[^,]*,(.*)"
+    line:   'admin: MD5:{{ rundeck_admin_pass|hash("md5") }},\1'
+    backrefs: yes
+  notify:
+    - Restart Rundeck
+  tags:
+    - config

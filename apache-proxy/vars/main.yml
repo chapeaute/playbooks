@@ -1,0 +1,4 @@
+---
+# vars file for apache-proxy
+
+apache2_proxy_backends_default_options: retry=0

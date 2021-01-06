@@ -1,0 +1,13 @@
+---
+- name: cron | Set permissions on cron configuration file to 0600
+  file:
+    path: "{{ item }}"
+    mode: "g-rwx,o-rwx"
+  with_items:
+    - /etc/crontab
+    - /etc/cron.hourly
+    - /etc/cron.daily
+    - /etc/cron.weekly
+    - /etc/cron.monthly
+    - /etc/cron.d
+  when: security_level >= 2

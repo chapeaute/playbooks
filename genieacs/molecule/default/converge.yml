@@ -1,0 +1,11 @@
+---
+- name: Converge
+  hosts: all
+  tasks:
+    - import_role:
+        name: basic-firewalld # Install pkg and libs for firewalld
+    - import_role:
+        name: mongodb
+    - import_role:
+        name: genieacs
+      vars:

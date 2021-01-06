@@ -1,0 +1,27 @@
+---
+use_satellite_repo: False
+
+# defaults file for kibana
+kibana_server_port: 5601
+kibana_server_host: "0.0.0.0"
+kibana_es_hosts: ['localhost']
+kibana_es_port: 9200
+kibana_deploy_dashboard: False
+firewall_setup: True
+firewall_type: "firewalld"
+
+# enable http_reverse proxy
+kibana_enable_http_reverse: True
+kibana_reverse_vhost_name: kibana
+
+# kibana version
+kibana_version: "7.8"
+kibana_major_version: "{{ kibana_version.split('.')[0] }}"
+
+# Kibana
+kibana_xpack_security_enabled: false
+kibana_xpack_infra_enabled: false
+kibana_xpack_graph_enabled: false
+kibana_xpack_reporting_enabled: false
+kibana_xpack_apm_enabled: false
+kibana_xpack_ml_enabled: false

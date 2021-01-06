@@ -1,0 +1,64 @@
+---
+
+
+- name: mysql | Download mysql jar driver
+  get_url:
+    url: http://archive.smile.ci/wso2/mysql-connector-java-5.1.41-bin.jar
+    dest: "{{ wso2as_install_dir }}/repository/components/lib/mysql-connector-java-5.1.41-bin.jar"
+    owner: "{{ wso2as_service_name }}"
+    group: "{{ wso2as_service_name }}"
+
+- name: mysql | Create database {{ wso2as_db_name }}
+  become: true
+  mysql_db:
+    name:           "{{ wso2as_db_name }}"
+    state:          present
+  register: wso2as_db_created
+  delegate_to: "{{ wso2as_db_remote_host }}"
+
+- name: mysql | Create {{ wso2as_db_user}} user and set privileges on {{ wso2as_db_name }} database
+  become: true
+  mysql_user:
+    name:           "{{ wso2as_db_user }}"
+    password:       "{{ wso2as_db_pass }}"
+    host:           "%"
+    priv:           "{{ wso2as_db_name }}.*:ALL"
+    state:          present
+  delegate_to: "{{ wso2as_db_remote_host }}"
+
+- name: mysql | copy sql schemas
+  synchronize:
+    src: "{{ item }}"
+    dest: "rsync://{{ wso2as_db_remote_host }}/tmp/{{ item }}"
+  run_once: true
+  when: wso2as_db_created.changed and wso2as_db_host != inventory_hostname
+  with_items:
+    - dbscripts/mysql.sql
+    - dbscripts/identity/mysql.sql
+    - dbscripts/metrics/mysql.sql
+
+- name: mysql | import sql schemas
+  mysql_db:
+    state: import
+    name: "{{ wso2as_db_pass }}"
+    target: "{{ wso2as_install_dir }}/{{ item }}"
+  run_once: true
+  when: wso2as_db_created.changed
+  delegate_to: "{{ wso2as_db_remote_host }}"
+  with_items:
+    - dbscripts/mysql.sql
+    - dbscripts/identity/mysql.sql
+    - dbscripts/metrics/mysql.sql
+
+# TODO : Configura datasources
+# - name: mysql | modify datasources
+#   template:
+#     src: "repository/conf/datasources/{{ item }}.j2"
+#     dest: "{{ wso2as_install_dir }}/repository/conf/datasources/{{ item }}"
+#     owner: "{{ wso2as_service_name }}"
+#     group: "{{ wso2as_service_name }}"
+#   notify: "Restart wso2as"
+#   with_items:
+#     - bps-datasources.xml
+#     - master-datasources.xml
+#     - metrics-datasources.xml

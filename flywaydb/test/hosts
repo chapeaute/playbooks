@@ -1,0 +1,1 @@
+centos7.lxc ansible_ssh_host="centos7.lxc" ansible_ssh_user=root

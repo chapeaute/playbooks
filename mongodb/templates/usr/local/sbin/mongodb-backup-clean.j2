@@ -1,0 +1,37 @@
+#!/bin/bash
+
+BACKUP_DIR="{{ mongodb_backup_dir }}"
+BACKUP_AGE="{{ mongodb_backup_age }}"
+
+function syntax() {
+    cat <<EOF
+Script to purge MongoDB dump.
+
+Usage: ${0##*/} [-h|-o <days>]
+    -h           Display this message
+    -o <days>    Purge dump older than n days. If not specified, purge all dump.
+EOF
+}
+
+while getopts "ho:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        o)
+            BACKUP_AGE="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+# Deleting old backups and keeping 1 log
+echo "Removing following backup:"
+find $BACKUP_DIR/ -maxdepth 1 -regex "${BACKUP_DIR}/backup-.*" -type d -mmin +$((${BACKUP_AGE}*1440)) -print -exec rm -rf {} \; 2>&1
+
+exit $?

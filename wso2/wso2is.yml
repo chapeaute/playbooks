@@ -1,0 +1,15 @@
+---
+- hosts: wso2is
+  vars:
+    wso2is_version: 5.11.0
+    # WSO2 Password
+    wso2is_admin_pass: changeme
+    # Address of MySQL host
+    wso2is_db_host: "{{ inventory_hostname }}"
+    # Percentage of total memory dedicated to jvm
+    wso2is_memory_size_prct: 0.6
+    # WSO2 root directory
+    wso2is_root_dir: /var/lib
+    wso2is_nodes: "{{ groups['wso2is'] }}"
+  roles:
+    - role: wso2is

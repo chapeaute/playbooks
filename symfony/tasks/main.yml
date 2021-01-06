@@ -1,0 +1,51 @@
+---
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | Create var directory
+  file:
+    path: "{{ symfony_site_root | dirname }}/var"
+    owner: "{{ apache2_user }}"
+    group: "{{ apache2_group }}"
+    state: directory
+    recurse: true
+
+- name: main | Delete app log and cache folder
+  file:
+    state: absent
+    path:  "{{ symfony_site_root | dirname }}/var/{{ item }}"
+  with_items:
+    - cache
+    - log
+
+- name: main | Create link for cache directory, {{ symfony_site_dir }}/{{ symfony_site_name }}/cache to {{ symfony_site_root | dirname }}/var/cache
+  file:
+    state: link
+    src:   "{{ symfony_site_dir }}/{{ symfony_site_name }}/cache"
+    dest:  "{{ symfony_site_root | dirname }}/var/cache"
+
+- name: main | Create links for logs directory, {{ symfony_site_dir }}/{{ symfony_site_name }}/logs to {{ symfony_site_root | dirname }}/var/log
+  file:
+    state: link
+    src:   "{{ symfony_site_dir }}/{{ symfony_site_name }}/logs"
+    dest:  "{{ symfony_site_root | dirname }}/var/log"
+
+- name: main | Fix selinux for symfony
+  sefcontext:
+    target: "{{ symfony_site_root }}/{{ item }}(/.*)?"
+    setype: httpd_sys_rw_content_t
+    state: present
+    reload: yes
+  with_items:
+    - uploads
+    - files

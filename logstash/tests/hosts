@@ -1,0 +1,5 @@
+[all]
+logstash ansible_connection=docker
+
+[logstash]
+logstash

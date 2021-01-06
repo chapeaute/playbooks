@@ -1,0 +1,16 @@
+---
+- import_playbook: user/admin-smile.yml
+- import_playbook: user/admin-ocit.yml
+- import_playbook: user/admin-deploy.yml
+- import_playbook: rename-interfaces.yml
+  ignore_errors: yes
+
+- import_playbook: basic-route.yml
+- import_playbook: katello-agent.yml
+- hosts: all
+  roles:
+    - role: basic-disk
+      tags: format_disk
+      when: format_additional_drive == True
+    - role: foreman-init
+      tags: init

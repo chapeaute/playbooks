@@ -1,0 +1,13 @@
+---
+- hosts: logstash
+  vars:
+    ls_version: "7.6"
+    # Input
+    ls_input_beat: true
+    ls_input_logstash: true
+    ls_logstash_hosts: "{{ groups['kafka'] }}"
+    # Output
+    ls_output_elasticsearch: true
+    ls_elasticsearch_hosts: "{{ groups['elasticsearch'] }}"
+  roles:
+    - role: logstash

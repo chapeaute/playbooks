@@ -1,0 +1,40 @@
+---
+
+- name: RedHat | Set SELinux context on nodejs log directory
+  tags: selinux
+  file:
+    path:    "{{ nodejs_data_dir }}/logs"
+    setype:  var_log_t
+    recurse: yes
+  when:
+    - ansible_selinux.status == "enabled"
+
+- name: RedHat | Declare SELinux context on nodejs log directory
+  tags: selinux
+  sefcontext:
+    target: "{{ nodejs_data_dir }}/logs(/.*)?"
+    setype: var_log_t
+    state: present
+  when:
+    - ansible_selinux.status == "enabled"
+
+- name: RedHat | Setting firewall rules
+  firewalld:
+    port:      "{{ item }}/tcp"
+    zone:      "{{ firewall_zone }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - "{{ nodejs_port }}"
+  when: manage_firewalld
+
+- name: RedHat | Deploy init scripts
+  template:
+    src:   etc/systemd/system/nodejs.service.j2
+    dest:  /etc/systemd/system/nodejs.service
+  notify:
+    - "Systemd reload"
+  when: nodejs_install_pm2
+
+- meta: flush_handlers

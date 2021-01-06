@@ -1,0 +1,30 @@
+#!/bin/bash
+
+export LANG="en_US.UTF-8"
+
+# Backpu dir
+BACKUP_DIR=${1:-{{ libvirt_backup_default_dir }}}
+
+# Max backup
+MAX_BACKUP=${2:-{{ libvirt_backup_default_retention }}}
+
+# Bandwith limitation
+BW_LIMIT=${3:-0}
+
+mkdir -p $BACKUP_DIR
+
+rc=0
+
+log () {
+  echo `date "+%Y-%m-%d %H:%M:%S"`": $@"
+}
+
+for vm in `virsh list | awk '{ print $2 }' | grep -v Name | grep -v Nom | grep -ve '^$'`
+do
+  log "Launching backup of $vm"
+  virt-filesystems --long -h --all -d $vm
+  /usr/local/sbin/libvirt-vm-backup $BACKUP_DIR $vm $MAX_BACKUP $BW_LIMIT 2>&1 || rc=1
+  virt-filesystems --long -h --all -d $vm
+done
+
+exit $rc

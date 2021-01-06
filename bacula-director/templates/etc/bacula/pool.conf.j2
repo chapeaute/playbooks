@@ -1,0 +1,18 @@
+Counter {
+    Name = dc
+    Minimum = 1
+    Maximum = {{ bacula_daily_file_retention }}
+    Catalog = MyCatalog
+}
+
+Counter {
+    Name = wc
+    Minimum = 1
+    Maximum = {{ bacula_weekly_file_retention }}
+    Catalog = MyCatalog
+}
+
+Pool {
+    Name = Scratch
+    Pool Type = Backup
+}

@@ -1,0 +1,65 @@
+[server]
+hostname = "{{ wso2_generic_hostname }}"
+node_ip = "{{ wso2_generic_hostname }}"
+base_path = "https://$ref{server.hostname}:${carbon.management.port}"
+
+[super_admin]
+username = "{{ wso2_generic_admin_user }}"
+password = "{{ wso2_generic_admin_pass }}"
+create_admin_account = {{ wso2_generic_admin_create }}
+
+[user_store]
+type = "database_unique_id"
+
+[database.identity_db]
+type = "{{ wso2_generic_db_type }}"
+url = "{{ wso2_generic_db_identity_url }}"
+username = "{{ wso2_generic_db_user }}"
+password = "{{ wso2_generic_db_password }}"
+
+[database.shared_db]
+type = "{{ wso2_generic_db_type }}"
+url = "{{ wso2_generic_db_shared_url }}"
+username = "{{ wso2_generic_db_user }}"
+password = "{{ wso2_generic_db_password }}"
+
+[keystore.primary]
+file_name = "{{ ssl_certs_keystore_filename }}.jks"
+type = "JKS"
+password = "{{ wso2_generic_keystore_pass }}"
+alias = "wso2carbon"
+key_password = "{{ wso2_generic_keystore_pass }}"
+
+[keystore.internal]
+file_name = "{{ ssl_certs_keystore_filename }}.jks"
+type = "JKS"
+password = "{{ wso2_generic_keystore_pass }}"
+alias = "wso2carbon"
+key_password = "{{ wso2_generic_keystore_pass }}"
+
+[keystore.tls]
+file_name = "{{ ssl_certs_keystore_filename }}.jks"
+type = "JKS"
+password = "{{ wso2_generic_keystore_pass }}"
+alias = "wso2carbon"
+key_password = "{{ wso2_generic_keystore_pass }}"
+
+[truststore]
+file_name = "{{ ssl_certs_truststore_filename }}.jks"
+type = "JKS"
+password = "{{ wso2_generic_truststore_pass }}"
+
+{% if wso2_generic_isnodes|length > 1 %}
+[hazelcast]
+"hazelcast.shutdownhook.enabled" = "false"
+"hazelcast.logging.type"= "log4j"
+{% endif %}
+
+{% set members_list = [] %}
+{% for member in wso2_generic_isnodes %}
+{{ members_list.append( member+":5672" ) }}
+{% endfor %}
+{% if wso2_generic_isnodes|length > 1 %}
+[clustering]
+members = {{ members_list|map('string')|list }}
+{% endif %}

@@ -1,0 +1,41 @@
+---
+
+- name: ssh | Generate ssh key
+  user:
+    name: hadoop
+    group: hadoop
+    state: present
+    # home: "{{ hadoop_install_dir }}"
+    createhome: yes
+    generate_ssh_key: yes
+    ssh_key_bits: 2048
+    ssh_key_comment: "hadoop@{{ hadoop_master }}"
+
+- name: ssh | modify home permission
+  file:
+    owner: hadoop
+    group: hadoop
+    path: "{{ hadoop_root_dir }}/{{ hadoop.subpath }}"
+    mode: 0755
+    state: directory
+
+- name: ssh | Fetch hadoop user key file on master server
+  command: cat ~hadoop/.ssh/id_rsa.pub
+  register: pub_key_file
+  delegate_to: "{{ hadoop_master }}"
+  run_once: true
+  changed_when: false
+  tags: deploy_ssh
+
+- name: ssh | Deploy hadoop user key file on slaves
+  tags: deploy_ssh
+  authorized_key:
+    user:  hadoop
+    key:   "{{ pub_key_file.stdout }}"
+    state: present
+
+- name: ssh | disable strict host key check on master
+  template:
+    src: ssh_config.j2
+    dest: "{{ hadoop_install_dir }}/.ssh/config"
+

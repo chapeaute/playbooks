@@ -1,0 +1,14 @@
+---
+- name: centreonengine_user | Generate centreon-engine user SSH Key
+  user:
+    name: centreon-engine
+    generate_ssh_key: yes
+    ssh_key_comment: "centreon@{{ ansible_fqdn }}"
+
+- name: centreonengine_user | Deploy centreon-engine SSH configuration key file
+  copy:
+    src:   var/spool/centreon/ssh.config
+    dest:  ~centreon-engine/.ssh/config
+    mode:  0644
+    owner: centreon-engine
+    group: centreon-engine

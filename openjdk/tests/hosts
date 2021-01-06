@@ -1,0 +1,5 @@
+[all]
+openjdk ansible_connection=docker
+
+[group1]
+openjdk

@@ -1,0 +1,1 @@
+options snd-aloop enable={% for i in range(jibri_workers) %}1{%- if not loop.last -%},{% endif %}{% endfor %} index={% for i in range(jibri_workers) %}{{i}}{%- if not loop.last -%},{% endif %}{% endfor %}

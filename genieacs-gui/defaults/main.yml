@@ -1,0 +1,20 @@
+---
+# defaults file for genieacs-gui
+
+#Global
+manage_firewalld: False
+
+genieacs_gui_service_name: genieacs-gui
+genieacs_gui:
+  source_url: http://archive.smile.ci/genieacs/genieacs-gui-1.0.tar.gz
+  subpath: genieacs-gui-1.0
+
+# Settings
+genieacs_gui_data_dir: "{{ genieacs_gui_default_data_dir }}"
+genieacs_gui_adapter: sqlite
+genieacs_gui_mongodb_host: 127.0.0.1
+genieacs_gui_port: 8080
+genieacs_gui_api_host: localhost
+genieacs_gui_api_port: 7557
+genieacs_gui_user: genieacs-gui
+genieacs_gui_group: genieacs-gui

@@ -1,0 +1,27 @@
+---
+
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../../apache/vars'
+
+- name: Launch manual installation of composer
+  include_tasks: manual.yml
+
+- name: Create cache directory
+  file:
+    path: "{{ apache2_home_dir }}/.cache"
+    owner: "{{ apache2_user }}"
+    group: "{{ apache2_group }}"
+    state: directory
+
+- include: deploy.yml
+  when: composer_site_dir is defined

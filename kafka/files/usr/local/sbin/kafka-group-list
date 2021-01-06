@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+
+
+kafka-consumer-groups --list --bootstrap-server 127.0.0.1:9092

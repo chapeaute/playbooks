@@ -1,0 +1,15 @@
+---
+- name: sysctl | Set dirty ratio kernel parameters (vm.dirty_ratio)
+  sysctl:
+    name:  vm.dirty_ratio
+    value: "{{ mongodb_sysctl_vm_dirty_ratio }}"
+
+- name: sysctl | Set dirty background ratio kernel parameters (vm.dirty_background_ratio)
+  sysctl:
+    name:  vm.dirty_background_ratio
+    value: "{{ mongodb_sysctl_vm_dirty_background_ratio }}"
+
+- name: sysctl | Set swappiness kernel parameters (vm.swappiness)
+  sysctl:
+    name:  vm.swappiness
+    value: "{{ mongodb_sysctl_vm_swappiness }}"

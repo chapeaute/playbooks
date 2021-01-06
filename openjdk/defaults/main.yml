@@ -1,0 +1,4 @@
+---
+# defaults file for openjdk
+openjdk_version: 8
+java_home: /usr/lib/jvm/jre-openjdk

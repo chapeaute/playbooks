@@ -1,0 +1,13 @@
+---
+
+- name: configure_wsrep_user | creating wsrep user
+  mysql_user:
+    name: "{{ mariadb_wsrep_sst_user }}"
+    host: "{{ item }}"
+    password: "{{ mariadb_wsrep_sst_password }}"
+    priv: "*.*:ALL,GRANT"
+  with_items:
+    - '%'
+    - '127.0.0.1'
+    - '::1'
+    - localhost

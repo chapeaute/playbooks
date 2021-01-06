@@ -1,0 +1,4 @@
+---
+# defaults file for ioncube
+ioncube_default_loader: '7.2'
+ioncube_default_extension_dir: '/usr/lib64/php/modules/'

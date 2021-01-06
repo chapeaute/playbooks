@@ -1,0 +1,14 @@
+---
+
+- name: RedHat | Add Erlang packagecloud.io yum repo.
+  yum_repository:
+    name: erlang
+    description: Erlang Cache packagecloud.io repository
+    baseurl: "https://packagecloud.io/rabbitmq/erlang/el/{{ ansible_distribution_major_version|int }}/$basearch"
+    repo_gpgcheck: no
+    gpgcheck: no
+    enabled: yes
+    gpgkey: https://packagecloud.io/rabbitmq/erlang/gpgkey
+    sslverify: 1
+    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+  when: use_satellite_repo == false

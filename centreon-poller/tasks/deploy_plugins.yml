@@ -1,0 +1,80 @@
+---
+- name: deploy_plugins | Create plugins directory
+  file:
+    path:  /usr/lib/nagios/plugins/
+    owner: root
+    group: root
+    mode:  0755
+    state: directory
+
+- name: deploy_plugins | Create plugins directory for lib64
+  file:
+    path:  /usr/lib64/nagios/plugins
+    owner: root
+    group: root
+    mode:  0755
+    state: directory
+    recurse: yes
+
+- name: deploy_plugins | Create symlink to lib64
+  file:
+    src:  /usr/lib/nagios/plugins/
+    dest: /usr/lib64/nagios/plugins/
+
+- name: deploy_plugins | Install git package
+  package:
+   name:  git
+   state: present
+
+- name: deploy_plugins | Deploy github centreon plugins
+  git:
+    repo: https://github.com/centreon/centreon-plugins.git
+    dest: /usr/lib/nagios/plugins/
+    force: yes
+
+- name: deploy_plugins | Git disable file mode check
+  shell: "cd /usr/lib/nagios/plugins && git config core.fileMode false"
+  changed_when: false
+
+- name: deploy_plugins | Deploy plugins for auto-discovery
+  copy:
+    src:  "usr/lib/nagios/plugins/{{ item }}"
+    dest: "/usr/lib/nagios/plugins/{{ item }}"
+    mode: 0755
+  with_items:
+    - check_centreon_snmp_remote_storage
+    - check_centreon_snmp_traffic
+    - check_by_ssh
+    - centreon.conf
+
+- name: deploy_plugins | Deploy ICMP plugins
+  copy:
+    src:  "usr/lib/nagios/plugins/{{ item }}"
+    dest: "/usr/lib/nagios/plugins/{{ item }}"
+    mode: 04755
+  with_items:
+    - check_icmp
+  tags: test
+
+- name: deploy_plugins | Copy auto-discovery library
+  copy:
+    src:  "usr/lib/nagios/plugins/{{ item }}"
+    dest: "/usr/lib/nagios/plugins/"
+    mode: 0755
+  with_items:
+    - Centreon
+
+- name: deploy_plugins | Set permissions on plugin centreon_plugins.pl
+  file:
+    path:  /usr/lib/nagios/plugins/centreon_plugins.pl
+    mode:  0755
+
+- name: deploy_plugins | Install plugins
+  package:
+   name:  "{{ item }}"
+   state: present
+  with_items:
+    - nagios-plugins-icmp
+    - nagios-plugins-by_ssh
+    - nagios-plugins-tcp
+

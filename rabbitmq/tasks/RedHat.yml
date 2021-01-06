@@ -1,0 +1,41 @@
+---
+
+- name: RedHat | Add Rabbitmq packagecloud.io yum repo.
+  yum_repository:
+    name: rabbitmq
+    description: Rabbitmq Cache packagecloud.io repository
+    baseurl: https://packagecloud.io/rabbitmq/rabbitmq-server/el/{{ ansible_distribution_major_version|int }}/$basearch
+    repo_gpgcheck: no
+    gpgcheck: no
+    enabled: yes
+    gpgkey: https://packagecloud.io/rabbitmq/rabbitmq-server/gpgkey
+    sslverify: 1
+    sslcacert: /etc/pki/tls/certs/ca-bundle.crt
+  when: use_satellite_repo == false
+
+- name: RedHat | Open firewall ports
+  firewalld:
+    port:      "{{ item }}/tcp"
+    zone:      "{{ firewall_zone }}"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  when:
+    - ansible_distribution_version >= '7'
+    - firewall_setup
+  with_items:
+    - "{{ rabbitmq_port }}"
+    - 15672
+#     - 1883
+#     - 4369
+#     - 8883
+#     - 25672
+#     - 61613-61614
+
+- name: RedHat | Install SELinux packages
+  package:
+    name: "{{ item }}"
+  with_items:
+    - policycoreutils-python
+  when: ansible_selinux and ansible_selinux.status == "enabled"
+

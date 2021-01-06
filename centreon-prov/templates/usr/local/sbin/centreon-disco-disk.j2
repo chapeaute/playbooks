@@ -1,0 +1,28 @@
+#!/bin/bash
+
+# Default value for Centreon
+PREFIX="{{ centreon_disk_svc_prefix }}"
+SERVICETPL="{{ centreon_disk_svc_tpl }}"
+MACROEXTRA="{{ centreon_disk_svc_macro_extra }}"
+MACROEXTRA_NAME=$(echo $MACROEXTRA | sed -e 's/=[^|]*//g')
+MACROEXTRA_VALUE=$(echo $MACROEXTRA | sed -e 's/[^|]*=//g')
+MACRONAME="{{ centreon_disk_svc_macro }}|${MACROEXTRA_NAME}"
+PLUGIN_PATH="{{ centreon_disk_plugin }}"
+
+service_get_devices() {
+  local hostaddr="$1"
+  local snmpcommunity="$2"
+  local snmpversion="$3"
+  local snmpport="$4"
+
+  if [ "$SSHACCESS" == "yes" ]; then
+    ssh $SSHUSER@$hostaddr $PLUGIN_PATH --maxrepetitions=16 -H 127.0.0.1 -C $snmpcommunity -v $snmpversion -P $snmpport -s | awk -v macroextra_value="$MACROEXTRA_VALUE" -F ' :: ' '{print $2"|"macroextra_value}' | sed 's/^hrStorage //' | grep / | sed -e 's/\\/\\\\/g' | sed -e 's/Serial Number.*//g'
+  else
+    if [ -n "$SSHBASTION" ]; then
+        BASTION_CMD="ssh -n $SSHBASTION"
+    fi
+    $BASTION_CMD $PLUGIN_PATH --maxrepetitions=16 -H $hostaddr -C $snmpcommunity -v $snmpversion -P $snmpport -s | awk -v macroextra_value="$MACROEXTRA_VALUE" -F ' :: ' '{print $2"|"macroextra_value}' | sed 's/^hrStorage //' | grep / | sed -e 's/\\/\\\\/g' | sed -e 's/Serial Number.*//g'
+  fi
+}
+
+source `dirname $0`/centreon-disco-common

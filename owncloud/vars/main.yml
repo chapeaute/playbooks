@@ -1,0 +1,10 @@
+---
+
+owncloud_install_dir: "{{ owncloud_root_dir }}/{{ owncloud_vhost_name }}"
+owncloud_docroot_dir: "{{ owncloud_install_dir }}/htdocs/owncloud"
+owncloud_data_dir: "{{ owncloud_install_dir }}/shared/owncloud/data"
+owncloud_config_file: "{{ owncloud_install_dir }}/shared/owncloud/config/config.php"
+
+owncloud_version_channel: "community" # mandatory # releases | prereleases | daily
+owncloud_repository: "https://download.owncloud.org"
+owncloud_download_url: "{{owncloud_repository}}/{{owncloud_version_channel}}/owncloud-{{[owncloud_version_full, owncloud_archive_format]|join('.')}}"

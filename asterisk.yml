@@ -1,0 +1,7 @@
+---
+
+- hosts: asterisk
+  roles:
+    - role: asterisk
+      asterisk_version: 16
+

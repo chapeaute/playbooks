@@ -1,0 +1,15 @@
+---
+
+- name: RedHat | Install python binding to manage selinux
+  package:
+    name: "{{ item }}"
+  with_items:
+    - libsemanage-python
+    - libselinux-python
+
+- name: RedHat | Enable httpd to use NFS
+  seboolean:
+    name:       httpd_use_nfs
+    state:      yes
+    persistent: yes
+  when: ansible_selinux.status == "enabled" and nfs_selinux_httpd_enable

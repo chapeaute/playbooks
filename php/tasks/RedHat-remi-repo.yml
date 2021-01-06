@@ -1,0 +1,22 @@
+---
+
+- name: Repo | Install Remi repo
+  yum:
+    name: "http://rpms.remirepo.net/enterprise/remi-release-{{ ansible_distribution_major_version  }}.rpm"
+    state: present
+    disable_gpg_check: yes
+  when:
+    - ansible_os_family == "RedHat"
+    - use_satellite_repo == false
+
+- name: Repo | Disable remi repo for php {{ php_version }}
+  command: "{{ yum_repo_manager }} {{ yum_repo_disable_command }} -y {{ php_remi_base_repo }}*"
+  changed_when: False
+  when:
+    - ansible_os_family == "RedHat"
+
+- name: Repo | Enable remi repo for php {{ php_version }}
+  command: "{{ yum_repo_manager }} {{ yum_repo_enable_command }} -y {{ php_remi_base_repo }}{% if ansible_distribution_major_version | int >= 8 %}:{% endif %}{{ php_remi_version }}"
+  changed_when: False
+  when:
+    - ansible_os_family == "RedHat"

@@ -1,0 +1,15 @@
+---
+
+- name: Read default lang file
+  command: cat {{ jitsi_meet_install_dir }}/lang/main-{{ item }}.json
+  register: jitsi_meet_default_lang
+  changed_when: False
+
+- name: Merge with custom strings
+  set_fact:
+    jitsi_meet_lang: "{{ jitsi_meet_default_lang.stdout | from_json | combine(jitsi_meet_custom_lang[item] | default({}), recursive=True) }}"
+
+- name: Save new lang file
+  copy:
+    dest: "{{ jitsi_meet_install_dir }}/lang/main-{{ item }}.json"
+    content: "{{ jitsi_meet_lang | to_nice_json }}"

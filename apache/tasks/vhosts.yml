@@ -1,0 +1,122 @@
+---
+- name: vhost | Define context httpd_log_t on logs directory
+  tags:
+    - create_vhosts
+    - config
+  sefcontext:
+    target: "{{ vhost_options.data_dir|default(apache2_data_dir + '/' + vhost_name ) }}/logs(/.*)?"
+    setype: httpd_log_t
+    state: present
+  when: ansible_os_family == "RedHat" and ansible_selinux is defined and ansible_selinux.status == "enabled"
+
+- name: vhost | Define context httpd_sys_rw_content_t on cache directory
+  tags:
+    - create_vhosts
+    - config
+  sefcontext:
+    target: "{{ vhost_options.data_dir|default(apache2_data_dir + '/' + vhost_name) }}/cache(/.*)?"
+    setype: httpd_sys_rw_content_t
+    state: present
+  when: ansible_os_family == "RedHat" and ansible_selinux is defined and ansible_selinux.status == "enabled"
+
+- name: vhost | Ensure folders exists for vhost
+  tags:
+    - create_vhosts
+    - config
+  file:
+    name: "{{ vhost_options.data_dir|default(apache2_data_dir + '/' + vhost_name) }}/{{ dir }}"
+    state: directory
+    owner: "{{ apache2_user }}"
+    group: "{{ apache2_group }}"
+    setype: httpd_sys_content_t
+    follow: yes
+  with_items:
+    - bin
+    - conf
+    - htdocs
+  loop_control:
+    loop_var: dir
+
+- name: vhost | Ensure folder cache exists for vhost with setype
+  tags:
+    - create_vhosts
+    - config
+  file:
+    name: "{{ vhost_options.data_dir|default(apache2_data_dir + '/' + vhost_name) }}/cache"
+    state: directory
+    owner: "{{ apache2_user }}"
+    group: "{{ apache2_group }}"
+    setype: httpd_sys_rw_content_t
+  when: ansible_os_family == "RedHat" and ansible_selinux is defined and ansible_selinux.status == "enabled"
+
+- name: vhost | Ensure folder logs exists for vhost
+  tags:
+    - create_vhosts
+    - config
+  file:
+    name: "{{ vhost_options.data_dir|default(apache2_data_dir + '/' + vhost_name) }}/logs"
+    state: directory
+    owner: "{{ apache2_user }}"
+    group: "{{ apache2_group }}"
+
+- name: vhost | Ensure folder logs exists for vhost with setype
+  tags:
+    - create_vhosts
+    - config
+  file:
+    name: "{{ vhost_options.data_dir|default(apache2_data_dir + '/' + vhost_name) }}/logs"
+    state: directory
+    owner: "{{ apache2_user }}"
+    group: "{{ apache2_group }}"
+    setype: httpd_log_t
+  when: ansible_os_family == "RedHat" and ansible_selinux is defined and ansible_selinux.status == "enabled"
+
+- name: vhost | Create vhosts
+  tags:
+    - config
+    - create_vhosts
+    - create_vhost_conf
+  template:
+    src: "etc/httpd/conf.d/vhost.conf.j2"
+    dest: "{{ apache2_vhosts_dir }}/{{ vhost_options.vhost_name|default(vhost_name) }}.conf"
+  notify: "Reload Apache"
+
+- name: vhost | Enable/Disable vhosts
+  tags:
+    - create_vhosts
+    - config
+  file:
+    name: "/etc/apache2/sites-enabled/{{ vhost_options.vhost_name|default(vhost_name) }}.conf"
+    src: "{{ apache2_vhosts_dir }}/{{ vhost_options.vhost_name|default(vhost_name) }}.conf"
+    state: "{{'link' if vhost_options.enabled|default('true') else 'absent' }}"
+  when: ansible_os_family == 'Debian'
+  notify: "Reload Apache"
+
+- name: vhost | Link conf vhosts
+  tags:
+    - create_vhosts
+    - config
+  file:
+    src: "{{ apache2_vhosts_dir }}/{{ vhost_options.vhost_name|default(vhost_name) }}.conf"
+    dest: "{{ vhost_options.data_dir|default(apache2_data_dir + '/' + vhost_name) }}/conf/{{ vhost_name }}.conf"
+    state: 'link'
+
+- name: vhost | find all files in htdocs dir
+  tags:
+    - create_vhosts
+    - config
+  find:
+    path:   "{{ vhost_options.data_dir|default(apache2_data_dir + '/' + vhost_name) }}/htdocs"
+  register: htdocs_file
+
+- name: vhost | Create index.html files if no file present in htdocs directory
+  tags:
+    - create_vhosts
+    - config
+  copy:
+    content: "{{ vhost_name }}"
+    dest:    "{{ vhost_options.data_dir|default(apache2_data_dir + '/' + vhost_name) }}/htdocs/index.html"
+    owner: "{{ apache2_user }}"
+    group: "{{ apache2_group }}"
+    mode: 0640
+  when: htdocs_file.matched == 0 and apache2_vhost_create_index_file

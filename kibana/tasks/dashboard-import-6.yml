@@ -1,0 +1,14 @@
+---
+- name: dashboard | Push all search in Kibana {{ dashbrd }}
+  uri:
+    url: "http://127.0.0.1:5601/api/kibana/dashboards/import"
+    method: POST
+    body: "{{ lookup('file',item) }}"
+    body_format: json
+    status_code: 200,201
+    headers:
+      kbn-xsrf: true
+  with_fileglob:
+    - "dashboards-6/*.json"
+  register: import_dashboard
+  changed_when: import_dashboard.status == 201

@@ -1,0 +1,9 @@
+---
+# handlers file for security-mariadb
+
+- name: "Restart MariaDB"
+  service:
+    name: "mariadb"
+    state: restarted
+    enabled: true
+  when: not manage_by_cluster

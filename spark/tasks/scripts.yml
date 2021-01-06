@@ -1,0 +1,26 @@
+---
+
+- name: scripts | Install jq to parse json outputs
+  package:
+    name: jq
+
+- name: scripts | deploy master scripts
+  template:
+    src:  "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    mode: 750
+    owner: root
+    group: spark
+  with_items:
+    - spark-master-node-status
+    - spark-worker-node-status
+
+- name: scripts | deploy worker scripts
+  template:
+    src:  "usr/local/sbin/{{ item }}.j2"
+    dest: "/usr/local/sbin/{{ item }}"
+    mode: 750
+    owner: root
+    group: spark
+  with_items:
+    - spark-worker-node-status

@@ -1,0 +1,11 @@
+#!/bin/bash
+
+ES_SERVER="127.0.0.1"
+
+# Enable reallocation shard
+curl -s -XPUT "http://${ES_SERVER}:9200/_cluster/settings" -H 'Content-Type: application/json' -d'
+{
+  "persistent": {
+    "cluster.routing.rebalance.enable": "all"
+  }
+}' | jq .

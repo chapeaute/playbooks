@@ -1,0 +1,5 @@
+---
+- hosts: all
+  roles:
+  - role: ntp
+    ntp_timezone: Africa/Abidjan

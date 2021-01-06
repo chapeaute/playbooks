@@ -1,0 +1,14 @@
+---
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: true
+
+- name: Restart jigasi
+  systemd:
+    name: "{{ jigasi_service_name }}"
+    state: restarted
+
+- name: Register Jigasi XMPP user
+  command: prosodyctl register {{ jigasi_xmpp_user }} {{ jitsi_xmpp_auth_domain }} '{{ jigasi_xmpp_pass }}'
+  delegate_to: "{{ jitsi_xmpp_server }}"

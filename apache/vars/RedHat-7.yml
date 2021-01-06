@@ -1,0 +1,38 @@
+apache2_default_root: /var/www/html
+apache2_default_packages:
+  - httpd
+apache2_modules_packages:
+  - module: perl
+    packages:
+      - mod_perl
+  - module: ssl
+    packages:
+      - mod_ssl
+  - module: php
+    packages:
+      - php
+apache2_service_name: httpd
+apache2_config_file: /etc/httpd/conf/httpd.conf
+apache2_config_file_ssl: /etc/httpd/conf.d/ssl.conf
+apache2_confd_dir: /etc/httpd/conf.d
+apache2_confd_custom_dir: "{{ apache2_confd_dir }}/custom"
+apache2_vhosts_dir: /etc/httpd/conf.d
+apache2_binary: httpd
+apache2_log_owner: root
+apache2_log_group: root
+apache2_log_dir: /var/log/httpd
+apache2_user: apache
+apache2_group: apache
+apache2_home_dir: /usr/share/httpd
+apache2_module_security2_conf_file: /etc/httpd/conf.d/mod_security.conf
+apache2_default_ssl_cert: /etc/pki/tls/certs/localhost.crt
+apache2_default_ssl_key: /etc/pki/tls/private/localhost.key
+apache2_htpasswd: /usr/bin/htpasswd
+apache2_htpasswd_dir: /etc/httpd/htpasswd
+apache2_apachectl: /sbin/apachectl
+pwgen_dir: /bin/pwgen
+apache2_disabled_default:
+  - welcome.conf
+apache_selinux_packages:
+  - policycoreutils-python
+  - libselinux-python

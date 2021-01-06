@@ -1,0 +1,60 @@
+
+
+    DocumentRoot "{{ jitsi_meet_install_dir }}"
+    <Directory "{{ jitsi_meet_install_dir }}">
+      Options Indexes Includes MultiViews FollowSymLinks
+      AddOutputFilter Includes .html
+      AllowOverride All
+      Require all granted
+    </Directory>
+
+    Alias "/config.js" "{{ jitsi_meet_etc_dir }}/config.js"
+    <Location "/config.js">
+      Require all granted
+      ExpiresActive On
+      ExpiresDefault "now"
+    </Location>
+
+    Alias "/external_api.js" "{{ jitsi_meet_install_dir }}/libs/external_api.min.js"
+    <Location "/external_api.js">
+      Require all granted
+    </Location>
+
+    RewriteEngine On
+    RewriteRule ^/([a-zA-Z0-9]+)$ /index.html
+    # Disable rewrite cache
+    ExpiresActive On
+    ExpiresDefault "now"
+
+    ProxyPreserveHost off
+    RequestHeader set Host "{{ jitsi_xmpp_domain }}"
+    ProxyPass /http-bind http://{{ jitsi_xmpp_server }}:5280/http-bind/ retry=0
+    ProxyPassReverse /http-bind http://{{ jitsi_xmpp_server }}:5280/http-bind/
+
+    <Location "/xmpp-websocket">
+      RequestHeader set Host "{{ jitsi_xmpp_domain }}"
+      ProxyPass "ws://{{ jitsi_xmpp_server }}:5280/xmpp-websocket" retry=0
+      ProxyPassReverse "ws://{{ jitsi_xmpp_server }}:5280/xmpp-websocket"
+    </Location>
+
+{% if jitsi_meet_enable_etherpad | bool %}
+    <Location "/etherpad/">
+      ProxyAddHeaders On
+      ProxyPass http://{{ jitsi_meet_etherpad_host }}:{{ jitsi_meet_etherpad_port }}/ retry=0
+      ProxyPassReverse http://{{ jitsi_meet_etherpad_host }}:{{ jitsi_meet_etherpad_port }}/
+      RequestHeader set X-Forwarded-For REMOTE_ADDR
+      RequestHeader set X-Forwarded-Host HOST
+    </Location>
+{% endif %}
+
+    ExpiresActive on
+    <FilesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|js|css|swf)$">
+        ExpiresDefault "access plus 4 weeks"
+    </FilesMatch>
+
+    LogFormat   "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %D" proxy
+    SetEnvIf    X-Forwarded-For "^.*\..*\..*\..*" forwarded=yes
+    CustomLog   /var/log/httpd/jitsi-meet_access.log proxy expr=reqenv('forwarded')=='yes'
+    LogFormat   "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %D" direct
+    CustomLog   /var/log/httpd/jitsi-meet_access.log direct expr=reqenv('forwarded')!='yes'
+    ErrorLog    /var/log/httpd/jitsi-meet_error.log

@@ -1,0 +1,102 @@
+#!/bin/bash
+
+USER_FILE="~/.my.cnf"
+MYSQL_CMD="mysql --defaults-extra-file=$USER_FILE -NB -e"
+TABLE_IMPORT_NAME="_import_sql"
+DB_NAME=""
+SQL_FILES=""
+
+register=0
+
+function syntax() {
+    cat <<EOF
+Script to import SQL files in database
+
+Usage: ${0##*/} [-h|-d <db_name>][-f <filename|dirname>] [-r]
+    -h                     Display this message
+    -d <db_name>           Database name
+    -f <filename|dirname>  Import SQL file or all SQL file in dirname with extension .sql
+    -r                     Register file already import in $TABLE_IMPORT_NAME. Usefull for CI/CD workflow.
+EOF
+}
+
+if [ "$UID" -ne 0 ]; then
+    >&2
+    echo "Script must be run with root privileges. Abording..."
+    exit 1
+fi
+
+while getopts "hd:f:r" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        d)
+            DB_NAME="${OPTARG}"
+            ;;
+        f)
+            SQL_FILES="${OPTARG}"
+            ;;
+        r)
+            register=1
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+
+if [[ -z $DB_NAME ]] || [[ -z $SQL_FILES ]]; then
+    syntax
+    exit 1
+fi
+
+if [[ ! `command -v mysql` ]]; then
+    echo "Client \"mysql\" not found. Try to install it with :
+    \"apt-get install mysql-client\" on Debian system
+    \"yum install MariaDB-client\" on CentOS"
+    exit 1
+fi
+
+$MYSQL_CMD "SHOW DATABASES" | grep -q "^${DB_NAME}$" || {
+    `dirname $0`/mysql-db-create -d $DB_NAME
+}
+
+if [ $register -eq 1 ]; then
+    $MYSQL_CMD "SHOW TABLES" -D $DB_NAME | grep -q "^${TABLE_IMPORT_NAME}$" || {
+        echo "Create table ${DB_NAME}.${TABLE_IMPORT_NAME}: "
+        $MYSQL_CMD "CREATE TABLE IF NOT EXISTS \`${TABLE_IMPORT_NAME}\` ( \`id\` int(11) NOT NULL auto_increment, \`file\` varchar(100) NOT NULL, PRIMARY KEY (\`id\`)) ENGINE=InnoDB DEFAULT CHARSET=utf8;" -D ${DB_NAME}
+    }
+fi
+
+for sql in `find $SQL_FILES -name "*.sql" -type f | sort -n`
+do
+    echo -n "Import '$sql' in '$DB_NAME': "
+
+    if [ $register -eq 1 ]; then
+        filename=$(basename $sql)
+        is_import=$($MYSQL_CMD "SELECT COUNT(*) FROM \`${DB_NAME}\`.\`${TABLE_IMPORT_NAME}\` WHERE file=\"$filename\"")
+    else
+        is_import=0
+    fi
+
+    if [ $is_import -eq 0 ]; then
+        $MYSQL_CMD "source $sql" -D $DB_NAME
+
+        if [ $? -eq 0 ]; then
+            echo "done"
+            if [ $register -eq 1 ]; then
+                $MYSQL_CMD "INSERT INTO \`${DB_NAME}\`.\`${TABLE_IMPORT_NAME}\` VALUES (null, \"$filename\")"
+            fi
+        else
+            echo "failed"
+            exit 1
+        fi
+    else
+        echo "already import"
+    fi
+done

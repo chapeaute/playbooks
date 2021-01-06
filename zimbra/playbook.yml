@@ -1,0 +1,11 @@
+---
+- hosts: zimbra
+  roles:
+    - role: zimbra
+      zimbra_is_ldap_master: true
+      zimbra_services:
+        - store
+        - ldap
+        - mta
+        - apache
+        - logger

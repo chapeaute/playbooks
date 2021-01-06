@@ -1,0 +1,9 @@
+---
+- hosts: all
+  roles:                             
+    - role: postfix                                                        
+      postfix_mydomain: "{{ ansible_domain }}"
+      postfix_local_user_relay_address:                                    
+        - support-systeme@smile.ci   
+
+

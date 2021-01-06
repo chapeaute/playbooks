@@ -1,0 +1,14 @@
+- hosts: all
+  roles:
+    - role: ansible-flywaydb
+      flywaydb_databases:
+        testdb:
+          url: "jdbc:mysql://localhost:3306/testdb?autoReconnect=true"
+          user: "root"
+          password: ""
+          migration_dir: "data/testdb"
+        testdb2:
+          url: "jdbc:mysql://localhost:3306/testdb2?autoReconnect=true"
+          user: "root"
+          password: ""
+          migration_dir: "data/testdb2"

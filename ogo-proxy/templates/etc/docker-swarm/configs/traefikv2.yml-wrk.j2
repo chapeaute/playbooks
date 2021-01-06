@@ -1,0 +1,87 @@
+# Traefik manager configuration file
+#
+# Common settings
+#
+global:
+  checkNewVersion: false
+  sendAnonymousUsage: false
+
+serversTransport:
+  insecureSkipVerify: true
+
+entryPoints:
+  monitoring:
+    address: ":7979"
+  http:
+    address: ":80"
+{% if dumb_proxy_hosts is defined %}
+    forwardedHeaders:
+      trustedIPs:
+{% for host in dumb_proxy_hosts %}
+        - "{{ host }}"
+{% endfor %}
+    proxyProtocol:
+      trustedIPs:
+{% for host in dumb_proxy_hosts %}
+        - "{{ host }}"
+{% endfor %}
+{% endif %}
+  https:
+    address: ":443"
+{% if dumb_proxy_hosts is defined %}
+    forwardedHeaders:
+      trustedIPs:
+{% for host in dumb_proxy_hosts %}
+        - "{{ host }}"
+{% endfor %}
+    proxyProtocol:
+      trustedIPs:
+{% for host in dumb_proxy_hosts %}
+        - "{{ host }}"
+{% endfor %}
+{% endif %}
+
+#
+# Providers
+#
+providers:
+  providersThrottleDuration: 5s
+  file:
+    directory: /etc/traefik/traefik.d
+    watch: true
+  etcd:
+    endpoints:
+      - "{{ etcd_opts.dns }}:2379"
+    rootKey: "traefikv2"
+
+#
+# Monitoring
+#
+metrics:
+  prometheus:
+    entryPoint: monitoring
+    buckets: ["0.1" ,"0.3" ,"1.2 ", "5.0"]
+
+ping:
+  entryPoint: monitoring
+
+#
+# Log
+#
+log:
+  level: {{ traefikv2_opts.loglevel }}
+  format: common
+
+accessLog:
+  format: json
+
+#
+# Admin services
+#
+http:
+  middlewares:
+    # Redirect to https
+    redirect-https:
+      redirectScheme:
+        scheme: https
+        permanent: true

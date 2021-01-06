@@ -1,0 +1,6 @@
+---
+- hosts: all
+  roles:
+    - role: elasticsearch # Needed for testing
+      es_heap_size: 256m
+    - role: kibana

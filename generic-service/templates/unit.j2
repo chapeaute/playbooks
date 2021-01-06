@@ -1,0 +1,23 @@
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type={{ genericservice.service_type|default('forking') }}
+User={{ genericservice.system_username|default(genericservice.name) }}
+Group={{ genericservice.system_groupname|default(genericservice.name) }}
+{% if genericservice.env_vars is defined %}
+EnvironmentFile=/etc/default/{{ genericservice.name }}
+{% endif %}
+{% if genericservice.limitopenfiles is defined %}
+LimitNOFILE={{ genericservice.limitopenfiles|int }}
+{% endif %}
+WorkingDirectory={{ genericservice_root }}/{{ genericservice.name }}
+Restart=on-failure
+TimeoutSec=5min
+IgnoreSIGPIPE=no
+KillMode=control-group
+GuessMainPID=no
+ExecStart={% if genericservice.start_command|first != '/' %}{{ genericservice_root }}/{{ genericservice.name }}/{% endif %}{{ genericservice.start_command }} {{ genericservice.start_command_opts|default() }}
+{% if genericservice.stop_command is defined %}
+ExecStop={% if genericservice.stop_command|first != '/' %}{{ genericservice_root }}/{{ genericservice.name }}/{% endif %}{{ genericservice.stop_command }} {{ genericservice.stop_command_opts|default() }}
+{% endif %}

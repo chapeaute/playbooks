@@ -1,0 +1,12 @@
+---
+- hosts: 1http
+  vars:
+    site_name: "www.smile.ci"
+    site_dir:  "/var/www"
+    docs_dir:  "{{ site_dir }}/{{ site_name }}/htdocs"
+  roles:
+    - role: apache
+      apache2_data_dir: "{{ site_dir }}"
+      apache2_vhosts:
+        "{{ site_name }}":
+    - role: php

@@ -1,0 +1,10 @@
+---
+- name: script | Deploy admin script
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - ipa-user-migrate

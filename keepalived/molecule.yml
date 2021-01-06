@@ -1,0 +1,23 @@
+---
+dependency:
+  name: galaxy
+driver:
+  name: docker
+docker:
+  containers:
+    - name: keepalived-1
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+      capabilities: ['SYS_ADMIN']
+      ansible_groups:
+        - keepalived
+    - name: keepalived-2
+      image: centos/systemd
+      image_version: latest
+      privileged: true
+      capabilities: ['SYS_ADMIN']
+      ansible_groups:
+        - keepalived
+verifier:
+  name: testinfra

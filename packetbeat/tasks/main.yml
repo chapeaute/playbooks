@@ -1,0 +1,49 @@
+---
+# tasks file for packetbeat
+
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  tags: always
+
+- include: "{{ ansible_os_family}}.yml"
+
+- name: main | Install packetbeat
+  tags: install
+  package:
+    name: "packetbeat-{{ pb_full_version|default(pb_major_version + '*') }}"
+
+- name: main | Install locally python pip
+  local_action: 'package name=python-pip'
+  become: true
+
+- name: main | upgrade jinja2 to support selectattr 'in'
+  local_action: 'pip name=jinja2>=2.10'
+  become: true
+
+- name: main | configure packetbeat
+  tags:
+    - config
+    - config_pb
+  template:
+    src: "etc/packetbeat-{{ pb_major_version}}.x/packetbeat.yml.j2"
+    dest: /etc/packetbeat/packetbeat.yml
+    owner: root
+    group: root
+    mode: 0640
+  notify: "Restart packetbeat"
+
+- name: main | start and enable service
+  service:
+    name: packetbeat
+    state: started
+    enabled: yes

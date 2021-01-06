@@ -1,0 +1,44 @@
+---
+
+- name: Redhat | Install yum-utils
+  package:
+    name: yum-utils
+
+- name: RedHat | Download asterisk repo
+  get_url:
+    url: https://ast.tucny.com/repo/tucny-asterisk.repo
+    dest: /etc/yum.repos.d/tucny-asterisk.repo
+    force: no
+  changed_when: false   # https://github.com/ansible/ansible/issues/64016
+
+- name: RedHat | import repo key
+  rpm_key:
+    state: present
+    key: https://ast.tucny.com/repo/RPM-GPG-KEY-dtucny
+
+- name: RedHat | Disable all asterisk repo
+  command: "{{ yum_repo_manager }} --disable asterisk*"
+  changed_when: False
+
+- name: RedHat | Enable asterisk-{{ asterisk_version }}
+  command: "{{ yum_repo_manager }} --enable asterisk-common asterisk-{{ asterisk_version }}"
+  changed_when: False
+
+- name: Redhat | Open SIP Port TCP
+  firewalld:
+    port:      "{{ asterisk_sip_port }}/tcp"
+    permanent: true
+    state:     enabled
+    immediate: yes
+
+- name: Redhat | Open SIP Port UDP
+  firewalld:
+    port:      "{{ asterisk_sip_port }}/udp"
+    permanent: true
+    state:     enabled
+    immediate: yes
+
+- name: RedHat | Install epel-release
+  package:
+    name: epel-release
+  when: use_satellite_repo == false

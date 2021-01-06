@@ -1,0 +1,9 @@
+#!/bin/bash
+
+sleep 2
+
+instance=$1
+name=jitsi-jibri
+
+docker container exec ${name}-$instance sed -i "s/Loopback/Loopback_$instance/g" /home/jibri/.asoundrc
+

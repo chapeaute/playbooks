@@ -1,0 +1,31 @@
+# v1.1
+---
+- hosts: apache,php
+  vars:
+    site_name: "www.smile.ci"
+    site_dir:  "app-name"
+    site_aliases:  ["app-url"]
+    docs_dir:  "{{ site_dir }}/{{ site_name }}/htdocs"
+    php_version: "7.2"
+  roles:
+    - role: apache
+      tags: apache
+      apache2_data_dir: "{{ site_dir }}"
+      apache2_vhosts:
+        site:
+          vhost_name: "{{ site_name }}" 
+          server_aliases: "{{ site_aliases }}"
+    - role: php
+      tags: php
+      php_use_default_package: False
+      php_default_version: "{{ php_version }}"
+      php_extensions:
+        - curl
+        - pdo
+        - gd
+        - mysql
+        - mcrypt
+        - xml
+        - redis
+        - mbstring
+        - opcache

@@ -1,0 +1,5 @@
+---
+manage_by_cluster: False
+# defaults file for nfs-server
+nfs_data_dir: "{{ nfs_default_data_dir }}"
+nfs_exports: []

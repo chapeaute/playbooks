@@ -1,0 +1,5 @@
+---
+
+# - name: RedHat | install pip
+#   package:
+#     name: python-pip

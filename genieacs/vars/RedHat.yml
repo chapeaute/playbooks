@@ -1,0 +1,6 @@
+---
+
+genieacs_dependencies:
+  - gcc
+  - gcc-c++
+  - make

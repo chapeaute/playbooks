@@ -1,0 +1,66 @@
+---
+# defaults file for katello-agent
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | Deploy Katello agent repository
+  package:
+    name:  "https://fedorapeople.org/groups/katello/releases/yum/{{ katello_version }}/client/el7/x86_64/katello-client-repos-latest.rpm"
+    state: present
+  when: use_satellite_repo == false
+
+- name: main | Install Subscription Manager package
+  package:
+    name:  subscription-manager
+    state: present
+
+- name: main | Remove old repository
+  shell: "rm -f /etc/yum.repos.d/{{ item }}"
+  with_items:
+    - "{{ katello_repofile_delete }}"
+  changed_when: false
+
+- name: main | Bootstrap RPM from Katello server
+  package:
+    name: "http://{{ katello_server }}/pub/katello-ca-consumer-latest.noarch.rpm"
+    state: present
+
+- name: main | Ensure RHSM is correctly configure
+  command: "/bin/bash /usr/bin/katello-rhsm-consumer"
+  changed_when: false
+  check_mode: no
+
+- name: main | Check register status
+  shell: "subscription-manager status || exit 0"
+  register: submgr_status_result
+  changed_when: false
+  check_mode: no
+
+- name: main | Register content host to Katello server
+  command: "subscription-manager register --org='{{ katello_organization }}' --activationkey='{{ katello_activation_key }}' --force"
+  register: submgr_result
+  when: "'Overall Status: Unknown' in submgr_status_result.stdout or katello_force_register"
+  notify:
+    - "Yum Clean All"
+
+- name: main | Install Katello agent
+  package:
+    name:  katello-agent
+    state: present
+
+- name: main | Ensure Katello agent (goferd) is started and enabled
+  service:
+    name:  goferd
+    state: restarted
+    enabled: yes
+  changed_when: false

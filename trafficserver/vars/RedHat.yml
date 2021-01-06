@@ -1,0 +1,6 @@
+---
+
+ts_dependencies:
+  - libunwind
+  - tcl-devel
+  - hwloc-devel

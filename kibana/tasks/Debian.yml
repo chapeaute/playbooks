@@ -1,0 +1,18 @@
+---
+
+- name: kibana | Add elasticsearch key
+  tags: key
+  apt_key:
+    keyserver: pgp.mit.edu
+    id: 46095ACC8548582C1A2699A9D27D666CD88E42B4
+
+- name: main | Install https
+  package:
+    name:    apt-transport-https
+
+- name: Debian |  Add kibana repo
+  apt_repository:
+    filename: "elastic-5.x"
+    repo: 'deb https://artifacts.elastic.co/packages/5.x/apt stable main'
+    state: present
+    update_cache: yes

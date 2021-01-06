@@ -1,0 +1,59 @@
+---
+- name: Copy config.dist.php to config
+  copy:
+    src:   "{{ phpipam_install_dir }}/config.dist.php"
+    dest:  "{{ phpipam_install_dir }}/config.php"
+    group: "{{ apache2_group }}"
+    mode:  0640
+    remote_src: True
+    force: no
+
+- name: config | Configure DB hostname
+  lineinfile:
+    dest:   "{{ phpipam_install_dir }}/config.php"
+    regexp: "\\$db\\['host'\\].*=.*"
+    line:   "$db['host'] = '{{ phpipam_db_host }}';"
+
+- name: config | Configure DB username
+  lineinfile:
+    dest:   "{{ phpipam_install_dir }}/config.php"
+    regexp: "\\$db\\['user'\\].*=.*"
+    line:   "$db['user'] = '{{ phpipam_db_user }}';"
+
+- name: config | Configure DB password
+  lineinfile:
+    dest:   "{{ phpipam_install_dir }}/config.php"
+    regexp: "\\$db\\['pass'\\].*=.*"
+    line:   "$db['pass'] = '{{ phpipam_db_pass }}';"
+
+- name: config | Configure DB name
+  lineinfile:
+    dest:   "{{ phpipam_install_dir }}/config.php"
+    regexp: "\\$db\\['name'\\].*=.*"
+    line:   "$db['name'] = '{{ phpipam_db_name }}';"
+
+- name: config | Configure DB port
+  lineinfile:
+    dest:   "{{ phpipam_install_dir }}/config.php"
+    regexp: "\\$db\\['port'\\].*=.*"
+    line:   "$db['port'] = {{ phpipam_db_port }};"
+
+- name: config | Set admin password
+  command: "/bin/php /var/www/phpipam/htdocs/functions/scripts/reset-admin-password.php {{ phpipam_db_admin_pass }}"
+  args:
+    creates: /etc/phpipam_init
+
+# update host statuses every 15 minutes
+- name: config | Setup cron to update host statues every 15 minutes
+  tags: cron
+  cron:
+    name: "{{ item.name }}"
+    minute: '*/15'
+    user: root
+    job: "{{ item.job }}"
+    cron_file: phpipam
+  with_items:
+    - name: pingCheck
+      job: "/bin/php {{phpipam_install_dir}}/functions/scripts/pingCheck.php"
+    - name: discoveryCheck
+      job: "/bin/php {{phpipam_install_dir}}/functions/scripts/discoveryCheck.php"

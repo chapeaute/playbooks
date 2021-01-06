@@ -1,0 +1,22 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+	echo "Syntax: ${0##*/} ogo_version"
+	exit 1
+fi
+
+version=$1
+svc_name="{{ docker_swarm_stack_name }}_{{ proxy_mgr_opts.dns }}"
+svc_list=$(docker service ls | grep $svc_name | awk '{print $2" "}' | tr -d "\n")
+
+count=-1
+while [ $count -ne 0 ]
+do
+	count=$(docker service ps $svc_list --filter desired-state=Running | sed 1d | awk '{$1=$4=$5="" ; print $0}' | egrep -v ":$version[[:space:]]+Running" -c)
+	if [ $count -ne 0 ]; then
+		echo -en "Remaining instance to update: $count\t\r"
+		sleep 2
+	fi
+done
+
+docker service ps $svc_list | grep 'Running' | sort -k2 | awk '{$1=$4=$5="" ; print $0}'

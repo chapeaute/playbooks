@@ -1,0 +1,13 @@
+---
+
+- name: users | Create postgresql user {{ item.user }}
+  become: true
+  become_user: postgres
+  postgresql_user:
+     name:            "{{ item.user }}"
+     password:        "{{ item.password }}"
+     role_attr_flags: "{{ item.roles| default(omit) }}"
+     priv:            "{{ item.priv | default(omit) }}"
+     state:           "{{ item.state| default('present') }}"
+  with_items:  "{{ postgresql_users }}"
+  delegate_to: "{{ postgresql_host }}"

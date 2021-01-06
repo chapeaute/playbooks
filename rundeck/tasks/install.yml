@@ -1,0 +1,12 @@
+---
+- name: main | Install Rundeck package
+  package:
+    name:  "{{ item }}"
+    state: present
+  with_items: "{{ rundeck_packages }}"
+
+- name: main | Install Ansible package
+  package:
+    name:  ansible
+    state: present
+  when: rundeck_ansible_enable

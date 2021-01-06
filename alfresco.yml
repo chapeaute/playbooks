@@ -1,0 +1,15 @@
+---
+- hosts: alfresco
+  roles:
+    - role: mariadb-server
+      mysql_config_bind_address: 127.0.0.1
+      mysql_config_innodb_buffer_pool_size_prct: 0.4
+      manage_by_cluster: true
+      mysql_root_password: changeme
+    - role: alfresco
+      alfresco_heap_size_prct: 0.4
+      alfresco_db_driver: mysql
+      alfresco_db_remote_host: ims-ged-1
+      alfresco_db_pass: changeme
+      alfresco_db_admin_user: root
+      alfresco_db_adminpass: changeme

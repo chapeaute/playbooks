@@ -1,0 +1,4 @@
+---
+nextcloud_docroot_dir: "{{ nextcloud_root_dir }}/htdocs/nextcloud"
+nextcloud_data_dir:    "{{ nextcloud_root_dir }}/shared/nextcloud/data"
+nextcloud_config_file: "{{ nextcloud_root_dir }}/shared/nextcloud/config/config.php"

@@ -1,0 +1,10 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: paozi
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQDGq0KdyVEGHCo1CWj3DMPJdKmi/CO1YAiZsivE0KJo0trvep11favyfWRgqyTZ4gFaxARPEOijiXKoI/GxdZtCzd6s1QYI1tHS6Vy5/bdkgPrHPncCYq143PvftvU8qjUtl7z5xNPBcknsP1Du3u3uv7WfQ+Z0pZeeEduHdsOpg9toKRi9gT32IjjLfPBpprHx9he1dXTiEXMxCsfBo1mBLdV7OTJBFd2alQDPFbzJ4yqBN90zET/b27ocj+hXjQJ3QBAprYpRXY1OzNd+nkl+7D7weQXM0dAysc1aoOkOyP+FeB5kN/szjOhjC2/DE5aR613n5PRR8HuGD32Xmek4kfsyhGeHyfXsJVZWNtNdo7mu3Z+zGkd4t2T+czKRilq+FrFgqkMmm56Q0+MeLNMYvom1qAmKargJYKEM5dcznja9ewns1EOCLiBAu50w7boOZJecK0MJegIrHYAw14ukLAhzyU8ToVkbkeg9n9Ju8wACwSfi3lWkeNGgFG/fo7xj+7EJ4AeqfYsEFIWHHVtPgAU3ukSw2bkt6yRyQNphuyDTXxLVUkdEa5x+bEfZIhQbxABCSowpnu6HbPY0v9caMzrHSC/2rhALhDz4aK+h1QxhSAT/kKWQNF84vbMTlb/3bAsmrzr5JKsx8APRwfTXYEmC5hfsavlf+KPgZ+ETtw==
+

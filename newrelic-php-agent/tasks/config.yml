@@ -1,0 +1,40 @@
+---
+
+- name: config | fix selinux log dir
+  sefcontext:
+    target: "{{newrelic_php_logdir}}(/.*)?'"
+    setype: httpd_log_t
+    state: present
+  when: ansible_selinux.status == "enabled"
+
+- name: config | configure php agent license
+  lineinfile:
+    path: "{{ newrelic_php_config }}"
+    regexp: 'newrelic.license'
+    line: "newrelic.license = '{{ newrelic_php_license }}' "
+    state: present
+  notify: Restart Apache
+
+- name: config | configure php agent logfile
+  lineinfile:
+    path: "{{ newrelic_php_config }}"
+    regexp: 'newrelic.logfile'
+    line: "newrelic.logfile = '{{newrelic_php_logfile}}'"
+    state: present
+  notify: Restart Apache
+
+- name: config | configure php agent daemon logfile
+  lineinfile:
+    path: "{{ newrelic_php_config }}"
+    regexp: 'newrelic.daemon.logfile'
+    line: "newrelic.daemon.logfile = '{{newrelic_php_daemon_logfile}}'"
+    state: present
+  notify: Restart Apache
+
+- name: config | configure php agent appname
+  lineinfile:
+    path: "{{ newrelic_php_config }}"
+    regexp: 'newrelic.appname'
+    line: "  newrelic.appname = '{{newrelic_php_appname}}'"
+    state: present
+  notify: Restart Apache

@@ -1,0 +1,58 @@
+---
+
+# vars file for jicofo
+jicofo_base_dir: /usr/share
+jicofo_root_dir: "{{ jicofo_base_dir }}/jitsi-jicofo"
+jicofo_install_dir: "{{ jicofo_root_dir }}"
+jicofo_etc_dir: "/etc/jitsi-jicofo"
+# jicofo_log_dir: "{{ jitsi_log_dir }}"
+jicofo_log_dir: /var/log/jitsi-jicofo
+jicofo_service_name: jitsi-jicofo
+jicofo_user: jicofo
+jicofo_group: "{{ jicofo_user }}"
+jicofo_prosody_plugins: "/usr/share/jitsi-meet/prosody-plugins"
+jicofo_install_tmp_dir: "/tmp/jicofo-{{ jicofo_version }}"
+jicofo_dependencies:
+  - gcc
+  - git
+  - openssl-devel
+  - lua-devel
+jicofo_luarocks_packages:
+  - net-url
+  - basexx
+  - luajwtjitsi
+  - luacrypto
+
+jicofo_ports:
+  - 8888
+  - 8778
+
+jicofo_prosody_base_modules:
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/ext_events.lib.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_auth_token.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_conference_duration.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_conference_duration_component.lua
+  # - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_filter_iq_jibri.lua
+  # - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_filter_iq_rayo.lua
+  # - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_jibri_queue.lua
+  # - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_jibri_queue_component.lua
+  # - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_muc_allowners.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_muc_call.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_muc_domain_mapper.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_muc_lobby_rooms.lua
+  # - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_muc_max_occupants.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_muc_meeting_id.lua
+  # - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_muc_poltergeist.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_muc_size.lua
+  # - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_muc_transcription_filter.lua
+  # - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_poltergeist_component.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_presence_identity.lua
+  # - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_smacks.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_speakerstats.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_speakerstats_component.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_token_verification.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/mod_turncredentials.lua
+  # - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/poltergeist.lib.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/master/resources/prosody-plugins/util.lib.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/4214a2462ab00673cd298b0e30255c1e42c50623/resources/prosody-plugins/mod_polls.lua
+  - https://raw.githubusercontent.com/jitsi/jitsi-meet/4214a2462ab00673cd298b0e30255c1e42c50623/resources/prosody-plugins/mod_polls_component.lua

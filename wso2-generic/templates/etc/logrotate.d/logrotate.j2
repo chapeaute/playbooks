@@ -1,0 +1,12 @@
+/var/log/{{ wso2_generic_service_name }}/*.log
+{
+    su {{ wso2_generic_service_name }} {{ wso2_generic_service_name }}
+    rotate {{ wso2_generic_logs_rotate }}
+    daily
+    dateext
+    compress
+    delaycompress
+    missingok
+    notifempty
+    copytruncate
+}

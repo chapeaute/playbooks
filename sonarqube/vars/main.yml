@@ -1,0 +1,4 @@
+---
+# vars file for sonarqube
+
+sonarqube_default_root_dir: /var/lib

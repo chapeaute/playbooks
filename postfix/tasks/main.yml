@@ -1,0 +1,37 @@
+---
+# tasks file for elasticsearch
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | Install requirements (RedHat)
+  package:
+    name: "{{ item }}"
+  with_items:
+    - "{{ postfix_packages }}"
+
+- name: main | Ensure /etc/postfix directory is owned by root user
+  file:
+    path:  /etc/postfix
+    owner: root
+  notify: Postfix restart
+
+- include: configure.yml
+  tags:
+    - config
+
+- name: Ensure Postfix is started
+  service:
+    name:    "{{ postfix_service }}"
+    state:   started
+    enabled: yes
+

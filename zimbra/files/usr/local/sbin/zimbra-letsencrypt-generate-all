@@ -1,0 +1,6 @@
+#!/bin/bash
+
+su - zimbra -c 'zmprov -l gad' | while read domain
+do 
+ zimbra-letsencrypt-generate -n -D $domain
+done

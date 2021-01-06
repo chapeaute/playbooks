@@ -1,0 +1,14 @@
+---
+
+- src: git@git.smile.ci:adminsys/ansible/role/ssl-certs.git
+  scm: git
+  version: v1.3.4
+
+- src: git@git.smile.ci:adminsys/ansible/role/apache.git
+  scm: git
+  version: v1.6.11
+
+- src: git@git.smile.ci:adminsys/ansible/role/security-apache.git
+  scm: git
+  version: v1.3.11
+

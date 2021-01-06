@@ -1,0 +1,9 @@
+---
+
+- name: Update facts
+  setup:
+
+- name: Restart network service
+  service:
+    name: network
+    state: restarted

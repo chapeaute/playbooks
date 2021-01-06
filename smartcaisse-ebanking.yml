@@ -1,0 +1,32 @@
+---
+- include: basic-server.yml
+- include: dev-users.yml
+
+- hosts: tomcat
+  roles:
+    - role: tomcat
+      tomcat_install_dir: /srv
+      tomcat_admin_pass: wWZPz9zqooW3lQc3
+
+- hosts: mariadb
+  roles:
+    - role: mariadb-server
+      mysql_config_bind_address: 127.0.0.1
+      mysql_config_innodb_buffer_pool_size_prct: 0.4
+      mysql_root_password: a7aDDCHxjadYF9kG
+      mysql_config_bind_address: 0.0.0.0
+      mysql_databases:
+        bd_smartcaisse:
+          db_name : bd_smartcaisse
+          collation: utf8_unicode_ci
+          encoding: utf8
+          user: dev
+          password: x8Pxzygd7W
+
+
+- hosts: mule-esb
+  roles:
+    - role: mule-esb
+      mule_esb_path_data: /srv                      
+      mule_esb_path_logs: /var/log/mule-standalone 
+      mule_esb_version: 3.8    

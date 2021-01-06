@@ -1,0 +1,11 @@
+---
+- name: proxy | Check if ProxySQL service is enable
+  shell: pmm-admin list 2>/dev/null | grep -q "^mysql:" && echo configure || echo unconfigure
+  changed_when: False
+  check_mode: no
+  register: pmm_proxy
+
+- name: proxy | Add ProxySQL service to PMM Server
+  command: pmm-admin add proxysql:metrics
+  changed_when: False
+  when: "'unconfigure' in pmm_proxy.stdout"

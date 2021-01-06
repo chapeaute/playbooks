@@ -1,0 +1,14 @@
+# Traefik logrotate script
+{{ traefik_log_dir }}/*.log {
+    daily
+    rotate 31
+    notifempty
+    compress
+    delaycompress
+    copytruncate
+    missingok
+    postrotate
+        /bin/kill -USR1 `/sbin/pidof /usr/bin/{{ traefik_service }}` 2> /dev/null || true
+    endscript
+}
+

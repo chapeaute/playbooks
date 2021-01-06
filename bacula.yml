@@ -1,0 +1,23 @@
+# v1.0
+---
+- hosts: bacula-director
+  vars:
+    # MySQL
+    mysql_data_dir:      "/var/lib/mysql"
+    mysql_backup_dir:    "/var/backup/mysql"
+    # Bacula Storage Daemon
+    bacula_sd_archive_device: "/var/lib/bacula"
+    # Webacula
+    webacula_admin_password: "changme"
+    bacula_dir_host: "{{ inventory_hostname }}"
+  roles:
+    - role: mariadb-server
+      mysql_config_bind_address: 127.0.0.1
+      mysql_config_innodb_buffer_pool_size_prct: 0.5
+    - role: bacula-director
+      bacula_db_remote_host: "{{ bacula_dir_host }}"
+      bacula_db_admin_pass: "{{ mysql_root_password }}"
+      bacula_dir_name: "{{ bacula_dir_host }}"
+    - role: bacula-storage
+      bacula_dir_name: "{{ bacula_dir_host }}"
+    - role: webacula

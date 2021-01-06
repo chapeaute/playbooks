@@ -1,0 +1,6 @@
+---
+# vars file for rancid
+rancid_data_dir: /var/rancid/
+rancid_conf_dir: /etc/rancid/
+rancid_user: rancid
+rancid_group: rancid

@@ -1,0 +1,322 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  ~ Copyright WSO2, Inc. (http://wso2.com)
+  ~
+  ~ Licensed under the Apache License, Version 2.0 (the "License");
+  ~ you may not use this file except in compliance with the License.
+  ~ You may obtain a copy of the License at
+  ~
+  ~ http://www.apache.org/licenses/LICENSE-2.0
+  ~
+  ~ Unless required by applicable law or agreed to in writing, software
+  ~ distributed under the License is distributed on an "AS IS" BASIS,
+  ~ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+  ~ See the License for the specific language governing permissions and
+  ~ limitations under the License.
+  -->
+<UserManager>
+    <Realm>
+        <Configuration>
+	    <AddAdmin>{{ wso2is_admin_create }}</AddAdmin>
+            <AdminRole>admin</AdminRole>
+            <AdminUser>
+                <UserName>{{ wso2is_admin_user }}</UserName>
+                <Password>{{ wso2is_admin_pass }}</Password>
+            </AdminUser>
+            <EveryOneRoleName>everyone</EveryOneRoleName>
+            <!-- By default users in this role sees the registry root -->
+            <Property name="isCascadeDeleteEnabled">true</Property>
+	    <Property name="initializeNewClaimManager">true</Property>
+            <Property name="dataSource">jdbc/WSO2UMDB</Property>
+        </Configuration>
+
+        {% if wso2is_store_type == "mysql" %}
+	<!-- Following is the configuration for internal JDBC user store. This user store manager is based on JDBC.
+	     In case if application needs to manage passwords externally set property
+	     <Property name="PasswordsExternallyManaged">true</Property>.
+	     In case if user core cache domain is needed to identify uniquely set property
+	     <Property name="UserCoreCacheIdentifier">domain</Property>.
+	     Furthermore properties, IsEmailUserName and DomainCalculation are readonly properties.
+	     Note: Do not comment within UserStoreManager tags. Cause, specific tag names are used as tokens
+	     when building configurations for products.
+	-->
+        <UserStoreManager class="org.wso2.carbon.user.core.jdbc.JDBCUserStoreManager">
+	   <Property name="TenantManager">org.wso2.carbon.user.core.tenant.JDBCTenantManager</Property>
+	   <Property name="driverName">com.mysql.jdbc.Driver</Property>
+	   <Property name="url">jdbc:mysql://{{ wso2is_db_host }}:3306/WSO2_UM</Property>
+	   <Property name="userName">{{ wso2is_db_user }}</Property>
+	   <Property name="password">{{ wso2is_db_pass }}</Property>
+	   <Property name="Disabled">false</Property>
+	   <Property name="MaxUserNameListLength">100</Property>
+	   <Property name="MaxRoleNameListLength">100</Property>
+	   <Property name="UserRolesCacheEnabled">true</Property>
+	   <Property name="PasswordDigest">SHA-256</Property>
+	   <Property name="ReadGroups">true</Property>
+	   <Property name="ReadOnly">false</Property>
+	   <Property name="IsEmailUserName">false</Property>
+	   <Property name="DomainCalculation">default</Property>
+	   <Property name="StoreSaltedPassword">true</Property>
+	   <Property name="WriteGroups">false</Property>
+	   <Property name="UserNameUniqueAcrossTenants">false</Property>
+	   <Property name="PasswordJavaRegEx">^[\S]{5,30}$</Property>
+	   <Property name="PasswordJavaScriptRegEx">^[\S]{5,30}$</Property>
+	   <Property name="UsernameJavaRegEx">^[\S]{5,30}$</Property>
+	   <Property name="UsernameJavaScriptRegEx">^[\S]{5,30}$</Property>
+	   <Property name="RolenameJavaRegEx">^[\S]{5,30}$</Property>
+	   <Property name="RolenameJavaScriptRegEx">^[\S]{5,30}$</Property>
+	   <Property name="SCIMEnabled">true</Property>
+	   <Property name="SelectUserSQL">SELECT * FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?</Property>
+	   <Property name="GetRoleListSQL">SELECT UM_ROLE_NAME, UM_TENANT_ID, UM_SHARED_ROLE FROM UM_ROLE WHERE UM_ROLE_NAME LIKE ? AND UM_TENANT_ID=? AND UM_SHARED_ROLE ='0' ORDER BY UM_ROLE_NAME</Property>
+	   <Property name="GetSharedRoleListSQL">SELECT UM_ROLE_NAME, UM_TENANT_ID, UM_SHARED_ROLE FROM UM_ROLE WHERE UM_ROLE_NAME LIKE ? AND UM_SHARED_ROLE ='1' ORDER BY UM_ROLE_NAME</Property>
+	   <Property name="UserFilterSQL">SELECT UM_USER_NAME FROM UM_USER WHERE UM_USER_NAME LIKE ? AND UM_TENANT_ID=? ORDER BY UM_USER_NAME</Property>
+	   <Property name="UserRoleSQL">SELECT UM_ROLE_NAME FROM UM_USER_ROLE, UM_ROLE, UM_USER WHERE UM_USER.UM_USER_NAME=? AND UM_USER.UM_ID=UM_USER_ROLE.UM_USER_ID AND UM_ROLE.UM_ID=UM_USER_ROLE.UM_ROLE_ID AND UM_USER_ROLE.UM_TENANT_ID=? AND UM_ROLE.UM_TENANT_ID=? AND UM_USER.UM_TENANT_ID=?</Property>
+	   <Property name="UserSharedRoleSQL">SELECT UM_ROLE_NAME, UM_ROLE.UM_TENANT_ID, UM_SHARED_ROLE FROM UM_SHARED_USER_ROLE INNER JOIN UM_USER ON UM_SHARED_USER_ROLE.UM_USER_ID = UM_USER.UM_ID INNER JOIN UM_ROLE ON UM_SHARED_USER_ROLE.UM_ROLE_ID = UM_ROLE.UM_ID WHERE UM_USER.UM_USER_NAME = ? AND UM_SHARED_USER_ROLE.UM_USER_TENANT_ID = UM_USER.UM_TENANT_ID AND UM_SHARED_USER_ROLE.UM_ROLE_TENANT_ID = UM_ROLE.UM_TENANT_ID AND UM_SHARED_USER_ROLE.UM_USER_TENANT_ID = ?</Property>
+	   <Property name="IsRoleExistingSQL">SELECT UM_ID FROM UM_ROLE WHERE UM_ROLE_NAME=? AND UM_TENANT_ID=?</Property>
+	   <Property name="GetUserListOfRoleSQL">SELECT UM_USER_NAME FROM UM_USER_ROLE, UM_ROLE, UM_USER WHERE UM_ROLE.UM_ROLE_NAME=? AND UM_USER.UM_ID=UM_USER_ROLE.UM_USER_ID AND UM_ROLE.UM_ID=UM_USER_ROLE.UM_ROLE_ID AND UM_USER_ROLE.UM_TENANT_ID=? AND UM_ROLE.UM_TENANT_ID=? AND UM_USER.UM_TENANT_ID=?</Property>
+	   <Property name="GetUserListOfSharedRoleSQL">SELECT UM_USER_NAME FROM UM_SHARED_USER_ROLE INNER JOIN UM_USER ON UM_SHARED_USER_ROLE.UM_USER_ID = UM_USER.UM_ID INNER JOIN UM_ROLE ON UM_SHARED_USER_ROLE.UM_ROLE_ID = UM_ROLE.UM_ID WHERE UM_ROLE.UM_ROLE_NAME= ? AND UM_SHARED_USER_ROLE.UM_USER_TENANT_ID = UM_USER.UM_TENANT_ID AND UM_SHARED_USER_ROLE.UM_ROLE_TENANT_ID = UM_ROLE.UM_TENANT_ID</Property>
+	   <Property name="IsUserExistingSQL">SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?</Property>
+	   <Property name="GetUserPropertiesForProfileSQL">SELECT UM_ATTR_NAME, UM_ATTR_VALUE FROM UM_USER_ATTRIBUTE, UM_USER WHERE UM_USER.UM_ID = UM_USER_ATTRIBUTE.UM_USER_ID AND UM_USER.UM_USER_NAME=? AND UM_PROFILE_ID=? AND UM_USER_ATTRIBUTE.UM_TENANT_ID=? AND UM_USER.UM_TENANT_ID=?</Property>
+	   <Property name="GetUserPropertyForProfileSQL">SELECT UM_ATTR_VALUE FROM UM_USER_ATTRIBUTE, UM_USER WHERE UM_USER.UM_ID = UM_USER_ATTRIBUTE.UM_USER_ID AND UM_USER.UM_USER_NAME=? AND UM_ATTR_NAME=? AND UM_PROFILE_ID=? AND UM_USER_ATTRIBUTE.UM_TENANT_ID=? AND UM_USER.UM_TENANT_ID=?</Property>
+	   <Property name="GetUserLisForPropertySQL">SELECT UM_USER_NAME FROM UM_USER, UM_USER_ATTRIBUTE WHERE UM_USER_ATTRIBUTE.UM_USER_ID = UM_USER.UM_ID AND UM_USER_ATTRIBUTE.UM_ATTR_NAME =? AND UM_USER_ATTRIBUTE.UM_ATTR_VALUE =? AND UM_USER_ATTRIBUTE.UM_PROFILE_ID=? AND UM_USER_ATTRIBUTE.UM_TENANT_ID=? AND UM_USER.UM_TENANT_ID=?SELECT UM_USER_NAME FROM UM_USER, UM_USER_ATTRIBUTE WHERE UM_USER_ATTRIBUTE.UM_USER_ID = UM_USER.UM_ID AND UM_USER_ATTRIBUTE.UM_ATTR_NAME =? AND UM_USER_ATTRIBUTE.UM_ATTR_VALUE LIKE ? AND UM_USER_ATTRIBUTE.UM_PROFILE_ID=? AND UM_USER_ATTRIBUTE.UM_TENANT_ID=? AND UM_USER.UM_TENANT_ID=?</Property>
+	   <Property name="GetProfileNamesSQL">SELECT DISTINCT UM_PROFILE_ID FROM UM_USER_ATTRIBUTE WHERE UM_TENANT_ID=?</Property>
+	   <Property name="GetUserProfileNamesSQL">SELECT DISTINCT UM_PROFILE_ID FROM UM_USER_ATTRIBUTE WHERE UM_USER_ID=(SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?) AND UM_TENANT_ID=?</Property>
+	   <Property name="GetUserIDFromUserNameSQL">SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?</Property>
+	   <Property name="GetUserNameFromTenantIDSQL">SELECT UM_USER_NAME FROM UM_USER WHERE UM_TENANT_ID=?</Property>
+	   <Property name="GetTenantIDFromUserNameSQL">SELECT UM_TENANT_ID FROM UM_USER WHERE UM_USER_NAME=?</Property>
+	   <Property name="AddUserSQL">INSERT INTO UM_USER (UM_USER_NAME, UM_USER_PASSWORD, UM_SALT_VALUE, UM_REQUIRE_CHANGE, UM_CHANGED_TIME, UM_TENANT_ID) VALUES (?, ?, ?, ?, ?, ?)</Property>
+	   <Property name="AddUserToRoleSQL">INSERT INTO UM_USER_ROLE (UM_USER_ID, UM_ROLE_ID, UM_TENANT_ID) VALUES ((SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?),(SELECT UM_ID FROM UM_ROLE WHERE UM_ROLE_NAME=? AND UM_TENANT_ID=?), ?)</Property>
+	   <Property name="AddRoleSQL">INSERT INTO UM_ROLE (UM_ROLE_NAME, UM_TENANT_ID) VALUES (?, ?)</Property>
+	   <Property name="AddSharedRoleSQL">UPDATE UM_ROLE SET UM_SHARED_ROLE = ? WHERE UM_ROLE_NAME = ? AND UM_TENANT_ID = ?</Property>
+	   <Property name="AddRoleToUserSQL">INSERT INTO UM_USER_ROLE (UM_ROLE_ID, UM_USER_ID, UM_TENANT_ID) VALUES ((SELECT UM_ID FROM UM_ROLE WHERE UM_ROLE_NAME=? AND UM_TENANT_ID=?),(SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?), ?)</Property>
+	   <Property name="AddSharedRoleToUserSQL">INSERT INTO UM_SHARED_USER_ROLE (UM_ROLE_ID, UM_USER_ID, UM_USER_TENANT_ID, UM_ROLE_TENANT_ID) VALUES ((SELECT UM_ID FROM UM_ROLE WHERE UM_ROLE_NAME=? AND UM_TENANT_ID=?),(SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?), ?, ?)</Property>
+	   <Property name="RemoveUserFromSharedRoleSQL">DELETE FROM UM_SHARED_USER_ROLE WHERE   UM_ROLE_ID=(SELECT UM_ID FROM UM_ROLE WHERE UM_ROLE_NAME=? AND UM_TENANT_ID=?) AND UM_USER_ID=(SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?) AND UM_USER_TENANT_ID=? AND UM_ROLE_TENANT_ID = ?</Property>
+	   <Property name="RemoveUserFromRoleSQL">DELETE FROM UM_USER_ROLE WHERE UM_USER_ID=(SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?) AND UM_ROLE_ID=(SELECT UM_ID FROM UM_ROLE WHERE UM_ROLE_NAME=? AND UM_TENANT_ID=?) AND UM_TENANT_ID=?</Property>
+	   <Property name="RemoveRoleFromUserSQL">DELETE FROM UM_USER_ROLE WHERE UM_ROLE_ID=(SELECT UM_ID FROM UM_ROLE WHERE UM_ROLE_NAME=? AND UM_TENANT_ID=?) AND UM_USER_ID=(SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?) AND UM_TENANT_ID=?</Property>
+	   <Property name="DeleteRoleSQL">DELETE FROM UM_ROLE WHERE UM_ROLE_NAME = ? AND UM_TENANT_ID=?</Property>
+	   <Property name="OnDeleteRoleRemoveUserRoleMappingSQL">DELETE FROM UM_USER_ROLE WHERE UM_ROLE_ID=(SELECT UM_ID FROM UM_ROLE WHERE UM_ROLE_NAME=? AND UM_TENANT_ID=?) AND UM_TENANT_ID=?</Property>
+	   <Property name="DeleteUserSQL">DELETE FROM UM_USER WHERE UM_USER_NAME = ? AND UM_TENANT_ID=?</Property>
+	   <Property name="OnDeleteUserRemoveUserRoleMappingSQL">DELETE FROM UM_USER_ROLE WHERE UM_USER_ID=(SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?) AND UM_TENANT_ID=?</Property>
+	   <Property name="OnDeleteUserRemoveUserAttributeSQL">DELETE FROM UM_USER_ATTRIBUTE WHERE UM_USER_ID=(SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?) AND UM_TENANT_ID=?</Property>
+	   <Property name="UpdateUserPasswordSQL">UPDATE UM_USER SET UM_USER_PASSWORD= ?, UM_SALT_VALUE=?, UM_REQUIRE_CHANGE=?, UM_CHANGED_TIME=? WHERE UM_USER_NAME= ? AND UM_TENANT_ID=?</Property>
+	   <Property name="UpdateRoleNameSQL">UPDATE UM_ROLE set UM_ROLE_NAME=? WHERE UM_ROLE_NAME = ? AND UM_TENANT_ID=?</Property>
+	   <Property name="AddUserPropertySQL">INSERT INTO UM_USER_ATTRIBUTE (UM_USER_ID, UM_ATTR_NAME, UM_ATTR_VALUE, UM_PROFILE_ID, UM_TENANT_ID) VALUES ((SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?), ?, ?, ?, ?)</Property>
+	   <Property name="UpdateUserPropertySQL">UPDATE UM_USER_ATTRIBUTE SET UM_ATTR_VALUE=? WHERE UM_USER_ID=(SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?) AND UM_ATTR_NAME=? AND UM_PROFILE_ID=? AND UM_TENANT_ID=?</Property>
+	   <Property name="DeleteUserPropertySQL">DELETE FROM UM_USER_ATTRIBUTE WHERE UM_USER_ID=(SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?) AND UM_ATTR_NAME=? AND UM_PROFILE_ID=? AND UM_TENANT_ID=?</Property>
+	   <Property name="UserNameUniqueAcrossTenantsSQL">SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=?</Property>
+	   <Property name="IsDomainExistingSQL">SELECT UM_DOMAIN_ID FROM UM_DOMAIN WHERE UM_DOMAIN_NAME=? AND UM_TENANT_ID=?</Property>
+	   <Property name="AddDomainSQL">INSERT INTO UM_DOMAIN (UM_DOMAIN_NAME, UM_TENANT_ID) VALUES (?, ?)</Property>
+	   <Property name="AddUserToRoleSQL-mssql">INSERT INTO UM_USER_ROLE (UM_USER_ID, UM_ROLE_ID, UM_TENANT_ID) SELECT (SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?),(SELECT UM_ID FROM UM_ROLE WHERE UM_ROLE_NAME=? AND UM_TENANT_ID=?),(?)</Property>
+	   <Property name="AddRoleToUserSQL-mssql">INSERT INTO UM_USER_ROLE (UM_ROLE_ID, UM_USER_ID, UM_TENANT_ID) SELECT (SELECT UM_ID FROM UM_ROLE WHERE UM_ROLE_NAME=? AND UM_TENANT_ID=?),(SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?), (?)</Property>
+	   <Property name="AddUserPropertySQL-mssql">INSERT INTO UM_USER_ATTRIBUTE (UM_USER_ID, UM_ATTR_NAME, UM_ATTR_VALUE, UM_PROFILE_ID, UM_TENANT_ID) SELECT (SELECT UM_ID FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?), (?), (?), (?), (?)</Property>
+	   <Property name="AddUserToRoleSQL-openedge">INSERT INTO UM_USER_ROLE (UM_USER_ID, UM_ROLE_ID, UM_TENANT_ID) SELECT UU.UM_ID, UR.UM_ID, ? FROM UM_USER UU, UM_ROLE UR WHERE UU.UM_USER_NAME=? AND UU.UM_TENANT_ID=? AND UR.UM_ROLE_NAME=? AND UR.UM_TENANT_ID=?</Property>
+	   <Property name="AddRoleToUserSQL-openedge">INSERT INTO UM_USER_ROLE (UM_ROLE_ID, UM_USER_ID, UM_TENANT_ID) SELECT UR.UM_ID, UU.UM_ID, ? FROM UM_ROLE UR, UM_USER UU WHERE UR.UM_ROLE_NAME=? AND UR.UM_TENANT_ID=? AND UU.UM_USER_NAME=? AND UU.UM_TENANT_ID=?</Property>
+	   <Property name="AddUserPropertySQL-openedge">INSERT INTO UM_USER_ATTRIBUTE (UM_USER_ID, UM_ATTR_NAME, UM_ATTR_VALUE, UM_PROFILE_ID, UM_TENANT_ID) SELECT UM_ID, ?, ?, ?, ? FROM UM_USER WHERE UM_USER_NAME=? AND UM_TENANT_ID=?</Property>
+	   <Property name="DomainName">wso2.org</Property>
+	   <Property name="Description"/>
+        </UserStoreManager>
+        {% endif %}
+	    <!-- If product is using an external LDAP as the user store in READ ONLY mode, use following user manager.
+		     In case if user core cache domain is needed to identify uniquely set property
+		     <Property name="UserCoreCacheIdentifier">domain</Property>
+ 	    -->
+        {% if wso2is_store_type == "ro_ldap" %}
+        <UserStoreManager class="org.wso2.carbon.user.core.ldap.ReadOnlyLDAPUserStoreManager">
+            <Property name="TenantManager">org.wso2.carbon.user.core.tenant.CommonHybridLDAPTenantManager</Property>
+            <Property name="ConnectionURL">{{ wso2is_ldap_url }}</Property>
+            <Property name="ConnectionName">{{ wso2is_ldap_binddn }}</Property>
+            <Property name="ConnectionPassword">{{ wso2is_ldap_pass }}</Property>
+            <Property name="AnonymousBind">false</Property>
+            <Property name="UserSearchBase">{{ wso2is_ldap_user_search }}</Property>
+            <Property name="UserNameAttribute">{{ wso2is_ldap_user_attribute }}</Property>
+            <Property name="UserNameSearchFilter">(&amp;(objectClass={{ wso2is_ldap_user_object_class }})(uid=?))</Property>
+            <Property name="UserNameListFilter">(objectClass={{ wso2is_ldap_user_object_class }})</Property>
+            <Property name="DisplayNameAttribute"/>
+            <Property name="ReadGroups">true</Property>
+            <Property name="GroupSearchBase">ou=system</Property>
+            <Property name="GroupNameAttribute">cn</Property>
+            <Property name="GroupNameSearchFilter">(&amp;(objectClass=groupOfNames)(cn=?))</Property>
+            <Property name="GroupNameListFilter">(objectClass=groupOfNames)</Property>
+            <Property name="MembershipAttribute">member</Property>
+            <Property name="BackLinksEnabled">false</Property>
+            <Property name="UsernameJavaRegEx">[a-zA-Z0-9._\-|//]{3,30}$</Property>
+            <Property name="PasswordJavaRegEx">^[\S]{5,30}$</Property>
+            <Property name="RolenameJavaRegEx">[a-zA-Z0-9._\-|//]{3,30}$</Property>
+            <Property name="SCIMEnabled">false</Property>
+            <Property name="PasswordHashMethod">PLAIN_TEXT</Property>
+            <Property name="MultiAttributeSeparator">,</Property>
+            <Property name="MaxUserNameListLength">100</Property>
+            <Property name="MaxRoleNameListLength">100</Property>
+            <Property name="UserRolesCacheEnabled">true</Property>
+            <Property name="ConnectionPoolingEnabled">true</Property>
+            <Property name="LDAPConnectionTimeout">5000</Property>
+            <Property name="ReadTimeout"/>
+            <Property name="RetryAttempts"/>
+            <Property name="ReplaceEscapeCharactersAtUserLogin">true</Property>
+        </UserStoreManager>
+        {% endif %}
+
+        {% if wso2is_store_type == "AD" %}
+	<!-- Active directory configuration is as follows.
+	     In case if user core cache domain is needed to identify uniquely set property
+	     <Property name="UserCoreCacheIdentifier">domain</Property>
+	     There are few special properties for "Active Directory".
+	     They are :
+	     1.Referral - (comment out this property if this feature is not reuired) This enables LDAP referral support.
+	     2.BackLinksEnabled - (Do not comment, set to true or false) In some cases LDAP works with BackLinksEnabled.
+	     In which role is stored at user level. Depending on this value we need to change the Search Base within code.
+	     isADLDSRole - (Do not comment) Set to true if connecting to an AD LDS instance else set to false.
+	-->
+        <UserStoreManager class="org.wso2.carbon.user.core.ldap.ActiveDirectoryUserStoreManager">
+            <Property name="TenantManager">org.wso2.carbon.user.core.tenant.CommonHybridLDAPTenantManager</Property>
+            <Property name="ConnectionURL">{{ wso2is_ldap_url }}</Property>
+            <Property name="ConnectionName">{{ wso2is_ldap_binddn }}</Property>
+            <Property name="ConnectionPassword">{{ wso2is_ldap_pass }}</Property>
+            <Property name="UserSearchBase">{{ wso2is_ldap_user_search }}</Property>
+            <Property name="UserNameAttribute">{{ wso2is_ldap_user_attribute }}</Property>
+            <Property name="AnonymousBind">false</Property>
+            <Property name="UserEntryObjectClass">user</Property>
+            <Property name="UserNameSearchFilter">(&amp;(objectClass=user)(sAMAccountName=?))</Property>
+            <Property name="UserNameListFilter">(objectClass=user)</Property>
+            <Property name="DisplayNameAttribute"/>
+            <Property name="ReadGroups">false</Property>
+            <Property name="WriteGroups">false</Property>
+            <Property name="GroupSearchBase">CN=Users,DC=WSO2,DC=Com</Property>
+            <Property name="GroupEntryObjectClass">group</Property>
+            <Property name="GroupNameAttribute">cn</Property>
+            <Property name="GroupNameSearchFilter">(&amp;(objectClass=group)(cn=?))</Property>
+            <Property name="GroupNameListFilter">(objectcategory=group)</Property>
+            <Property name="MembershipAttribute">member</Property>
+            <Property name="MemberOfAttribute">memberOf</Property>
+            <Property name="BackLinksEnabled">true</Property>
+            <Property name="Referral">follow</Property>
+            <Property name="UsernameJavaRegEx">[a-zA-Z0-9._\-|//]{3,30}$</Property>
+            <Property name="UsernameJavaScriptRegEx">^[\S]{3,30}$</Property>
+            <Property name="UsernameJavaRegExViolationErrorMsg">Username pattern policy violated</Property>
+            <Property name="PasswordJavaRegEx">^[\S]{5,30}$</Property>
+            <Property name="PasswordJavaScriptRegEx">^[\S]{5,30}$</Property>
+            <Property name="PasswordJavaRegExViolationErrorMsg">Password length should be within 5 to 30 characters</Property>
+            <Property name="RolenameJavaRegEx">[a-zA-Z0-9._\-|//]{3,30}$</Property>
+            <Property name="RolenameJavaScriptRegEx">^[\S]{3,30}$</Property>
+            <Property name="SCIMEnabled">false</Property>
+            <Property name="IsBulkImportSupported">false</Property>
+            <Property name="EmptyRolesAllowed">true</Property>
+            <Property name="PasswordHashMethod">PLAIN_TEXT</Property>
+            <Property name="MultiAttributeSeparator">,</Property>
+            <Property name="isADLDSRole">false</Property>
+            <Property name="userAccountControl">512</Property>
+            <Property name="MaxUserNameListLength">100</Property>
+            <Property name="MaxRoleNameListLength">100</Property>
+            <Property name="MembershipAttributeRange">1500</Property>
+            <Property name="kdcEnabled">false</Property>
+            <Property name="defaultRealmName">WSO2.ORG</Property>
+            <Property name="UserRolesCacheEnabled">true</Property>
+            <Property name="ConnectionPoolingEnabled">false</Property>
+            <Property name="LDAPConnectionTimeout">{{ wso2is_ldap_timeout }}</Property>
+            <Property name="ReadTimeout"/>
+            <Property name="RetryAttempts"/>
+        </UserStoreManager>
+        {% endif %}
+
+        {% if wso2is_store_type == "rw_ldap" %}
+
+        <!-- Following user manager is used by Identity Server (IS) as its default user manager.
+             IS will do token replacement when building the product. Therefore do not change the syntax.
+             If "kdcEnabled" parameter is true, IS will allow service principle management.
+             Thus "ServicePasswordJavaRegEx", "ServiceNameJavaRegEx" properties control the service name format and
+             service password formats. In case if user core cache domain is needed to identify uniquely set property
+             <Property name="UserCoreCacheIdentifier">domain</Property>
+        -->
+        <UserStoreManager class="org.wso2.carbon.user.core.ldap.ReadWriteLDAPUserStoreManager">
+            <Property name="TenantManager">org.wso2.carbon.user.core.tenant.CommonHybridLDAPTenantManager</Property>
+            <Property name="ConnectionURL">{{ wso2is_ldap_url }}</Property>
+            <Property name="ConnectionName">{{ wso2is_ldap_binddn }}</Property>
+            <Property name="ConnectionPassword">{{ wso2is_ldap_pass }}</Property>
+            <Property name="UserSearchBase">{{ wso2is_ldap_user_search }}</Property>
+            <Property name="UserNameAttribute">{{ wso2is_ldap_user_attribute }}</Property>
+            <Property name="AnonymousBind">false</Property>
+            <Property name="UserEntryObjectClass">user</Property>
+            <Property name="AnonymousBind">false</Property>
+            <Property name="UserEntryObjectClass">identityPerson</Property>
+            <Property name="UserNameSearchFilter">(&amp;(objectClass={{ wso2is_ldap_user_object_class }})(uid=?))</Property>
+            <Property name="UserNameListFilter">(objectClass={{ wso2is_ldap_user_object_class }})</Property>
+            <Property name="DisplayNameAttribute"/>
+            <Property name="ReadGroups">true</Property>
+            <Property name="WriteGroups">true</Property>
+            <Property name="GroupSearchBase">ou=Groups,dc=wso2,dc=org</Property>
+            <Property name="GroupEntryObjectClass">groupOfNames</Property>
+            <Property name="GroupNameAttribute">cn</Property>
+            <Property name="GroupNameSearchFilter">(&amp;(objectClass=groupOfNames)(cn=?))</Property>
+            <Property name="GroupNameListFilter">(objectClass=groupOfNames)</Property>
+            <Property name="MembershipAttribute">member</Property>
+            <Property name="BackLinksEnabled">false</Property>
+            <Property name="UsernameJavaRegEx">[a-zA-Z0-9._\-|//]{3,30}$</Property>
+            <Property name="UsernameJavaScriptRegEx">^[\S]{3,30}$</Property>
+            <Property name="UsernameJavaRegExViolationErrorMsg">Username pattern policy violated</Property>
+            <Property name="PasswordJavaRegEx">^[\S]{5,30}$</Property>
+            <Property name="PasswordJavaScriptRegEx">^[\S]{5,30}$</Property>
+            <Property name="PasswordJavaRegExViolationErrorMsg">Password length should be within 5 to 30 characters</Property>
+            <Property name="RolenameJavaRegEx">[a-zA-Z0-9._\-|//]{3,30}$</Property>
+            <Property name="RolenameJavaScriptRegEx">^[\S]{3,30}$</Property>
+            <Property name="SCIMEnabled">true</Property>
+            <Property name="IsBulkImportSupported">false</Property>
+            <Property name="EmptyRolesAllowed">true</Property>
+            <Property name="PasswordHashMethod">PLAIN_TEXT</Property>
+            <Property name="MultiAttributeSeparator">,</Property>
+            <Property name="MaxUserNameListLength">100</Property>
+            <Property name="MaxRoleNameListLength">100</Property>
+            <Property name="kdcEnabled">false</Property>
+            <Property name="defaultRealmName">WSO2.ORG</Property>
+            <Property name="UserRolesCacheEnabled">true</Property>
+            <Property name="ConnectionPoolingEnabled">false</Property>
+            <Property name="LDAPConnectionTimeout">5000</Property>
+            <Property name="ReadTimeout"/>
+            <Property name="RetryAttempts"/>
+        </UserStoreManager>
+        {% endif %}
+
+        <AuthorizationManager class="org.wso2.carbon.user.core.authorization.JDBCAuthorizationManager">
+            <Property name="AdminRoleManagementPermissions">/permission</Property>
+            <Property name="AuthorizationCacheEnabled">true</Property>
+            <Property name="GetAllRolesOfUserEnabled">false</Property>
+        </AuthorizationManager>
+    </Realm>
+</UserManager>
+
+<!--
+
+************* Description of some of the configuration properties used in user-mgt.xml *********************************
+
+DomainName -
+    This property must be used by all secondary user store managers in multiple user store configuration.
+    DomainName is a unique identifier given to the user store. Users must provide both the domain name and
+    username at log-in as "DomainName\Username"
+
+UserRolesCacheEnabled -
+    This is to indicate whether to cache role list of a user. By default it is set to true.
+    You may need to disable it if user-roles are changed by external means and need to reflect
+    those changes in the carbon product immediately.
+
+ReplaceEscapeCharactersAtUserLogin -
+    This is to configure whether escape characters in user name needs to be replaced at user login.
+    Currently the identified escape characters that needs to be replaced are '\' & '\\'
+
+UserDNPattern -
+    This property will be used when authenticating users. During authentication we do a bind. But if the user is login
+    with email address or some other property we need to first lookup LDAP and retrieve DN for the user.
+    This involves an additional step.  If UserDNPattern is specified the DN will be constructed using the pattern
+    specified in this property. Performance of this is much better than looking up DN and binding user.
+
+RoleDNPattern -
+    This property will be used when checking whether user has been assigned to a given role.
+    Rather than searching the role in search base, by using this property direct search can be done.
+
+PasswordHashMethod -
+    This says how the password should be stored. Allowed values are as follows,
+        SHA - Uses SHA digest method
+        MD5 - Uses MD 5 digest method
+        PLAIN_TEXT - Plain text passwords
+        In addition to above this supports all digest methods supported by http://docs.oracle.com/javase/6/docs/api/java/security/MessageDigest.html.
+
+DisplayNameAttribute -
+    This is to have a dedicated LDAP attribute to display an entity(User/Role) in UI, in addition to the UserNameAttribute which is used for IS-UserStore interactions.
+-->

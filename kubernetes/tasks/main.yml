@@ -1,0 +1,68 @@
+---
+
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include_tasks: "{{ ansible_os_family }}.yml"
+
+- include: prerequisites.yml
+
+- name: main | Ensure dependencies are installed.
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items: "{{ k8s_packages_dependencies }}"
+
+- name: main | Install Kubernetes packages.
+  package:
+    name:  "{{ item }}"
+    state: present
+  notify: restart kubelet
+  with_items: "{{ kubernetes_packages }}"
+
+- include_tasks: setup.yml
+
+- name: main | Ensure kubelet is started and enabled at boot.
+  service:
+    name: kubelet
+    state: started
+    enabled: true
+
+- name: main | Check if Kubernetes has already been initialized.
+  stat:
+    path: /etc/kubernetes/admin.conf
+  register: kubernetes_init_stat
+
+# Set up master.
+- include_tasks: master-setup.yml
+  when: inventory_hostname == k8s_master_node or ansible_fqdn == k8s_master_node
+
+
+# Set up nodes.
+- name: main | Get the kubeadm join command from the Kubernetes master.
+  command: kubeadm token create --print-join-command
+  changed_when: false
+  when: inventory_hostname == k8s_master_node or ansible_fqdn ==  k8s_master_node
+  register: kubernetes_join_command_result
+
+
+- name: main | Set the kubeadm join command globally.
+  set_fact:
+    kubernetes_join_command: "{{ kubernetes_join_command_result.stdout }}"
+  when: kubernetes_join_command_result.stdout is defined
+  delegate_to: "{{ item }}"
+  delegate_facts: true
+  with_items: "{{ play_hosts }}"
+
+- include_tasks: node-setup.yml
+  when: inventory_hostname in k8s_slave_nodes

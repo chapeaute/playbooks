@@ -1,0 +1,17 @@
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+EnvironmentFile=/etc/default/hadoop
+Type=forking
+User=hadoop
+Group=hadoop
+LimitNOFILE=8192
+WorkingDirectory={{ hadoop_install_dir }}
+Restart=no
+TimeoutSec=5min
+IgnoreSIGPIPE=no
+KillMode=control-group
+GuessMainPID=no
+ExecStart={{ hadoop_install_dir }}/sbin/hadoop-daemon.sh start namenode
+ExecStop={{ hadoop_install_dir }}/sbin/hadoop-daemon.sh start namenode

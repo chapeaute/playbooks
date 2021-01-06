@@ -1,0 +1,8 @@
+export REDISCLI_AUTH={{ redis_password }}
+
+# Get redis version
+redis_version=$(redis-cli --version | awk '{print $2}' | cut -d. -f1)
+
+if [ $redis_version -lt 5 ]; then
+	alias redis-cli='redis-cli -a "$REDISCLI_AUTH"'
+fi

@@ -1,0 +1,51 @@
+$TTL 14400
+@       IN      SOA     {{ soa_server }}   {{ soa_mail }} (
+                        2016052601      ; Serial
+                        10800           ; Refresh 3 hours
+                        3600            ; retry 1 hour
+                        604800          ; expire 1 week
+                        600 )           ; min TTL 1 day
+
+{% for srv in servers %}
+{% if srv.split(':')[1]|default("")|regex_search('^-') %}
+{% else %}
+{% if srv.split(':')[1]|default("") != "" %}
+		IN	NS	{{ srv.split(':')[1] }}{% if not '.' in srv.split(':')[1] %}.{{ key }}{% endif %}.
+{% else %}
+		IN	NS	ns{{ loop.index }}.{{ key }}.
+{% endif %}
+{% endif %}
+{% endfor %}
+
+{% if ".in-addr.arpa" in key %}
+
+{%- for srv in servers %}
+{% if srv.split(':')[1]|default("")|regex_search('^-') %}
+{% else %}
+{%- if key in srv.split(':')[0]|ipaddr('revdns') %}
+{%- if srv.split(':')[1]|default("") != "" %}
+{{ srv.split(':')[0].split('.')[3] }}		IN	PTR     {{ srv.split(':')[1] }}.
+{% else %}
+{{ srv.split(':')[0].split('.')[3] }}		IN	PTR     ns{{ loop.index }}.{{ key }}.
+{% endif %}
+{% endif %}
+{% endif %}
+{%- endfor %}
+
+{% else %}
+
+{%- for srv in servers %}
+{% if srv.split(':')[1]|default("")|regex_search('^-') %}
+{% else %}
+{% if srv.split(':')[1]|default("") != "" %}
+{%- if '.' in srv.split(':')[1] and not key in srv.split(':')[1] %}
+{%- else %}
+{{ srv.split(':')[1].split('.')[0] }} 		IN	A	{{ srv.split(':')[0] }}
+{% endif %}
+{% else %}
+ns{{ loop.index }} 		IN	A	{{ srv.split(':')[0] }}
+{% endif %}
+{% endif %}
+{% endfor %}
+
+{% endif %}

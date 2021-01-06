@@ -1,0 +1,27 @@
+---
+- name: script | Install python pip package
+  package:
+    name: python2-pip
+
+- name: script | Install last python pip version
+  pip:
+    name: pip
+    state: latest
+
+- name: script | Install python etcd3 library
+  pip:
+    name: etcd3
+
+- name: script | Deploy custom scripts
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0755
+  with_items:
+    - etcd-backup-clean
+    - etcd-backup-dump
+    - etcd-backup-restore
+    - etcd-cluster-info
+  tags: script

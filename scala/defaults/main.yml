@@ -1,0 +1,4 @@
+---
+# defaults file for scala
+scala_version: 2.12.5
+scala_package: "https://scala-lang.org/files/archive/scala-{{scala_version}}.rpm"

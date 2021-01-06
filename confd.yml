@@ -1,0 +1,9 @@
+# v1.0
+---
+- hosts: all
+  vars:
+    confd_version: 0.16.0
+    confd_etcd_nodes: ['http://127.0.0.1:2379']
+  roles:
+  - role: confd
+

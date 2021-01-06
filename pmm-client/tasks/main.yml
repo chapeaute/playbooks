@@ -1,0 +1,36 @@
+---
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: '{{ ansible_os_family }}.yml'
+
+- name: main | Install PMM client
+  package:
+    name:  "{{ pmmclient_package }}"
+    state: present
+
+- name: main | Check if PMM client is configure
+  shell: pmm-admin info >/dev/null 2>&1 && echo configure || echo unconfigure
+  changed_when: False
+  check_mode: no
+  register: pmm_conf
+
+- name: main | Authenticate to PMM server {{ pmmserver_address }}
+  command: pmm-admin config --server {{ pmmserver_address }} --server-user {{ pmmserver_username }} --server-password {{ pmmserver_password }}
+  when: "'unconfigure' in pmm_conf.stdout"
+
+- include: mysql.yml
+  when: pmmclient_mysql_enable
+
+- include: mongo.yml
+  when: pmmclient_mongo_enable

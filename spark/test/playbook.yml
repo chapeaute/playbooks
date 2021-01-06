@@ -1,0 +1,60 @@
+- hosts: all
+  roles:
+      - role: generic-service
+        genericservice:
+            name: activemq
+            source_url: "http://www.apache.org/dyn/closer.cgi?filename=/activemq/5.14.1/apache-activemq-5.14.1-bin.tar.gz&action=download"
+            source_checksum: sha1:671608f9df6e44e379d78362557b8ec0659145d9
+            source_filename: apache-activemq-5.14.1-bin.tar.gz
+            subpath: apache-activemq-5.14.1
+            start_command: bin/activemq start
+            stop_command: bin/activemq stop
+            log_glob: data/*.log
+            chowned_dirs:
+                - "."
+            needed_packages:
+              - "{% if ansible_os_family == 'Debian' %}openjdk-7-jre{% else %}java-1.7.0-openjdk{% endif %}"
+              - unzip
+            limitopenfiles: 4096
+            env_vars:
+              ACTIVEMQ_TMP: '$ACTIVEMQ_DATA_DIR/tmp'
+
+              #      - role: generic-service
+              #        genericservice:
+              #            name: sonar
+              #            source_url: http://downloads.sonarsource.com/sonarqube/sonarqube-5.1.1.zip
+              #            source_filename: sonarqube-5.1.1.zip
+              #            source_sha256sum: 8626ff7b4eaf8aba92856b27ed0cdcea432d5596bd1ac167ec27cce70ad0557f
+              #            subpath: sonarqube-5.1.1
+              #            start_command: bin/linux-x86-64/sonar.sh start
+              #            stop_command: bin/linux-x86-64/sonar.sh stop
+              #            log_glob: logs/*.log
+              #            chowned_dirs:
+              #                - "."
+              #            needed_packages:
+              #              - "{% if ansible_os_family == 'Debian' %}openjdk-7-jre{% else %}java-1.7.0-openjdk{% endif %}"
+              #              - unzip
+              #            env_vars:
+              #                JAVA_HOME: /usr/lib/jvm/java-7-openjdk-amd64/
+  tasks:
+    - name: Install httplib2 for service check
+      apt: name=python-httplib2 state=installed
+      when: ansible_os_family == 'Debian'
+
+    - name: Install httplib2 for service check
+      yum: name=python-httplib2 state=installed
+      when: ansible_os_family == 'RedHat'
+
+    - name: Check ActiveMQ
+      uri: url=http://localhost:8161/
+      register: result
+      until: result|success
+      retries: 5
+      delay: 5
+
+    - name: Check Sonar
+      uri: url=http://localhost:9000/
+      register: result
+      until: result|success
+      retries: 5
+      delay: 5

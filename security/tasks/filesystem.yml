@@ -1,0 +1,14 @@
+---
+- name: filesystem | Disable unused filesystem
+  template:
+    src:  etc/modprobe.d/cis.conf.j2
+    dest:  /etc/modprobe.d/cis.conf
+  when: security_level >= 1
+
+- name: filesystem | Set filesystem mount options
+  include: "mount_point.yml dev={{ fs.value.dev }} path={{ fs.value.path }} opts={{ fs.value.opts }} type={{ fs.value.type }}"
+  with_dict: "{{ security_filesystem_opts | default({}) }}"
+  loop_control:
+    loop_var: fs
+  when: security_level >= 3
+

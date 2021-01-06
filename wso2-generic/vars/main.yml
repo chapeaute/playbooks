@@ -1,0 +1,93 @@
+---
+# vars file for wso2
+wso2_generic_default_root_dir: /var/lib
+wso2_generic_default_data_dir: "{{ wso2_generic_default_root_dir }}/{{ wso2_generic_service_name }}-data"
+
+wso2_generic_sysctl:
+  net.ipv4.tcp_fin_timeout: 30
+  net.ipv4.tcp_tw_recycle: 1
+  net.ipv4.tcp_tw_reuse: 1
+  net.core.rmem_default: 524288
+  net.core.wmem_default: 524288
+  net.core.rmem_max: 67108864
+  net.core.wmem_max: 67108864
+  net.ipv4.tcp_rmem: 4096 87380 16777216
+  net.ipv4.tcp_wmem: 4096 65536 16777216
+  net.ipv4.ip_local_port_range: 1024 65535
+  fs.file-max: 2097152
+
+wso2_generic_db_user_source: "{% if wso2_generic_db_enable == 'true' %}WSO2UMDB{% else %}WSO2CarbonDB{% endif %}"
+wso2_generic_configs: {}
+wso2_generic_ssl_protocol: "TLSv1.2"
+wso2_generic_default_configs:
+    carbon.xml:
+        - regexp: .*(<|-)HostName>.*
+          line: '<HostName>{{ wso2_generic_remote_hostname }}</HostName>'
+        - regexp: .*<Offset>.*Offset.*
+          line:  '<Offset>{{ wso2_generic_offset | default(0) }}</Offset>'
+        - regexp: .*(<|-)MgtHostName>.*
+          line: '<MgtHostName>{{ wso2_generic_remote_hostname }}</MgtHostName>'
+        - regexp: .*<Password>.*Password.*
+          line: '<Password>{{ wso2_generic_keystore_pass }}</Password>'
+          # after: '<!-- Keystore password-->'
+          # before: '<!-- Private Key alias-->'
+        - regexp: .*<Password>.*Password.*
+          line: '<Password>{{ wso2_generic_truststore_pass }}</Password>'
+          # after: '<!-- trust-store password -->'
+          # before: '</TrustStore>'
+        - regexp: '.*<KeyPassword>.*'
+          line: '<KeyPassword>{{ wso2_generic_keystore_pass }}</KeyPassword>'
+        - regexp: '.*<EnableHTTPAdminConsole>.*'
+          line: '<EnableHTTPAdminConsole>{{ wso2_generic_enable_http_admin }}</EnableHTTPAdminConsole>'
+        - regexp: '.*<HideAdminServiceWSDLs>.*'
+          line: '<HideAdminServiceWSDLs>false</HideAdminServiceWSDLs>'
+    user-mgt.xml:
+        - regexp: '<AddAdmin>.*'
+          line: '<AddAdmin>{{ wso2_generic_admin_create }}</AddAdmin>'
+        - regexp: '<UserName>.*'
+          line: '<UserName>{{ wso2_generic_admin_user }}</UserName>'
+        - regexp: <Password>.*Password.*
+          line: <Password>{{ wso2_generic_admin_pass }}</Password>
+        - regexp: '<Property name="dataSource">jdbc/.*'
+          line: <Property name="dataSource">jdbc/WSO2UMDB</Property>
+          when: wso2_generic_version is version_compare('2.6.0', '<=')
+          line: <Property name="dataSource">jdbc/SHARED_DB</Property>
+          when: wso2_generic_version is version_compare('3.0.0', '>=')
+    identity/identity.xml:
+        - regexp: <EnableSSOConsentManagement>.*
+          line: <EnableSSOConsentManagement>false</EnableSSOConsentManagement>
+        - regexp: <SessionIdleTimeout>.*
+          line: <SessionIdleTimeout>5</SessionIdleTimeout>
+        - regexp: <Password>.*Password.*
+          line: "<Password>{{ wso2_generic_keystore_pass }}</Password>"
+    tomcat/catalina-server.xml:
+        - regexp: sslEnabledProtocols.*
+          line: "sslEnabledProtocols='{{ wso2_generic_ssl_protocol }}'"
+        - regexp: sslEnabledProtocols.*
+          line: "sslEnabledProtocols='{{ wso2_generic_ssl_protocol }}'"
+        - regexp: prefix=.*
+          line: 'prefix="http_access_management_console"  rotatable="false" suffix=".log"'
+        - regexp: truststorePassword=.*
+          line: "truststorePassword='{{ wso2_generic_truststore_pass }}'"
+        - regexp: certificateKeystorePassword=.*
+          line: "certificateKeystorePassword='{{ wso2_generic_keystore_pass }}'"
+        - regexp: certificateKeyPassword=.*
+          line: "certificateKeyPassword='{{ wso2_generic_keystore_pass }}'"
+        - regexp: keystorePass=.*
+          line: "keystorePass='{{ wso2_generic_keystore_pass }}'"
+        - regexp: protocols=.*
+          line: "protocols='{{ wso2_generic_ssl_protocol }}'"
+    security/authenticators.xml:
+        - regexp: '<Authenticator name="SAML2SSOAuthenticator".*'
+          line:   <Authenticator name="SAML2SSOAuthenticator" disabled="{{ wso2_generic_sso_enable == 'true' | ternary('false', 'true') }}">
+        - regexp: .*IdentityProviderSSOServiceURL.*
+          line:   <Parameter name="IdentityProviderSSOServiceURL">{{ wso2_generic_sso_url }}/samlsso</Parameter>
+        - regexp: .*AssertionConsumerServiceURL.*
+          line:   <Parameter name="AssertionConsumerServiceURL">https://{{ wso2_generic_remote_hostname }}:9443/acs</Parameter>
+        - regexp: .*ResponseSignatureValidationEnabled.*
+          line:   <Parameter name="ResponseSignatureValidationEnabled">false</Parameter>
+        - regexp: .*AssertionSignatureValidationEnabled.*
+          line:   <Parameter name="AssertionSignatureValidationEnabled">false</Parameter>
+        - regexp: .*ServiceProviderID.*
+          line:   <Parameter name="ServiceProviderID">CARBON_SERVER</Parameter>
+        

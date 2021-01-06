@@ -1,0 +1,72 @@
+---
+
+# Setting up firewall rules 
+
+- name: Firewalld | Setting up firewall rules for MTA service
+  firewalld:
+    port: "{{item}}"
+    permanent: true
+    state: enabled
+    immediate: yes
+  with_items: 
+    - "25/tcp"
+    - "465/tcp"
+    - "587/tcp"
+    - "7025/tcp"
+    - "53/udp"
+    - "3310/tcp"
+
+
+# Installing ZIMBRA-MTA Service
+
+- name: keystrokes-mta | Uploading keystroke file for community version on MTA
+  tags: keystroke
+  template: 
+    src: community-keystrokes-mta.j2
+    dest: "{{ zimbra_tmp_dir }}/keystrokes-mta"
+    mode: 0640
+  when: "zimbra_license_file is not defined"
+
+
+- name: zimbra-mta.conf | Uploading installer configuration file | MTA
+  template:
+    src: zimbra-mta.conf.j2
+    dest: "{{ zimbra_tmp_dir }}/zimbra-mta.conf"
+    owner: root
+    group: root
+    mode: 0640
+  when: "zimbra_license_file is not defined"
+
+
+- name: keystrokes-mta | Installing Zimbra OSE | MTA
+  shell: "./install.sh -s < {{ zimbra_tmp_dir }}/keystrokes-mta"
+  args: 
+    chdir: "{{ zimbra_tmp_dir }}/{{ zimbra_package }}/"
+
+
+- name: zimbra-mta.conf | Configuring Zimbra OSE's services for use | MTA
+  command: "./zmsetup.pl -c {{ zimbra_tmp_dir }}/zimbra-mta.conf"
+  args: 
+    chdir: /opt/zimbra/libexec/
+
+
+- name: Restart Zimbra services
+  shell: su - zimbra -c "zmcontrol restart && echo Running || echo failed"
+  register: zmcontrol_status
+
+
+- name: zmconfigd.pid | Delete zmconfigd_file
+  file:
+    path: "{{ zmconfigd_file }}"
+    state: absent 
+  when: "'failed' in zmcontrol_status.stdout"
+
+- name: Restart Zimbra services
+  shell: su - zimbra -c 'zmcontrol restart'
+  when: "'failed' in zmcontrol_status.stdout"
+
+
+- name: zimbra-mta | Removing Zimbra configuration file | MTA
+  command: "rm -f {{ zimbra_tmp_dir }}/zimbra-mta.conf"
+  args: 
+    removes: "{{ zimbra_tmp_dir }}/zimbra-mta.conf"

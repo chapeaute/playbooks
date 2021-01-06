@@ -1,0 +1,3 @@
+#!/bin/bash
+
+echo show all | sudo bconsole | grep ^Client: | awk '{print $2}' | sed 's/name=//'

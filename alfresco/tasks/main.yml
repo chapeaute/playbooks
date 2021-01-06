@@ -1,0 +1,97 @@
+---
+# tasks file for alfresco
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- name: main | Alfresco install required package
+  package:
+    name:  "{{ item }}"
+    state: present
+  with_items:
+    - "{{ alfresco_required_packages }}"
+
+- include: "{{ alfresco_db_driver }}.yml"
+
+- name: main | Create Alfresco directories
+  file:
+    path:  "{{ alfresco_root_dir }}/{{ item }}"
+    owner: "{{ alfresco_user }}"
+    group: "{{ alfresco_group }}"
+    mode:  0750
+    state: directory
+  with_items:
+    - shared
+    - shared/classes
+    - shared/lib
+    - data
+    - logs
+
+- name: main | Purge tomcat default webapps
+  file:
+    path: "{{ alfresco_root_dir }}/webapps/{{ item }}"
+    state: absent
+  with_items:
+    - "{{ alfresco_purge_tomcat_webapp|default([]) }}"
+
+- name: main | Download alfresco community
+  get_url:
+    url:  "{{ alfresco_archive_url }}"
+    dest: "/var/tmp/{{ alfresco_archive_name }}.zip"
+    checksum: "{{ alfresco_archive_sha256 }}"
+    validate_certs: no
+  register: alfresco_downloaded
+
+- name: main | Extract war file from Alfresco download archive
+  shell: "unzip -p /var/tmp/{{ alfresco_archive_name }}.zip \
+  {{ alfresco_archive_name }}/web-server/webapps/{{ item }} > \
+  {{ alfresco_root_dir }}/webapps/{{ item }}"
+  with_items:
+    - alfresco.war
+    - share.war
+    - solr4.war
+    - ROOT.war
+  when: alfresco_downloaded|changed
+
+- name: main | Update tomcat configuration for Alfresco
+  replace:
+    dest:    "{{ tomcat_root_dir }}/conf/catalina.properties"
+    regexp:  'shared.loader=.*'
+    replace: 'shared.loader=${catalina.base}/shared/classes'
+
+- name: main | Deploy Alfresco configuration file
+  template:
+    src:   var/lib/tomcat/shared/classes/alfresco-global.properties.j2
+    dest:  "{{ alfresco_root_dir }}/shared/classes/alfresco-global.properties"
+    owner: "{{ alfresco_user }}"
+    group: "{{ alfresco_group }}"
+    mode:  0640
+  notify:
+    - Restart alfresco
+
+- name: main | Wait for alfresco war deploy
+  wait_for:
+    path: "{{ alfresco_root_dir }}/webapps/{{ item }}"
+  with_items:
+    - alfresco/WEB-INF/web.xml
+    - alfresco/WEB-INF/classes/log4j.properties
+    - share/WEB-INF/classes/log4j.properties
+
+- name: main | Define Alfresco log4j configuration
+  replace:
+    dest:    "{{ tomcat_root_dir }}/webapps/{{ item }}/WEB-INF/classes/log4j.properties"
+    regexp:  'log4j.appender.File.File=.*'
+    replace: 'log4j.appender.File.File={{ tomcat_root_dir }}/logs/{{ item }}.log'
+  with_items:
+    - alfresco
+    - share
+  notify:
+    - Restart alfresco

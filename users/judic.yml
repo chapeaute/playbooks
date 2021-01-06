@@ -1,0 +1,22 @@
+---
+
+- hosts: all
+  roles:
+    - role: basic-user
+      tags: user
+      users_groups:
+        - name: exploit
+      sudoers:
+        exploit:
+          state: present
+          lines:
+            - "%exploit ALL=(ALL) NOPASSWD: ALL"
+        default:
+          state: present
+          lines:
+            - 'Defaults    env_keep += "SSH_AUTH_SOCK"'
+      users:
+        - login: jyapi
+          groups: exploit
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAABJQAAAQEAuvwXdCqmFF5RoC9NTCOLj7CuY36k+9zxr8HGaatK+RZvbtNfvcmkpFkiRlyfMfO99H651LPQpXQy18oIJ839Op5Jyf6Ell0VT1fypoFRJjIUFxLyzUOqVsJNHgJguD7Sl+JB2yTER+Iy8ZcBc38JRw5SYgH4W9xZ+fSwVuznjTUrBjwFnJHfrlBST41BJryYV+Q+BOPGaVJworaYDtyWMO8g8qiJKC2yPnuwosmndfrSA8DxB7+1DJ8hiIsYNYHgjZZbV4ffAnrulcmfoHdPepS6P6IUR0ZQ9g5BaaFRFdnYkdAunbGth4pxCSzsjKHPbLULtjVevDrD0H3dmEVFsRdw== judicael.yapi@orange.com

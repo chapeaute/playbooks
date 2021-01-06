@@ -1,0 +1,22 @@
+---
+- name: script | Deploy admin scripts
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: "root"
+    group: "{{ nodejs_group }}"
+    mode:  0750
+  with_items:
+    - nodejs-app-create
+    - nodejs-app-delete
+    - nodejs-app-deploy
+    - nodejs-app-info
+    - nodejs-app-list
+    - nodejs-app-logs
+    - nodejs-app-restart
+    - nodejs-app-start
+    - nodejs-app-status
+    - nodejs-app-stop
+  when: nodejs_install_pm2
+  tags:
+    - script

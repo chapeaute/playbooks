@@ -1,0 +1,17 @@
+[Install]
+WantedBy=multi-user.target
+
+[Service]
+Type=simple
+User=wso2sp
+Group=wso2sp
+EnvironmentFile=/etc/default/wso2sp
+EnvironmentFile=/etc/default/wso2sp-{{ service }}
+LimitNOFILE=655360
+WorkingDirectory=/var/lib/wso2sp
+Restart=on-failure
+TimeoutSec=5min
+IgnoreSIGPIPE=no
+KillMode=control-group
+GuessMainPID=no
+ExecStart=/var/lib/wso2sp/bin/{{ service }}.sh

@@ -1,0 +1,104 @@
+###################################################################
+# proxy_ogo.properties 
+#
+# Defines reverse proxy conf info for etcd, RabbitMQ, Redis...
+# Same file name is used on Worker and Manager
+# Default location is /usr/local/tomcat/webapps/
+#
+# Default values are used if file does not exist.
+# The default values are the commented one below.
+#
+# All values are superseded if defined at Worker or Manager start:
+# Example: java -Detcd_endpoint=http://my_new_etcd:2379
+#
+##################################################################
+
+# etcd server / endpoint. Defaults to  http://etcd:2379
+etcd_endpoint=http://{{ etcd_opts.dns }}:{{ etcd_port }}
+
+# RabbitMQ host. Defaults to localhost
+rabbitmq_host={{ rabbitmq_opts.dns }}
+
+# RabbitMQ IP. Defaults to -1 (no port passed to RabbitMQ)
+rabbitmq_port={{ rabbitmq_port }}
+
+# RabbitMQ username. Defaults to guest
+rabbitmq_username={{ rabbitmq_admin_user }}
+
+# RabbitMQ password. Defaults to guest
+rabbitmq_password={{ rabbitmq_admin_pass }}
+
+# RabbitMQ number of threads for worker publish. Defaults to 20.
+rabbitmq_publisher_thread_pool_size= 20
+
+# RabbitMQ Channel pool min idle. Defaults to 10.
+rabbitmq_channel_pool_min_idle=10
+
+# RabbitMQ Channel pool max total. Defaults to 20.
+rabbitmq_channel_pool_max_total=20
+
+# RabbitMQ max queue length in bytes. Defaults to 5242880 (5Mb).
+rabbitmq_queue_max_length_bytes=5242880
+
+#############################################
+# REDIS DATABASES CONFIGURATION             #
+#############################################
+
+#############################################
+# IP DATABASE CONFIGURATION                 #
+#############################################
+
+# IP database.  Redis host. Defaults to localhost.
+redis_host={{ redis_opts.dns }}
+
+# IP database. Redis Port. Defaults to -1 (no port passed to Redis).
+redis_port={{ redis_port }}
+
+# IP database. Database number. Defaults to 0.
+redis_db_number=0
+
+# IP database. Connection pool min idle. Defaults to 20.
+redis_min_idle=20
+
+# IP database. Redis connection pool max idle. Defaults to 200.
+redis_max_idle=200
+
+
+#############################################
+# NAVIGATION DATABASE CONFIGURATION         #
+#############################################
+
+# Navigation database.  Redis host. Defaults to localhost.
+redis_navigation_host={{ redis_opts.dns }}
+
+# Navigation database. Redis Port. Defaults to -1 (no port passed to Redis).
+redis_navigation_port={{ redis_port }}
+
+# Navigation database. Database number. Defaults to 1.
+redis_navigation_db_number=1
+
+# Navigation database. Connection pool min idle. Defaults to 20.
+redis_navigation_min_idle=20
+
+# Navigation database. Redis connection pool max idle. Defaults to 200.
+redis_navigation_max_idle=200
+
+
+#############################################
+# DOMAIN DATABASE CONFIGURATION             #
+#############################################
+
+# Domain database.  Redis host. Defaults to localhost.
+redis_domain_host={{ redis_opts.dns }}
+
+# Domain database. Redis Port. Defaults to -1 (no port passed to Redis).
+redis_domain_port={{ redis_port }}
+
+# Domain database. Database number. Defaults to 2.
+redis_domain_db_number=2
+
+# Domain database. Connection pool min idle. Defaults to 20.
+redis_domain_min_idle=20
+
+# Domain database. Redis connection pool max idle. Defaults to 200.
+redis_domain_max_idle=200

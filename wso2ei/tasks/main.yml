@@ -1,0 +1,35 @@
+---
+
+# tasks file for wso2
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- import_tasks: config.yml
+  tags:
+    - config
+
+- include: script.yml
+  tags: script
+
+- name: main | link log dir for wso2ei integrator
+  tags: config_log
+  file:
+    src: "{{ wso2ei_install_dir }}/repository/logs"
+    dest: "/var/log/wso2ei"
+    state: link
+
+- name: main | Start and enable {{ wso2ei_service_name }}
+  service:
+    name: "{{ wso2ei_service_name }}"
+    state: started
+    enabled: true

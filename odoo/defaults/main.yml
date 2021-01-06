@@ -1,0 +1,51 @@
+---
+
+# Global config
+manage_firewalld: true
+use_satellite_repo: false
+
+# Odoo defaults configuration
+odoo_version:  "12.0"
+odoo_major_version: "{{ odoo_version | int }}"
+odoo_port: 8069
+odoo_user: "odoo"
+odoo_group: "{{ odoo_user }}"
+odoo_admin_password: "{{ lookup('password', 'credential/{{ inventory_hostname }}-odoo_admin_password chars=ascii_letters,digits') }}"
+odoo_config_custom: {}
+
+# Directory parameters
+odoo_conf_dir: /etc/odoo
+odoo_home_dir: "{{ odoo_default_home_dir }}"
+odoo_src_dir: "{{ odoo_home_dir }}/src"
+odoo_data_dir: "{{ odoo_home_dir }}/data"
+odoo_addons_dir: "{{ odoo_home_dir }}/addons-custom"
+odoo_python_version: '3.6'
+
+# Log configuration
+odoo_log_dir: /var/log/odoo
+odoo_log_file: "{{ odoo_log_dir }}/odoo.log"
+odoo_log_level: info
+
+# Tuning configuration
+## CPU Tuning
+odoo_workers: "{{ ansible_processor_vcpus * 2 }}"
+odoo_max_cron_threads: 1
+odoo_limit_time_cpu: 600
+odoo_limit_time_real: 1200
+odoo_available_memory: "{{ (ansible_memtotal_mb*odoo_memory_prct*1024*1024)|int }}"
+odoo_needed_memory: "{{ odoo_memory | int }}"
+
+## Memory Tuning
+odoo_memory_prct: 0.8  # 0.4 for allinone installation (ie. on same server than PostgreSQL), otherwise set to 0.8
+odoo_memory: "{{ (((odoo_workers|int + odoo_max_cron_threads|int) * ((0.8*150) + (0.2*1024))) * 1024*1024)|int }}" # https://www.odoo.com/documentation/14.0/setup/deploy.html#id5
+odoo_limit_memory_hard: "{{ odoo_memory }}"
+odoo_limit_memory_soft: "{{ (odoo_memory|int*0.85)|int }}"
+odoo_limit_memory_request: 8192
+
+# Database configuration
+odoo_db_driver: postgresql
+odoo_db_host: "127.0.0.1"
+odoo_db_port: 5432
+odoo_db_user: odoo
+odoo_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-odoo_db_pass chars=ascii_letters,digits') }}"
+odoo_db_remote_host: "{{ inventory_hostname }}"

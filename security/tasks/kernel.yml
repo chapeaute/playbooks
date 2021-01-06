@@ -1,0 +1,61 @@
+---
+- name: kernel | Ensure core dumps restriction
+  pam_limits:
+    domain:     "*"
+    limit_type: hard
+    limit_item: core
+    value:      0
+  when: security_level >= 1
+
+- name: kernel | Set sysctl fs.suid_dumpable to 0
+  sysctl:
+    name:  fs.suid_dumpable
+    value: 0
+  when: security_level >= 1
+
+- name: kernel | Enforcing network security
+  sysctl:
+    name:   "{{ item.name}}"
+    value : "{{ item.value }}"
+  with_items:
+    - name:  net.ipv4.conf.all.send_redirects
+      value: 0
+    - name:  net.ipv4.conf.all.accept_redirects
+      value: 0
+    - name:  net.ipv4.conf.default.send_redirects
+      value: 0
+    - name:  net.ipv4.conf.default.accept_redirects
+      value: 0
+    - name:  net.ipv4.conf.all.secure_redirects
+      value: 0
+    - name:  net.ipv4.conf.all.log_martians
+      value: 1
+    - name:  net.ipv4.conf.default.log_martians
+      value: 1
+    - name:  net.ipv4.conf.default.secure_redirects
+      value: 0
+    - name: net.ipv6.conf.all.disable_ipv6
+      value: 1
+    - name: net.ipv6.conf.all.accept_ra
+      value: 0
+    - name: net.ipv6.conf.default.accept_ra
+      value: 0
+    - name: net.ipv4.tcp_max_syn_backlog
+      value: 2048
+    - name: net.ipv4.tcp_synack_retries
+      value: 3
+  when: security_level >= 1
+
+- name: kernel | Enforcing kernel security
+  sysctl:
+    name:   "{{ item.name}}"
+    value : "{{ item.value }}"
+  with_items:
+    - name:  kernel.pid_max
+      value: "{{ kernel_pid_max }}"
+    - name:  kernel.panic
+      value: "{{ kernel_panic }}"
+    - name:  kernel.sysrq
+      value: "{{ kernel_sysrq }}"
+  when:
+    - security_level >= 1

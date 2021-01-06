@@ -1,0 +1,75 @@
+#
+# These groups are read by MariaDB server.
+# Use it for options that only the server (but not clients) should see
+#
+# See the examples of server my.cnf files in /usr/share/mysql/
+#
+
+# this is read by the standalone daemon and embedded servers
+[server]
+
+# this is only for the mysqld standalone daemon
+[mysqld]
+
+#
+# Galera-related settings
+#
+[galera]
+# Mandatory settings
+wsrep_on = ON
+wsrep_provider = /usr/lib64/galera/libgalera_smm.so
+wsrep_cluster_address = "gcomm://"
+wsrep_cluster_name = "{{ galera_cluster_name }}"
+wsrep_node_name = "{{ galera_nodes | intersect([ansible_fqdn]) | first | default(ansible_hostname) }}"
+wsrep_node_address = "{{ galera_nodes | intersect([ansible_fqdn]) | first | default(ansible_hostname) }}"
+default_storage_engine = InnoDB
+binlog_format = {{ mariadb_config_binlog_format }}
+datadir = {{ mariadb_default_data_dir }}
+
+#
+# Allow server to accept connections on all interfaces.
+#
+bind-address = {{ galera_cluster_bind_address }}
+max_connections = {{ mariabd_max_connections }}
+
+#
+# Optional setting
+#wsrep_slave_threads = 1
+innodb_autoinc_lock_mode = 2
+innodb_flush_log_at_trx_commit = 0
+innodb_file_per_table = 1
+innodb_log_file_size = 256M
+wsrep_drupal_282555_workaround = ON
+wsrep_retry_autocommit = 5
+
+query_cache_size = 0
+query_cache_type = 0
+
+# To start failed cluster comment out above and uncomment below...Once cluster is started revert changes and restart mysql on main node where change was made
+wsrep_sst_method = {{ mariadb_wsrep_sst_method }}
+wsrep_sst_auth = "{{ mariadb_wsrep_sst_user }}:{{ mariadb_wsrep_sst_password }}"
+
+{% if monitoring_galera_enable %}
+#wsrep_notify_cmd = '{{ monitoring_galera_script_path }}/{{ monitoring_galera_script_name }}'
+{% endif %}
+
+# Logs
+log_error = /var/log/mysql/mysql.err
+slow_query_log
+#log_queries_not_using_indexes
+slow_query_log_file = '/var/log/mysql/mysql-slow-query.log'
+long_query_time = 5
+
+# this is only for embedded server
+[embedded]
+
+# This group is only read by MariaDB servers, not by MySQL.
+# If you use the same .cnf file for MySQL and MariaDB,
+# you can put MariaDB-only options here
+[mariadb]
+
+# This group is only read by MariaDB-{{ mariadb_version }} servers.
+# If you use the same .cnf file for MariaDB of different versions,
+# use this group for options that older servers don't understand
+[mariadb-{{ mariadb_version }}]
+

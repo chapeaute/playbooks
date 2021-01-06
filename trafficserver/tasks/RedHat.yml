@@ -1,0 +1,9 @@
+---
+
+- name: RedHat | Setup firewalld
+  firewalld:
+    state: enabled
+    immediate: true
+    permanent: true
+    port: "{{ item }}"
+  with_items: "{{ ts_ports }}"

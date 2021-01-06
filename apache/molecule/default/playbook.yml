@@ -1,0 +1,16 @@
+---
+
+- name: Converge
+  hosts: all
+  roles:
+    - role: apache
+      apache2_vhosts:
+        test.com:
+        test_with_ssl.com:
+          ssl:
+            enabled: true
+          location_proxies:
+            - name: api
+              location: /api
+              http_backends: "{{ groups['all' ] }}"
+              http_backends_port: 80

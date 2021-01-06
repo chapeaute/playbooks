@@ -1,0 +1,3 @@
+---
+# vars file for wekan
+wekan_default_root_dir: /var/lib

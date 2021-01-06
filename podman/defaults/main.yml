@@ -1,0 +1,5 @@
+---
+# defaults file for podman
+
+podman_images: []
+podman_data_dir: /var/lib/containers/storage

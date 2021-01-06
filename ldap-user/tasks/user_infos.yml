@@ -1,0 +1,14 @@
+---
+# tasks file for ldap-user
+
+- name: "User Infos | Get user infos for {{ user }}"
+  set_fact:
+    user_infos: "{{ lookup('ldapuser', user ) }}"
+
+- name: "User Infos | Pick the good infos"
+  set_fact:
+    u: "{{ { 'login': user_infos.uid[0], 'groups': ldap_users_groups, 'sshkeys': user_infos.sshPublicKey|default([]), 'password': user_infos.userPassword[0], 'mail': user_infos.mail[0], 'name': user_infos.cn[0] } }}"
+
+- name: "User Infos | Concatenate users"
+  set_fact:
+    users: "{{ users + [u]}}"

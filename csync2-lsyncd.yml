@@ -1,0 +1,19 @@
+---
+- name: main | Install csync2 and lsyncd
+  hosts: csync2
+  tags: csync2
+  roles:
+    - role: csync2-lsyncd
+      lsyncd_enabled: false
+      csync2_hosts: "{{ play_hosts }}"
+      csync2_groups:
+        - name: nginx
+          includes:
+            - /etc/nginx/sites-enabled
+            - /etc/nginx.conf
+          actions:
+            - name: nginx
+              pattern: '/etc/nginx/*'
+              exec: 'nginx -t && service nginx reload'
+              do_local: true
+

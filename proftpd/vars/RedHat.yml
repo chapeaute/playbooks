@@ -1,0 +1,13 @@
+---
+
+proftpd_dependencies:
+  - epel-release
+  - openssh
+
+proftpd_packages:
+  - proftpd
+  - proftpd-utils
+
+proftpd_conf_file: /etc/proftpd.conf
+apache_uid: 48
+apache_gid: 48

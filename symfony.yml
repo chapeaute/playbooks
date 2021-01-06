@@ -1,0 +1,12 @@
+---
+
+- hosts: all
+  vars:
+    symfony_site_dir: /var/www
+    symfony_site_name: monsite.ci
+  roles:
+    - role: symfony
+      symfony_php_extensions: [] # Add more extensions (NOT required)
+    - role: security-apache
+      security_level: 2
+

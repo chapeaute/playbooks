@@ -1,0 +1,48 @@
+---
+# defaults file for generic-deploy-webapp
+
+generic_webapp_vhost:
+generic_webapp_aliases: []
+#generic_webapp_folder:
+
+# Download url webapp
+generic_webapp_download_url:
+generic_webapp_current_via: symlink
+generic_webapp_deploy_via: download_unarchive
+generic_webapp_unarchive_opts: ""
+
+# Uncompress path
+generic_webapp_webroot_dir: /var/www
+generic_webapp_htdocs_dir: htdocs
+generic_webapp_release_dir: release
+generic_webapp_root_dir: "{{ generic_webapp_webroot_dir }}/{{ generic_webapp_vhost }}"
+generic_webapp_docroot_dir: "{{ generic_webapp_root_dir }}/{{ generic_webapp_htdocs_dir }}"
+generic_webapp_shared_dir: "{{ generic_webapp_root_dir }}/shared"
+
+# RW Directories
+generic_webapp_rw_dirs: []
+generic_webapp_rw_files: []
+
+# Arrays of directories and files to be shared.
+generic_webapp_shared_paths: []
+generic_webapp_shared_files: []
+
+# users and groups
+generic_webapp_owner: apache
+generic_webapp_group: apache
+
+# Playbook before deploy
+generic_webapp_before_deploy_script:
+
+# Playbook after deploy
+generic_webapp_after_deploy_script:
+
+# Releases to keep after a new deployment
+generic_webapp_keep_releases: 2
+
+# Database
+generic_webapp_db_backend: mariadb
+generic_webapp_db_host: 127.0.0.1
+generic_webapp_db_name:
+generic_webapp_db_user:
+generic_webapp_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-generic_webapp_db_pass chars=ascii_letters,digits') }}"

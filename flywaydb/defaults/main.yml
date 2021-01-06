@@ -1,0 +1,18 @@
+---
+# Global settings
+flywaydb_version: "5.1.4"
+flywaydb_source_url: "https://repo1.maven.org/maven2/org/flywaydb/flyway-commandline/{{ flywaydb_version }}/flyway-commandline-{{ flywaydb_version }}-linux-x64.tar.gz"
+flywaydb_subpath: "flyway-{{ flywaydb_version }}"
+flywaydb_root: "/opt/flyway"
+flywaydb_name: "flyway"
+flywaydb_systemwide_install: True
+flywaydb_cluster_migration: False
+flywaydb_debug: False
+
+# JDBC connectors not provided by default
+flywaydb_drivers: []
+flywaydb_drivers_files: []
+
+## Database migration configuration
+flywaydb_reset: false
+flywaydb_databases: {}

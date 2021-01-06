@@ -1,0 +1,22 @@
+---
+
+- name: Monitoring | Install monitoring packages
+  package:
+    name: "{{ item }}"
+    state: present
+  with_items:
+    - "{{ varnish_monitoring_packages }}"
+
+- name: Monitoring | Create plugins dir
+  file:
+    path: "/usr/lib/nagios/plugins-agent"
+    state: directory
+    recurse: true
+
+- name: Monitoring | Copy monitoring scripts
+  copy:
+    src: "usr/lib/nagios/plugins-agent/{{ item }}"
+    dest: "/usr/lib/nagios/plugins-agent/{{ item }}"
+    mode: 0755
+  with_items:
+    - check_varnish

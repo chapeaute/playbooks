@@ -1,0 +1,12 @@
+---
+- hosts: haproxy-apache
+  roles:
+    - role: haproxy
+      haproxy_pool_servers:
+        - name: apache
+          vip:
+            - 192.168.122.20
+          port: 80
+          haproxy_backend_servers: 
+            - { name: 'apache-1', address: '192.168.122.116:80' }
+            - { name: 'apache-2', address: '192.168.122.117:80' }

@@ -1,0 +1,91 @@
+---
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: "{{ ansible_os_family }}.yml"
+
+- stat:
+    path: "{{varnish_config_path}}/custom.vcl"
+  register: varnish_custom_vcl
+
+- name: main | Ensure custom.vcl exists
+  file:
+    path: "{{varnish_config_path}}/custom.vcl"
+    state: touch
+    owner: root
+    group: root
+    mode: 0644
+  when: not varnish_custom_vcl.stat.exists
+
+- name: main | Ensure Varnish config path exists.
+  file:
+    path: "{{ varnish_config_path }}"
+    state: directory
+
+- name: main | Copy Varnish configuration (systemd).
+  template:
+    src: etc/varnish/varnish.params.j2
+    dest: "{{varnish_config_path}}/varnish.params"
+    owner: root
+    group: root
+    mode: 0644
+
+- name: main | Copy Varnish VCLs.
+  template:
+    src: "etc/varnish/{{item}}.vcl.j2"
+    dest: "{{varnish_config_path}}/{{ item }}.vcl"
+    owner: root
+    group: root
+    mode: 0644
+  with_items:
+    - backends
+    - sample
+  notify: restart varnish
+
+- name: main | Copy Varnish default VCLs.
+  copy:
+    src: "etc/varnish/{{item}}.vcl"
+    dest: "{{varnish_config_path}}/{{ item }}.vcl"
+    owner: root
+    group: root
+    mode: 0644
+    force: no
+  with_items:
+    - core
+    - default
+    - drupal-default
+    - hit-miss
+  notify: restart varnish
+
+- name: main | Copy varnish secret.
+  template:
+    src: etc/varnish/secret.j2
+    dest: "{{ varnish_config_path }}/secret"
+    owner: root
+    group: root
+    mode: 0644
+  notify: restart varnish
+
+- meta: flush_handlers
+
+- name: main | Ensure Varnish services are started and enabled on startup.
+  service:
+    name: "{{ item }}"
+    state: started
+    enabled: yes
+  with_items: "{{ varnish_enabled_services | default([]) }}"
+  when: ansible_service_mgr == "systemd"
+
+- include: script.yml
+  tags:
+    - script

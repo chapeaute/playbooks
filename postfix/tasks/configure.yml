@@ -1,0 +1,59 @@
+---
+- name: main | Deploy postfix main.cf
+  template:
+    src:   etc/postfix/main.cf.j2
+    dest:  /etc/postfix/main.cf
+    owner: root
+    group: root
+    mode:  0644
+  notify: Postfix restart
+
+- name: main | Deploy postfix generic
+  template:
+    src:   etc/postfix/generic.j2
+    dest:  /etc/postfix/generic
+    owner: root
+    group: root
+    mode:  0644
+  register: _postfix_generic
+  notify: Postfix restart
+
+- name: configure | stats /etc/postfix/generic.db
+  stat:
+    path: /etc/postfix/generic.db
+  register: _postfix_generic_db
+
+- name: main | Generate map for generic
+  command: /usr/sbin/postmap /etc/postfix/generic
+  when: (_postfix_generic is defined and _postfix_generic.changed) or _postfix_generic_db.stat.exists == False
+
+- name: configure | Configure map for generic aliases
+  lineinfile:
+    dest:   /etc/aliases
+    regexp: "^#?{{ item.key }}:.*"
+    line:   "{{ item.key }}: {{ item.value }}"
+  with_items:
+    - key:   root
+      value: "{{ postfix_local_user_relay_address | join(',') }}"
+  register: update_aliases
+
+- name: configure | Generate map for generic aliases
+  command: /usr/sbin/postalias /etc/aliases
+  when: update_aliases.changed
+
+- name: main | Deploy postfix virtual
+  template:
+    src:   etc/postfix/virtual.j2
+    dest:  /etc/postfix/virtual
+    owner: root
+    group: root
+    mode:  0644
+  when: postfix_local_user_relay_address != ""
+  notify: Postfix restart
+
+- name: main | Deploy postfix sender canonical maps
+  template:
+    src:  etc/postfix/sender_canonical_maps.j2
+    dest: /etc/postfix/sender_canonical_maps
+  when: postfix_rewrite_sender_address != ""
+  notify: Postfix restart

@@ -1,0 +1,7 @@
+input {
+  http {
+    host => "0.0.0.0"
+    port => {{ ls_input_http_port }}
+    tags => [{% for tag in ls_input_http_tags -%}"{{ tag }}"{%- if not loop.last -%},{% endif -%}{%- endfor %}]
+  }
+}

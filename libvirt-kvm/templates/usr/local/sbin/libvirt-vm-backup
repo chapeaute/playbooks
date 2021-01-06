@@ -1,0 +1,73 @@
+#!/bin/bash
+
+export LANG="en_US.UTF-8"
+
+BACKUPSTORAGE=`df --output=target,avail | egrep "^$1"`
+BACKUPDEST="$BACKUPSTORAGE" | sort -rnk2 | awk '{print $1}' | head -1
+BACKUPFOLDER='backup'
+DOMAIN="$2"
+MAXBACKUPS="${3:-2}"
+BWLIMIT="${4:-0}"
+ID=`date +%Y-%m-%d`
+
+log () {
+  echo `date "+%Y-%m-%d %H:%M:%S"`": [$DOMAIN] $@"
+}
+echo "$BACKUPSTORAGE"
+
+if [ -z "$BACKUPSTORAGE" ]; then 
+    BACKUPDEST="$1"
+    BACKUPFOLDER=""
+fi
+
+if [ -z "$BACKUPDEST/$BACKUPFOLDER" -o -z "$DOMAIN" ]; then
+    echo "Usage: $0 <backup-folder> <domain> [max-backups]"
+    exit 1
+fi
+
+log "Beginning backup"
+
+# Generate the backup path
+#
+BACKUPDATE=`date "+%Y-%m-%d.%H%M%S"`
+BACKUPDOMAIN="$BACKUPDEST/$BACKUPFOLDER/$DOMAIN"
+BACKUP="$BACKUPDOMAIN/$BACKUPDATE"
+
+mkdir -p "$BACKUP"
+
+#
+# Get the list of targets (disks) and the image paths.
+#
+#TARGETS=`virsh domblklist "$DOMAIN" --details | grep -v hdc |  grep ^file | awk '{print $3}'`
+IMAGES=`virsh domblklist "$DOMAIN" --details | grep -v hdc | grep ^file | awk '{print $4}'`
+
+#
+# Copy disk images
+#
+for t in $IMAGES; do
+    NAME=`basename "$t"`
+    log "Copy image $t to $BACKUP/$NAME"
+    rsync -qz --bwlimit=$BWLIMIT "$t" "$BACKUP"/"$NAME"
+done
+
+#
+# Dump the configuration information.
+#
+log "Dump XML file to $BACKUP/$DOMAIN.xml"
+virsh dumpxml "$DOMAIN" > "$BACKUP/$DOMAIN.xml"
+
+#
+# Cleanup older backups.
+#
+echo "Beginning cleanup older backups"
+echo "$BACKUPSTORAGE"
+
+if [ -z "$BACKUPSTORAGE" ]; then
+    find $BACKUPDOMAIN/* -maxdepth 1  -name `date +%Y-*` 2>/dev/null | awk -F/ '{print $NF,$0}' | sort -rd | awk '{print $2}' | tail -n +$((MAXBACKUPS+1)) | xargs rm -rfv
+else
+    for dir in `df --output=target,avail | egrep "^$1"`; do find $dir/$BACKUPFOLDER/$DOMAIN/* -maxdepth 1  -name "*.tar.gz" 2>/dev/null; done| awk -F/ '{print $NF,$0}' | sort -rd | awk '{print $2}' | tail -n +$((MAXBACKUPS+1)) | xargs rm -rfv
+    echo "Finished cleanup older backups"
+fi 
+
+log "Finished backup"
+log ""

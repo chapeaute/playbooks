@@ -1,0 +1,10 @@
+---
+# handlers file for traefik
+- name: Reload Systemd
+  command: systemctl daemon-reload
+
+- name: Restart traefik
+  service:
+    name:  "{{ traefik_service }}"
+    state: restarted
+

@@ -1,0 +1,7 @@
+---
+- name: RedHat | Deploy Docker repository
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docker-ce.repo
+    validate_certs: no
+  when: use_satellite_repo == false

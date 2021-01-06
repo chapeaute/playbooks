@@ -1,0 +1,12 @@
+---
+- hosts: all
+  roles:
+    - role: proftpd
+      proftpd_enable_ftp: true
+      proftpd_enable_sftp: true
+      proftpd_ftp_port: 21
+      proftpd_sftp_port: 2222
+      proftpd_users:
+        - name: smile
+          password: 37dn6eXpwgeQ
+          home_dir: /tmp

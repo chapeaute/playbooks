@@ -1,0 +1,14 @@
+---
+- name: main | add deploy / undeploy scripts
+  tags:
+    - scripts
+    - config_scripts
+  copy:
+    src: "usr/local/sbin/{{ item }}"
+    dest: "/usr/local/sbin/{{ item }}"
+    mode: 0755
+  with_items:
+    - wso2ei-app-deploy
+    - wso2ei-app-undeploy
+    - wso2ms-app-deploy
+    - wso2ms-app-undeploy

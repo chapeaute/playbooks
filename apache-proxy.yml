@@ -1,0 +1,18 @@
+---
+- hosts: all
+  roles:
+    - role: apache-proxy
+      apache2_proxies:
+        myorange:
+          server_aliases:
+            - myorange.orange.ci
+          http_backends:
+            - 127.0.0.1:3000
+        ma-fibre:
+          server_aliases:
+            - mafibre.orange.ci
+          http_backends:
+            - 127.0.0.1:3000
+
+#    - role: security-apache
+#      security_level: 2

@@ -1,0 +1,18 @@
+---
+- hosts: zimbra-stack-store
+  vars: 
+    zimbra_domain: example.com
+    zimbra_admin_password: changeme
+    _ldap_server: zm-ldap.example.com 
+  roles:
+    - role: zimbra
+      zimbra_ldap_server: "{{ _ldap_server }}"
+      zimbra_timezone: UTC
+      zimbra_services:
+        - store
+        - apache
+        - logger
+        - drive
+        - chat
+        - snmp
+        - spell

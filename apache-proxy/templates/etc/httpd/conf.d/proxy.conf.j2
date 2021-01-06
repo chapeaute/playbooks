@@ -1,0 +1,167 @@
+{% set proxy_name    = item.value.proxy_name|default(item.key) %}
+{% set proxy_params  = item.value %}
+{% set location_proxies  = proxy_params.location_proxies|default([]) %}
+{% set ssl_enabled   = proxy_params.ssl is defined and proxy_params.ssl.enabled|default(false) %}
+{% set document_root = proxy_params.document_root|default(apache2_default_data_dir + '/' + proxy_name + '/htdocs')  %}
+{% set _logpath = apache2_log_dir %}
+{% if ssl_enabled %}
+{% if proxy_params.ssl.redirect_to_https|default(true) %}
+<VirtualHost *:80>
+
+    ServerName   {{ proxy_params.server_name|default(proxy_name) }}
+{% for alias in proxy_params.server_aliases|default([]) %}
+    ServerAlias  {{ alias }}
+{% endfor %}
+    RewriteEngine On
+    RewriteCond %{HTTPS} off
+    RewriteRule (.*) https://{{ proxy_params.server_name|default("%{HTTP_HOST}") }}/$1 [R,L]
+</VirtualHost>
+{% else %}
+<VirtualHost *:{{ apache2_port }}>
+
+    ServerName   {{ proxy_params.server_name|default(proxy_name) }}
+{% for alias in proxy_params.server_aliases|default([]) %}
+    ServerAlias  {{ alias }}
+{% endfor %}
+{% if proxy_params.environment_vars is defined %}
+    {% for env_var_name, env_var_value in proxy_params.environment_vars.iteritems()|default([]) %}
+    SetEnv {{ env_var_name }} {{ env_var_value }}
+    {% endfor %}
+{% endif %}
+
+    # Modsecurity rules
+    <IfModule mod_security2.c>
+        SecRuleEngine {{ proxy_params.modsecurity_mode|default(apache2_modsecurity_default_mode) }}
+    </IfModule>
+
+    <Proxy balancer://{{ proxy_name }} >
+{%for backend in proxy_params.http_backends|default([]) %}
+        BalancerMember http://{{ backend }}{% if proxy_params.http_backends_port is defined  %}:{{ proxy_params.http_backends_port }} {% endif %} {{ apache2_proxy_backends_default_options }} {{ proxy_params.http_backends_options|default() }}
+{% endfor %}
+        ProxySet lbmethod={{ proxy_params.load_balencing_method | default(apache2_default_load_balencing_method) }}
+        ProxySet stickysession={{ proxy_params.stickysession | default(apache2_default_stickysession) }}
+    </Proxy>
+
+    # Disable modsec for assets
+    <FilesMatch ".+\.(ico|ttf|mp4|gif|gz|ogv|ogg|webm|js|jp?g|png|gif|swf|css)$">
+      <IfModule mod_security2.c>
+        SecRuleEngine Off
+      </IfModule>
+    </FilesMatch>
+
+    ProxyPass           / balancer://{{ proxy_name }}/
+    ProxyPassReverse    / balancer://{{ proxy_name }}/
+    ProxyPreserveHost   On
+    # Timeout
+    ProxyTimeout {{ apache2_proxy_timeout }}
+    Timeout  {{ apache2_proxy_timeout }}
+
+{% for location_proxy in location_proxies %}
+    # Per location proxy {{ location_proxy.name }}
+    <Proxy balancer://{{ location_proxy.name }}>
+{%for backend in location_proxy.http_backends %}
+        BalancerMember http://{{ backend }}{% if location_proxy.http_backends_port is defined  %}:{{ location_proxy.http_backends_port }} {% endif %} {{ apache2_proxy_backends_default_options }} {{ location_proxy.http_backends_options|default() }}
+{% endfor %}
+        ProxySet lbmethod={{ location_proxy.load_balencing_method |default(apache2_default_load_balencing_method) }}
+        ProxySet stickysession={{ location_proxy.stickysession | default(apache2_default_stickysession) }}
+    </Proxy>
+
+    <Location {{ location_proxy.location }}>
+        ProxyPass           balancer://{{ location_proxy.name }}
+        ProxyPassReverse    balancer://{{ location_proxy.name }}
+        ProxyPreserveHost   On
+    </Location>
+{% endfor %}
+
+{% if apache2_log_x_forwarded_for %}
+    LogFormat   "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %D" proxy
+    SetEnvIf    X-Forwarded-For "^.*\..*\..*\..*" forwarded=yes
+    CustomLog   {{ _logpath }}/{{ proxy_name }}_access.log proxy expr=reqenv('forwarded')=='yes'
+{% endif %}
+    LogFormat   "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %D" direct
+    CustomLog   {{ _logpath }}/{{ proxy_name }}_access.log direct expr={% if apache2_log_x_forwarded_for %}reqenv('forwarded')!='yes'&&{% endif %}{% if apache2_dontlog_proxy_healthcheck %}reqenv('healthcheck')!='yes'&&{% endif %}true
+    ErrorLog    {{ _logpath }}/{{ proxy_name }}_error.log
+
+    IncludeOptional {{ apache2_confd_dir }}/custom/{{ proxy_params.proxy_name|default(proxy_name) }}.con[f]
+</VirtualHost>
+
+{% endif %}
+{% endif %}
+
+<VirtualHost *:{{ apache2_ssl_port if ssl_enabled else apache2_port }}>
+
+{% if ssl_enabled %}
+    # SSL Enabled
+    SSLEngine             on
+    SSLCertificateFile    {{ proxy_params.ssl.certificate_file|default(apache2_default_ssl_cert) }}
+    SSLCertificateKeyFile {{ proxy_params.ssl.certificate_key_file|default(apache2_default_ssl_key) }}
+{% if proxy_params.ssl.certificate_chain_file is defined %}
+    SSLCertificateChainFile {{ proxy_params.ssl.certificate_chain_file }}
+{% endif %}
+{% endif %}
+
+    ServerName   {{ proxy_params.server_name|default(proxy_name) }}
+{% for alias in proxy_params.server_aliases|default([]) %}
+    ServerAlias  {{ alias }}
+{% endfor %}
+{% if proxy_params.environment_vars is defined %}
+    {% for env_var_name, env_var_value in proxy_params.environment_vars.iteritems()|default([]) %}
+    SetEnv {{ env_var_name }} {{ env_var_value }}
+    {% endfor %}
+{% endif %}
+
+    # Modsecurity rules
+    <IfModule mod_security2.c>
+        SecRuleEngine {{ proxy_params.modsecurity_mode|default(apache2_modsecurity_default_mode) }}
+    </IfModule>
+
+    <Proxy balancer://{{ proxy_name }} >
+{%for backend in proxy_params.http_backends %}
+        BalancerMember http://{{ backend }}{% if proxy_params.http_backends_port is defined  %}:{{ proxy_params.http_backends_port }} {% endif %} {{ apache2_proxy_backends_default_options }} {{ proxy_params.http_backends_options|default() }}
+{% endfor %}
+        ProxySet lbmethod={{ proxy_params.load_balencing_method |default(apache2_default_load_balencing_method) }}
+        ProxySet stickysession={{ proxy_params.stickysession | default(apache2_default_stickysession) }}
+    </Proxy>
+
+    # Disable modsec for assets
+    <FilesMatch ".+\.(ico|ttf|mp4|gif|gz|ogv|ogg|webm|js|jp?g|png|gif|swf|css)$">
+      <IfModule mod_security2.c>
+        SecRuleEngine Off
+      </IfModule>
+    </FilesMatch>
+
+    ProxyPass           / balancer://{{ proxy_name }}/
+    ProxyPassReverse    / balancer://{{ proxy_name }}/
+    ProxyPreserveHost   On
+    # Timeout
+    ProxyTimeout {{ apache2_proxy_timeout }}
+    Timeout  {{ apache2_proxy_timeout }}
+
+{% for location_proxy in location_proxies %}
+    # Per location proxy {{ location_proxy.name }}
+    <Proxy balancer://{{ location_proxy.name }}>
+{%for backend in location_proxy.http_backends %}
+        BalancerMember http://{{ backend }}{% if location_proxy.http_backends_port is defined  %}:{{ location_proxy.http_backends_port }} {% endif %} {{ apache2_proxy_backends_default_options }} {{ location_proxy.http_backends_options|default() }}
+{% endfor %}
+        ProxySet lbmethod={{ location_proxy.load_balencing_method |default(apache2_default_load_balencing_method) }}
+        ProxySet stickysession={{ location_proxy.stickysession | default(apache2_default_stickysession) }}
+    </Proxy>
+
+    <Location {{ location_proxy.location }}>
+        ProxyPass           balancer://{{ location_proxy.name }}
+        ProxyPassReverse    balancer://{{ location_proxy.name }}
+        ProxyPreserveHost   On
+    </Location>
+{% endfor %}
+
+{% if apache2_log_x_forwarded_for %}
+    LogFormat   "%{X-Forwarded-For}i %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %D" proxy
+    SetEnvIf    X-Forwarded-For "^.*\..*\..*\..*" forwarded=yes
+    CustomLog   {{ _logpath }}/{{ proxy_name }}_access.log proxy expr=reqenv('forwarded')=='yes'
+{% endif %}
+    LogFormat   "%h %l %u %t \"%r\" %>s %b \"%{Referer}i\" \"%{User-Agent}i\" %D" direct
+    CustomLog   {{ _logpath }}/{{ proxy_name }}_access.log direct expr={% if apache2_log_x_forwarded_for %}reqenv('forwarded')!='yes'&&{% endif %}{% if apache2_dontlog_proxy_healthcheck %}reqenv('healthcheck')!='yes'&&{% endif %}true
+    ErrorLog    {{ _logpath }}/{{ proxy_name }}_error.log
+
+    IncludeOptional {{ apache2_confd_dir }}/custom/{{ proxy_params.proxy_name|default(proxy_name) }}.con[f]
+</VirtualHost>

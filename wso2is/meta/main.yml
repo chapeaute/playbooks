@@ -1,0 +1,104 @@
+galaxy_info:
+  author: your nise
+  description: your description
+  company: your company (optional)
+
+  # If the issue tracker for your role is not on github, uncomment the
+  # next line and provide a value
+  # issue_tracker_url: http://exisple.com/issue/tracker
+
+  # Some suggested licenses:
+  # - BSD (default)
+  # - MIT
+  # - GPLv2
+  # - GPLv3
+  # - Apache
+  # - CC-BY
+  license: license (GPLv2, CC-BY, etc)
+
+  min_ansible_version: 1.2
+
+  # If this a Container Enabled role, provide the minimum Ansible Container version.
+  # min_ansible_container_version:
+
+  # Optionally specify the branch Galaxy will use when accessing the GitHub
+  # repo for this role. During role install, if no tags are available,
+  # Galaxy will use this branch. During import Galaxy will access files on
+  # this branch. If Travis integration is configured, only notifications for this
+  # branch will be accepted. Otherwise, in all cases, the repo's default branch
+  # (usually master) will be used.
+  #github_branch:
+
+  #
+  # platforms is a list of platforms, and each platform has a nise and a list of versions.
+  #
+  # platforms:
+  # - nise: Fedora
+  #   versions:
+  #   - all
+  #   - 25
+  # - nise: SomePlatform
+  #   versions:
+  #   - all
+  #   - 1.0
+  #   - 7
+  #   - 99.99
+
+  galaxy_tags: []
+    # List tags for your role here, one per line. A tag is a keyword that describes
+    # and categorizes the role. Users find roles by searching for tags. Be sure to
+    # remove the '[]' above, if you add tags to this list.
+    #
+    # NOTE: A tag is limited to a single word comprised of alphanumeric characters.
+    #       Maximum 20 tags per role.
+
+dependencies:
+  - role: wso2-generic
+    wso2_generic_service_name:     "wso2is"
+    wso2_generic_configs:          "{{ wso2is_default_configs | combine(wso2is_configs) }}"
+    wso2_generic_deployment_conf:  "{{ wso2is_default_deployment_conf | combine(wso2is_deployment_conf) }}"
+    wso2_generic_admin_create:     "{{ wso2is_admin_create }}"
+    wso2_generic_admin_user:       "{{ wso2is_admin_user }}"
+    wso2_generic_admin_pass:       "{{ wso2is_admin_pass }}"
+    wso2_generic_sso_enable:       "false" # Dont enable sso on wso2is
+    wso2_generic_sso_url:          ""
+    wso2_generic_db_shared_url:  "{% if wso2is_db_host is defined %}jdbc:mysql://{{ wso2is_db_host }}:3306/{{ wso2is_db_shared_name }}{% else %}jdbc:h2:./repository/database/WSO2SHARED_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000{% endif %}"
+    wso2_generic_db_user_url:    "{% if wso2is_db_host is defined %}jdbc:mysql://{{ wso2is_db_host }}:3306/{{ wso2is_db_user_name }}{% else %}jdbc:h2:./repository/database/WSO2SHARED_DB;DB_CLOSE_ON_EXIT=FALSE;LOCK_TIMEOUT=60000{% endif %}"
+    wso2_generic_keystore_pass:    "{{ wso2is_keystore_pass }}"
+    wso2_generic_truststore_pass:  "{{ wso2is_keystore_pass }}"
+    wso2_generic_db_enable:        "{{ wso2is_db_enable }}"
+    wso2_generic_db_host:          "{{ wso2is_db_host|default('') }}"
+    wso2_generic_db_user:          "{{ wso2is_db_user}}"
+    wso2_generic_db_pass:          "{{ wso2is_db_pass }}"
+    wso2_generic_hostname:         "{{ wso2is_hostname }}"
+    wso2_generic_remote_hostname:  "{{ wso2is_remote_hostname }}"
+    wso2_generic_isnodes:          "{{ wso2is_nodes }}"
+    wso2_generic_version:          "{{ wso2is_version }}"
+    wso2_generic_patch_version:    "{{ wso2is_patch_version }}"
+    wso2_generic_ports:            "{{ wso2is_ports }}"
+    wso2_generic_start_command:    "bin/wso2server.sh"
+    wso2_generic_stop_command:     "bin/wso2server.sh --stop"
+    wso2_generic_java_version:     "{{ wso2is_java_version }}"
+    wso2_generic_java_impl:        "{{ wso2is_java_impl }}"
+    wso2_generic_memory_size_prct: "{{ wso2is_memory_size_prct }}"
+    wso2_generic_memory_size:      "{{ wso2is_memory_size }}"
+    wso2_generic_root_dir:         "{{ wso2is_root_dir }}"
+    wso2_generic_log_glob:         repository/logs/*log
+    wso2_generic_data_root_dir:    "{{ wso2is_data_root_dir }}"
+    wso2_generic_data_dir_list:    "{{ wso2is_data_dir_list }}"
+    wso2_generic_repl_method:      "{{ wso2is_repl_method }}"
+    wso2_generic_dropins_dir:      "{{ wso2is_install_dir }}/repository/components/dropins"
+    wso2_generic_confs_dir:        "{{ wso2is_install_dir }}/repository/conf"
+    wso2_generic_libs_dir:         "{{ wso2is_install_dir }}/repository/components/lib"
+  - role: csync2-lsyncd
+    when:
+      - wso2is_nodes|length > 1
+      - wso2is_repl_method == "lsyncd"
+    tags: config_csync2
+    lsyncd_enabled: true
+    csync2_config_per_group: true
+    csync2_hosts: "{{ wso2is_nodes }}"
+    csync2_groups:
+      - name: wso2is
+        auto: first
+        includes: "{{ wso2is_data_dir_list | map('regex_replace', '(^.*)', wso2is_data_root_dir + '/' + wso2is_service_name + '-data/\\1') | list }}"

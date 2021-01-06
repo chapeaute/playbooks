@@ -1,0 +1,9 @@
+---
+- name: indice | Enable crontab to purge indice
+  cron:
+    name: "Purge {{ item.prefix }}"
+    minute: "{{ 59 | random(seed=item.prefix) }}"
+    hour:   0
+    job:    "chronic /usr/local/sbin/es-indice-purge -p {{ item.prefix }} -o {{ item.age }}"
+  with_items: "{{ es_indice_purge }}"
+  when: es_indice_purge|length > 0

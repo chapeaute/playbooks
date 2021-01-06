@@ -1,0 +1,4 @@
+---
+- include: centreon-database.yml
+- include: centreon-central.yml
+- include: centreon-agent.yml

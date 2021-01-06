@@ -1,0 +1,21 @@
+---
+
+- src: git@git.smile.ci:adminsys/ansible/role/apache.git
+  scm: git
+  version: v1.6.6
+
+- src: git@git.smile.ci:adminsys/ansible/role/mariadb-server.git
+  scm: git
+  version: v1.3.2
+
+- src: git@git.smile.ci:adminsys/ansible/role/mysql-provider.git
+  scm: git
+  version: v1.3.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/security-mariadb.git
+  scm: git
+  version: v1.0.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/privacy-idea.git
+  scm: git
+  version: beta

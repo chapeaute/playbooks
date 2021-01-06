@@ -1,0 +1,23 @@
+---
+- name: configure_monitoring | adding monitoring db user for monitoring
+  mysql_user:
+    name: "{{ monitoring_nagios_db_user }}"
+    password: "{{ monitoring_nagios_db_pass }}"
+    host: "{{ monitoring_nagios_server_fqdn }}"
+    priv: "*.*:SUPER,PROCESS"
+    state: "present"
+  when: "'started' in mysql_running.stdout"
+
+- name: configure_monitoring | create auth directory
+  file:
+    path: /etc/mysql/auth.d
+    state: directory
+    recurse: true
+
+- name: configure_monitoring | create monitoring mysql auth file
+  template:
+    src: "etc/mysql/auth.d/nagios.cnf.j2"
+    dest: "/etc/mysql/auth.d/nagios.cnf"
+    owner: "root"
+    group: "root"
+    mode: 0644

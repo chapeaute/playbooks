@@ -1,0 +1,8 @@
+---
+# handlers file for wekan
+
+- name: Restart wekan
+  service: 
+    name: wekan
+    state: restarted
+

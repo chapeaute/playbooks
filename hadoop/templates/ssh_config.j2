@@ -1,0 +1,5 @@
+{% for line in hadoop_slaves %}
+Host * {{ line }} 
+  StrictHostKeyChecking no
+{% endfor %}
+

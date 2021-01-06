@@ -1,0 +1,8 @@
+#!/bin/bash
+
+if [ $# -ne 1 ]; then
+    echo "You must specified URL ti remove from cache"
+    exit 1
+fi
+
+varnishadm "ban req.url == $1"

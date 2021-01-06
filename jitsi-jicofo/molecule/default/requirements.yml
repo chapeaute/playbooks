@@ -1,0 +1,21 @@
+---
+
+- src: git@git.smile.ci:adminsys/ansible/role/basic-firewalld.git
+  scm: git
+  version: v1.0.7
+
+- src: git@git.smile.ci:adminsys/ansible/role/lua.git
+  scm: git
+  version: v0.1.0
+
+- src: git@git.smile.ci:adminsys/ansible/role/openjdk.git
+  scm: git
+  version: v1.1.3
+
+- src: git@git.smile.ci:adminsys/ansible/role/ssl-certs.git
+  scm: git
+  version: v1.3.7
+
+- src: git@git.smile.ci:adminsys/ansible/role/prosody.git
+  scm: git
+  version: v1.2.3

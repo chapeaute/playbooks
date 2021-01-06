@@ -1,0 +1,15 @@
+---
+
+- name: Proftpd User | Encrypt users password
+  shell: "echo {{ user.password }} | ftpasswd --stdin --hash | awk '{ print $2 }'"
+  register: enc_passwords
+  tags: proftpd_users
+
+- name: Proftpd User | Set line in proftpd
+  tags: proftpd_users
+  lineinfile:
+    create: yes
+    regexp: "^{{ user.name}}"
+    path: "{{ proftpd_auth_user_file }}"
+    line: "{{user.name}}:{{ enc_passwords.stdout }}:{{ user.user_id|default(proftpd_user_id) }}:{{ user.group_id|default(proftpd_group_id) }}::{{ user.home_dir|default(proftpd_home_dir)}}:{{ user.shell|default(proftpd_user_shell)}}"
+    state: "{{ user.state|default('present') }}"

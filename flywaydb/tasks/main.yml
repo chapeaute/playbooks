@@ -1,0 +1,28 @@
+---
+- name: "Include installation tasks"
+  include: install.yml
+  tags:
+    - install
+
+- name: "Include configuration tasks for databases migration"
+  include: dbs.yml
+  tags:
+    - dbs
+  when: flywaydb_databases|length > 0
+  #  no_log: "{{ not flywaydb_debug }}"
+
+- block:
+  - name: "Clean databases"
+    shell: "{{ flywaydb_name }} clean -configFile={{ flywaydb_root }}/{{ flywaydb_subpath }}/conf/{{ item.key }}.conf"
+    with_dict: "{{ flywaydb_databases }}"
+    when: flywaydb_reset
+
+  - name: "Migrate databases"
+    shell: "{{ flywaydb_name }} migrate -configFile={{ flywaydb_root }}/{{ flywaydb_subpath }}/conf/{{ item.key }}.conf"
+    with_dict: "{{ flywaydb_databases }}"
+    run_once: "{{ flywaydb_cluster_migration }}"
+    register: migration
+    changed_when: "'No migration necessary.' not in migration.stdout"
+  no_log: "{{ not flywaydb_debug }}"
+  environment:
+    PATH: "{{ ansible_env.PATH }}{% if not flywaydb_systemwide_install %}:{{ flywaydb_root }}/{{ flywaydb_subpath }}{% endif %}"

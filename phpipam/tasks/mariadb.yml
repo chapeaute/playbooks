@@ -1,0 +1,31 @@
+- name: mariadb | Waiting for database to become available {{ phpipam_db_host }}:{{ phpipam_db_port }}
+  wait_for:
+    port: "{{ phpipam_db_port }}"
+    host: "{{ phpipam_db_host }}"
+
+- name: mariadb | Create phpipam database
+  mysql_db:
+    name: "{{ phpipam_db_name }}"
+    state: present
+  run_once: true
+  delegate_to: "{{ phpipam_db_remote_host }}"
+  register: phpipam_db_created
+
+- name: mariadb | Create phpipam user
+  tags: create_phpipam_db_user
+  mysql_user:
+    name: "{{ phpipam_db_user }}"
+    password: "{{ phpipam_db_pass }}"
+    host: "{{ phpipam_db_host }}"
+    priv: "{{ phpipam_db_name }}.*:ALL"
+    state: present
+  run_once: true
+  delegate_to: "{{ phpipam_db_remote_host }}"
+
+- name: mariadb | Copy phpipam database schema on {{ phpipam_db_remote_host }}
+  mysql_db:
+    name: "{{ phpipam_db_name }}"
+    state: import
+    target: "{{ phpipam_install_dir }}/db/SCHEMA.sql"
+  when: phpipam_db_created|changed
+

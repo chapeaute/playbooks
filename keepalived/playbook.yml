@@ -1,0 +1,25 @@
+---
+- hosts: all
+  roles:
+    - role: keepalived
+      keepalived_vrrp_instance:
+        VIP:
+          interface: eth1
+          vrid: 128
+          pass: supercomplexepass
+          vip:
+            - 192.168.122.200
+        VIP2:
+          interface: eth1
+          vrid: 129
+          pass: supercomplexepass
+          vip:
+            - 192.168.122.201
+
+    #   keepalived_vrrp_instance:
+    #     VERDURE:
+    #         interface: eth0
+    #         vrid: 10
+    #         pass: S3cureP@ssw0rd
+    #         vip:
+    #         - 192.168.122.6

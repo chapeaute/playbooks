@@ -1,0 +1,6 @@
+---
+# defaults file for ldap-user
+
+# Get users from ldap
+ldap_users: []  # users to fetch from ldap
+ldap_users_groups: [] # default groups for ldap users

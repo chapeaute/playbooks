@@ -1,0 +1,8 @@
+---
+
+odoo_dependencies_common: []
+odoo_default_home_dir: "/var/lib/odoo"
+odoo_main_addons_dir: "{% if odoo_version | int < 11 %}/usr/lib/python2.7/site-packages/odoo/addons{% else %}{{ odoo_src_dir }}/addons{% endif %}"
+odoo_python_dependencies: []
+
+python_version: "{{ odoo_python_version | string | replace('.', '') }}"

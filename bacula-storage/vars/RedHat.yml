@@ -1,0 +1,3 @@
+---
+bacula_sd_package: "bacula-storage"
+bacula_sd_archive_device: /var/spool/bacula

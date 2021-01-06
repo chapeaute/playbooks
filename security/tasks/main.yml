@@ -1,0 +1,56 @@
+---
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: filesystem.yml
+  when: security_filesystem
+  tags: filesystem 
+
+- include: aide.yml
+  when: security_aide
+  tags: aide
+
+- include: auditd.yml
+  when: security_auditd
+  tags: auditd
+
+- include: files_permissions.yml
+  when: security_files_permissions
+  tags: security_files_permissions
+
+- include: kernel.yml
+  when: security_kernel
+  tags: kernel
+
+- include: syslog.yml
+  when: security_syslog
+  tags: syslog
+
+- include: cron.yml
+  when: security_cron
+  tags: cron
+
+- include: ssh.yml
+  when: security_ssh
+  tags: ssh
+
+- include: tcp_wrappers.yml
+  when: security_tcp_wrappers
+  tags: tcp_wrappers
+
+- include: tty.yml
+  when: security_tty
+  tags: tty
+
+- include: host.yml
+  when: security_host
+  tags: host

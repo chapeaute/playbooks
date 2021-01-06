@@ -1,0 +1,14 @@
+---
+- hosts: elasticsearch
+  vars:
+    _es_hosts: "{{ _elasticsearch_hosts }}"
+  roles:
+    - role: elasticsearch
+      es_cluster_name: elasticsearch
+      es_hosts: "{{ _es_hosts }}"
+      es_shard_count: "{{ _es_hosts | length }}"
+      es_replica_count: 1
+      es_install_curator: True
+      es_install_admin_scripts: True
+      es_install_elasticdump: True
+      es_install_prompt_scripts: True

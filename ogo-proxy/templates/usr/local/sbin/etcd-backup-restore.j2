@@ -1,0 +1,39 @@
+#!/bin/bash
+
+export PATH=$PATH:/usr/local/bin:/usr/local/sbin
+ETCDCTL=`dirname $0`/etcd-ctl
+rc=0
+
+function syntax() {
+    cat <<EOF
+Script to restore Etcd configuration
+
+Usage: ${0##*/} [-h|-f <filename>]
+    -h                Display this message
+    -f <filename>     File to restore
+EOF
+}
+
+while getopts "hf:" OPT; do
+    case $OPT in
+        h)
+            syntax
+            exit 0
+            ;;
+        f)
+            FILE_NAME="${OPTARG}"
+            ;;
+        *)
+            echo "Unknown option."
+            syntax
+            exit 1
+            ;;
+    esac
+done
+
+if [[ -z $FILE_NAME ]]; then
+	syntax
+	exit 1
+fi
+
+cat $FILE_NAME | jq -r '.keys[] | [.key,.value] | @sh' | tr '\n' '\0' | xargs -I{} -0 -n1 bash -c "$ETCDCTL put {}"

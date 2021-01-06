@@ -1,0 +1,10 @@
+---
+
+- name: Config | Deploy prosody configuration
+  template:
+    src: etc/prosody/prosody.cfg.lua.j2
+    dest: /etc/prosody/prosody.cfg.lua
+    owner: prosody
+    group: prosody
+    mode: 0640
+  notify: Restart prosody

@@ -1,0 +1,156 @@
+{
+    "host_groups": [
+        {
+            "name": "masters",
+            "components": [
+              { "name": "APP_TIMELINE_SERVER"},
+              { "name": "DATANODE"},
+              { "name": "HDFS_CLIENT"},
+              { "name": "HIVE_CLIENT"},
+              { "name": "HIVE_SERVER"},
+              { "name": "HIVE_METASTORE"},
+              { "name": "HISTORYSERVER"},
+              { "name": "JOURNALNODE"},
+              { "name": "KNOX_GATEWAY"},
+              {% if ambari_enable_kerberos == true %}
+              { "name": "KERBEROS_CLIENT"},
+              {% endif %}
+              { "name": "MAPREDUCE2_CLIENT"},
+              { "name": "METRICS_COLLECTOR"},
+              { "name": "METRICS_MONITOR"},
+              { "name": "NAMENODE"},
+              { "name": "NODEMANAGER"},
+              { "name": "OOZIE_SERVER"},
+              { "name": "OOZIE_CLIENT"},
+              { "name": "RESOURCEMANAGER"},
+              { "name": "SECONDARY_NAMENODE"},
+              { "name": "SPARK2_CLIENT"},
+              { "name": "SPARK2_JOBHISTORYSERVER"},
+              { "name": "SPARK2_THRIFTSERVER"},
+              { "name": "TEZ_CLIENT"},
+              { "name": "YARN_CLIENT"},
+              { "name": "ZEPPELIN_MASTER"},
+              { "name": "ZOOKEEPER_SERVER"},
+              { "name": "ZOOKEEPER_CLIENT"}
+            ],
+            "cardinality": "1"
+        }
+        {% if ambari_slaves | length > 0 %}
+        ,{
+            "name": "slaves",
+            "components": [
+              { "name": "DATANODE"},
+              { "name": "HDFS_CLIENT"},
+              { "name": "HIVE_CLIENT"},
+              {% if ambari_enable_kerberos == true %}
+              { "name": "KERBEROS_CLIENT"},
+              {% endif %}
+              { "name": "MAPREDUCE2_CLIENT"},
+              { "name": "METRICS_MONITOR"},
+              { "name": "NODEMANAGER"},
+              { "name": "OOZIE_CLIENT"},
+              { "name": "RESOURCEMANAGER"},
+              { "name": "SPARK2_CLIENT"},
+              { "name": "TEZ_CLIENT"},
+              { "name": "YARN_CLIENT"},
+              { "name": "ZOOKEEPER_SERVER"},
+              { "name": "ZOOKEEPER_CLIENT"}
+            ]
+        }
+        {% endif %}
+    ],
+    "configurations": [
+        {
+            "cluster-env": {
+                "security_enabled": "false",
+                "smokeuser": "ambari-qa",
+                "user_group": "hadoop",
+                "properties": {
+                  "ignore_groupsusers_create": "false",
+                  "override_uid": "true"
+                }
+            }
+        }, {
+          "core-site": {
+            "hadoop.proxyuser.hcat.groups": "*",
+            "hadoop.proxyuser.hcat.hosts": "*",
+            "hadoop.proxyuser.elyra.groups": "*",
+            "hadoop.proxyuser.elyra.hosts": "*"
+          }
+        }, {
+          "hadoop-env": {
+            "dtnode_heapsize": "1024m",
+            "namenode_heapsize": "2048m",
+            "namenode_opt_maxnewsize": "384m",
+            "namenode_opt_newsize": "384m"
+          }
+        }, {
+          "hdfs-site": {
+            "dfs.datanode.data.dir": "/var/lib/hadoop/hdfs/data",
+            "dfs.datanode.failed.volumes.tolerated": "0",
+            "dfs.replication": "{{ ambari_slaves | length }}"
+          }
+        }, {
+          "knox-env": {
+            "knox_master_secret": "passw0rd"
+          }
+        },{
+            "hive-site": {
+                "javax.jdo.option.ConnectionDriverName": "com.mysql.jdbc.Driver",
+                "javax.jdo.option.ConnectionPassword": "{{ ambari_db_pass  }}",
+                "javax.jdo.option.ConnectionURL": "jdbc:mysql://{{ ansible_fqdn }}:3306/hive",
+                "javax.jdo.option.ConnectionUserName": "hive"
+          }
+        },{
+            "hive-env": {
+                "hive_ambari_database": "MySQL",
+                "hive_database_name": "hive",
+                "hive_database": "Existing MySQL / MariaDB Database",
+                "hive_database_type": "mysql"
+           }
+        },{
+            "oozie-site": {
+                "oozie.db.schema.name": "oozie",
+                "oozie.service.JPAService.create.db.schema": "true",
+                "oozie.service.JPAService.jdbc.driver": "com.mysql.jdbc.Driver",
+                "oozie.service.JPAService.jdbc.username": "oozie",
+                "oozie.service.JPAService.jdbc.password": "{{ ambari_db_pass  }}",
+                "oozie.service.JPAService.jdbc.url": "jdbc:mysql://{{ ansible_fqdn }}:3306/oozie"
+           }
+        },{
+            "oozie-env": {
+                "oozie_database": "Existing MySQL Database",
+                "oozie_existing_oracle_database": "MySQL",
+                "oozie_existing_oracle_host": "{{ ansible_fqdn }}"
+           }
+        }
+        {% if ambari_enable_kerberos == true %}
+        ,{
+            "kerberos-env": {
+                "manage_identities": "true",
+                "install_packages": "true",
+                "realm": "IBM.COM",
+                "kdc_type": "mit-kdc",
+                "kdc_hosts": "{{ ambari_server }}",
+                "admin_server_host": "{{ ambari_server }}"
+            }
+        },
+        {
+            "krb5-conf": {
+                "domains": "IBM.COM",
+                "manage_krb5_conf": "true"
+            }
+        }
+        {% endif %}
+    ],
+    "Blueprints": {
+        "blueprint_name": "{{ ambari_cluster_name }}",
+        "stack_name": "HDP",
+        "stack_version": "{{ ambari_hdp_version }}"
+        {% if ambari_enable_kerberos == true %}
+        ,"security": {
+            "type": "KERBEROS"
+        }
+        {% endif %}
+    }
+}

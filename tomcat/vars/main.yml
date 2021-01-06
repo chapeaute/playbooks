@@ -1,0 +1,4 @@
+---
+
+tomcat_extra_packages: []
+tomcat_default_root_dir: /var/lib/tomcat

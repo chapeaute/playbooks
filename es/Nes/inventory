@@ -1,0 +1,10 @@
+# Inventory
+[all:children]
+basic-server
+
+[basic-server]
+es[1:3]
+
+# Elasticsearch
+[elasticsearch]
+es[1:3]

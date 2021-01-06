@@ -1,0 +1,70 @@
+---
+
+- name: install | Detect Apache version
+  shell: "set -o pipefail && {{ apache2_binary }} -v | grep '^Server version' | grep -o 'Apache/...' | cut -d/ -f2"
+  register: apache2_version_cmd
+  check_mode: no
+  changed_when: False
+  when: apache2_version is not defined
+
+- name: install | Setup ServerName in "{{ apache2_config_file }}"
+  lineinfile:
+    regexp: "^ServerName "
+    line:   "ServerName {{ apache2_server_name }}"
+    dest: "{{ apache2_config_file }}"
+
+- name: install | Save Apache version as fact
+  set_fact:
+    apache2_version: "{{ apache2_version_cmd.stdout }}"
+  when: apache2_version is not defined
+
+- name: install | Create conf.d folder if no exists
+  file:
+    path: "{{ apache2_confd_dir }}"
+    state: directory
+  tags:
+    - install
+    - update_config
+
+- name: install | Create conf.d folder if no exists
+  file:
+    path: "{{ apache2_confd_custom_dir }}"
+    state: directory
+  tags:
+    - install
+    - update_config
+
+- name: install | Tune kernel to allow a high number of vhosts / Increase semaphores
+  sysctl:
+    name:  "{{ item.name }}"
+    value: "{{ item.value }}"
+  with_items:
+    - name: kernel.msgmni
+      value: 512
+    - name: kernel.sem
+      value:  "250 128000 32 512"
+
+# - name: install | Copy SSL conf
+#   replace:
+#     path:    /etc/httpd/conf.d/ssl.conf
+#     after:   '<VirtualHost'
+#     regexp:  '^.*$'
+#     replace: ''
+#   notify:    "Reload Apache"
+#   tags:
+#     - install
+#     - update_config
+
+- name: install | Tighten Apache2 security
+  copy:
+    src:  etc/httpd/conf.d/security.conf
+    dest: "{{ apache2_confd_dir }}/security.conf"
+  notify: "Reload Apache"
+  tags:
+    - install
+    - update_config
+
+- name: install | Deploy logrotate config
+  template:
+    src: etc/logrotate.d/httpd.j2
+    dest: "/etc/logrotate.d/{{ apache2_service_name }}"

@@ -1,0 +1,20 @@
+---
+
+- name: Restart jicofo
+  service:
+    name: "{{ jicofo_service_name }}"
+    state: restarted
+
+- name: Restart prosody
+  service:
+    name: prosody
+    state: restarted
+  delegate_to: "{{ jitsi_xmpp_server }}"
+
+- name: Register Jicofo XMPP users
+  command: "prosodyctl register {{ jicofo_xmpp_user }} {{ jicofo_xmpp_auth_domain }} {{ jicofo_xmpp_pass }}"
+  delegate_to: "{{ jitsi_xmpp_server }}"
+
+- name: Reload systemd
+  systemd:
+    daemon_reload: true

@@ -1,0 +1,27 @@
+---
+# handlers file for hadoop
+
+- name: reload systemd
+  command: systemctl daemon-reload
+
+- name: Restart yarn-node-manager
+  service:
+    name: yarn-node-manager
+    state: restarted
+
+- name: Restart yarn-resource-manager
+  service:
+    name: yarn-resource-manager
+    state: restarted
+  when: hadoop_master == inventory_hostname
+
+- name: Restart hdfs-name-node
+  service:
+    name: hdfs-name-node
+    state: restarted
+  when: hadoop_master == inventory_hostname
+
+- name: Restart hdfs-data-node
+  service:
+    name: hdfs-data-node
+    state: restarted

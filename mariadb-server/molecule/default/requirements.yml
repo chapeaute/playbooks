@@ -1,0 +1,5 @@
+---
+
+- src: git@git.smile.ci:adminsys/ansible/role/security-mariadb.git
+  scm: git
+  version: v1.1.0

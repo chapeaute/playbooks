@@ -1,0 +1,31 @@
+{% if proftpd_enable_sftp -%}
+<IfModule mod_sftp.c>
+<VirtualHost 0.0.0.0>
+
+  SFTPEngine on
+  SFTPLog {{proftpd_log_dir}}/sftp.log
+
+  # Configure the server to listen on the normal SSH2 port, port 22
+  Port {{ proftpd_sftp_port }}
+
+  # auth method
+  SFTPAuthMethods {{ proftpd_sftp_auth_methods }}
+
+  {% if proftpd_users|length > 0 -%}
+  # User auth file
+  AuthUserFile   {{ proftpd_auth_user_file }}
+  {% endif -%}
+  AllowOverwrite                  on
+
+  # SFTP Host key
+  SFTPHostKey /etc/proftpd/ssh_host_keys/dsa
+  SFTPHostKey /etc/proftpd/ssh_host_keys/rsa
+
+  # Enable compression
+  SFTPCompression delayed
+
+  # Allow the same number of authentication attempts as OpenSSH.
+  MaxLoginAttempts 3
+</IfModule>
+</VirtualHost>
+{% endif %}

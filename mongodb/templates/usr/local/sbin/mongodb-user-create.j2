@@ -1,0 +1,138 @@
+#!/bin/bash
+#
+# Create MongoDB user with read/write access on specify database
+#
+# Syntax : mongodb-user-create -u username -d database [-r|-w] [-p]
+#
+
+AUTH_FILE="/root/.mongorc.js"
+AUTH_LINE=$(grep "^db.getSiblingDB" ${AUTH_FILE} | sed 's/.*"\(.*\)".*"\(.*\)".*"\(.*\)".*/\1:\2:\3/')
+MONGO_ADB=$(echo ${AUTH_LINE} | cut -d: -f1)
+MONGO_USER=$(echo ${AUTH_LINE} | cut -d: -f2)
+MONGO_PASS=$(echo ${AUTH_LINE} | cut -d: -f3)
+MONGO_AUTH_OPTS="--username ${MONGO_USER} --password ${MONGO_PASS} --authenticationDatabase ${MONGO_ADB}"
+
+RES_COL="60"
+RES_COL_INFO="30"
+MOVE_TO_COL="\\033[${RES_COL}G"
+MOVE_TO_COL_INFO="\\033[${RES_COL_INFO}G"
+SETCOLOR_INFO="\\033[1;38m"
+SETCOLOR_SUCCESS="\\033[1;32m"
+SETCOLOR_FAILURE="\\033[1;31m"
+SETCOLOR_NORMAL="\\033[0;39m"
+
+all_access=0
+rw_access=0
+set_passwd=0
+force=0
+access="RO"
+
+syntax ()
+{
+    cat << EOF
+Usage: ${0##*/} -u username -d [database1,database2,...] [-r|-w] [-p] [-h] [-f]
+
+Create MongoDB user with read/write access on specify database
+Options :
+    -u username   name of user to create (required)
+    -d database   name of database to give access (required)
+    -r            give read only access to user (default)
+    -w            give write access to user
+    -p            set password for user
+    -f            force updating password
+    -h            display this help
+EOF
+}
+
+# Check arguments
+if [ $# -eq 0 ]; then
+    syntax
+    exit 1
+fi
+
+while getopts ":u:d:p:rwfh" opt; do
+    case $opt in
+        u)
+            username=$OPTARG
+            ;;
+        d)
+            database=$OPTARG
+            ;;
+        r)
+            rw_access=0
+            access="RO"
+            ;;
+        w)
+            rw_access=1
+            access="RW"
+            ;;
+        p)
+            passwd=$OPTARG
+            set_passwd=1
+            ;;
+        f)
+            force=1
+            ;;
+        h)
+            syntax && exit 0
+            ;;
+        :)
+            echo "option $opt requires an argument"
+            syntax && exit 1
+            ;;
+        \?)
+            echo "unkwown arg: $opt $OPTARG"
+            syntax && exit 1
+            ;;
+    esac
+done
+
+if [[ -z $username ]] || [[ -z $database ]]; then
+	syntax
+	exit 1
+fi
+
+if [[ ! `command -v mongo` ]]; then
+    echo "Client \"mongo\" not found. Try to install it with :
+    \"yum install mongodb-org-shell\" on CentOS"
+    exit 1
+fi
+
+# Check command
+if [[ ! `command -v pwgen` ]] && [[ "$set_passwd" -eq 0 ]]; then
+    echo "Command \"pwgen\" not found. Try to install it with :
+    \"apt-get install pwgen\" on Debian
+    \"yum install pwgen\" on CentOS (on EPEL repository)"
+    exit 1
+fi
+    
+# Grant privileges on databases
+for db in ${database//,/ }
+do
+    # Check if user exist
+    exist_user=$(mongo ${MONGO_AUTH_OPTS} --quiet --eval "db.runCommand({ usersInfo: { user: '$username', db: '$database' } }).users.length == 1")
+
+    # Generate secure password
+    if [ "$exist_user" == "false" ]; then
+        passwd=${passwd:-$(pwgen -s -1)}
+        mongo ${MONGO_AUTH_OPTS} --quiet --eval "db.createUser({user: '$username', pwd: '$passwd', roles: ['readWrite']})" $database
+        echo -e "Username:${MOVE_TO_COL_INFO}${SETCOLOR_INFO}$username${SETCOLOR_NORMAL}"
+        echo -e "Password:${MOVE_TO_COL_INFO}${SETCOLOR_INFO}$passwd${SETCOLOR_NORMAL}"
+    else
+        echo "User $username already exist"
+        if [ $set_passwd -eq 1 ]; then
+            echo -e "Updating $username password"
+            mongo ${MONGO_AUTH_OPTS} --quiet --eval "db.changeUserPassword('$username', '$passwd')" $database
+        fi
+    fi
+
+    # Remove existing privileges on database
+    if [ $rw_access -eq 0 ]; then
+        mongo ${MONGO_AUTH_OPTS} --quiet --eval "db.updateUser('$username', {roles: [ 'read' ] })" $database
+    else
+        mongo ${MONGO_AUTH_OPTS} --quiet --eval "db.updateUser('$username', {roles: [ 'readWrite' ] })" $database
+    fi
+
+    echo -e "Database:${MOVE_TO_COL_INFO}${SETCOLOR_INFO}$db ($access)${SETCOLOR_NORMAL}"
+done
+

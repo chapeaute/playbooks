@@ -1,0 +1,9 @@
+---
+- name: history | Disable MySQL Command History
+  file:
+    src:   /dev/null
+    dest:  /root/.mysql_history
+    state: link
+    force: yes
+  when: security_level >= 3
+

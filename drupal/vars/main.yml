@@ -1,0 +1,15 @@
+---
+# vars file for drupal
+drupal_default_php_extensions:
+  - bcmath
+  - curl
+  - gd
+  - json
+  - mbstring
+  - mcrypt
+  - mysql
+  - opcache
+  - pdo
+  - redis
+  - xml
+  - zip

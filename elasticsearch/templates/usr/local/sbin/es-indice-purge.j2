@@ -1,0 +1,46 @@
+#!/bin/bash
+
+syntax() {
+    echo "Usage: ${0##*/} -d -p prefix -o older_than"
+    echo
+    echo "Options:"
+    echo "  -d             Do not perform any changes"
+    echo "  -p prefix      Include only indices beginning with prefix"
+    echo "  -o older_than  Include only indices older than n days"
+
+    exit 1
+}
+
+while getopts "dp:o:" opt
+do
+    case $opt in
+        p) IDX_PREFIX=$OPTARG
+        ;;
+        o) DAYS=$OPTARG
+        ;;
+        d) OPTS='--dry-run'
+        ;;
+        *) syntax
+        ;;
+    esac
+done
+
+if [ -z "$IDX_PREFIX" -o -z "$DAYS" ]; then
+	syntax
+fi
+
+{% if es_major_version|int >= 5 %}
+curator_cli $OPTS --master-only show_indices --filter_list "[{\"filtertype\":\"age\",\"source\":\"name\",\"direction\":\"older\",\"unit\":\"days\",\"unit_count\":${DAYS},\"timestring\": \"%Y.%m.%d\"},{\"filtertype\":\"pattern\",\"kind\":\"prefix\",\"value\":\"${IDX_PREFIX}\"}]" > /dev/null 2>&1
+
+if [ $? -eq 0 ]; then
+    curator_cli $OPTS --master-only delete_indices --filter_list "[{\"filtertype\":\"age\",\"source\":\"name\",\"direction\":\"older\",\"unit\":\"days\",\"unit_count\":${DAYS},\"timestring\": \"%Y.%m.%d\"},{\"filtertype\":\"pattern\",\"kind\":\"prefix\",\"value\":\"${IDX_PREFIX}\"}]"
+    exit $?
+else
+    echo "No indices to delete"
+    exit 0
+fi
+{% else %}
+curator $OPTS --master-only delete indices --older-than ${DAYS}  --time-unit days --timestring '%Y.%m.%d' --prefix ${IDX_PREFIX}
+
+exit $?
+{% endif %}

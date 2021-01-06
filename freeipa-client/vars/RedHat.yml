@@ -1,0 +1,3 @@
+---
+freeipa_packages:
+  - ipa-client

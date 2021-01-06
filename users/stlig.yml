@@ -1,0 +1,10 @@
+---
+- hosts: all
+  roles:
+    - role: basic-user
+      users:
+        - login: stlig
+          groups: exploit
+          state: present
+          sshkeys:
+            - ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDJwOZni4ctiIvy+IdNePQCtUwZIe9oqKIOoH6WaSqPWLhtSxgOAp7z8V3HcPYxlK6GzDo/WTtYgT8iXxnLWSiYY0yxY3T/3CUg4ue7qG6TUNE04HKqQGfYO7NWtBmfEKqDXSNbQNojCKdy7qju2Cj79e4sHYicw9As4cdW7U90yPpslu6RJyfV4hQf5gZGWQSWY01p9lHIQuO45ESt3iIRkdgarhGNQzk3XD3VNzXvDn/ZEuHSLJwNQAQdXEWasEF1FEyN+MOOgFueQuK6S5bcp65GSO0j8eVVfR3zK2Gv0OE7B2nTq9fQ/AjlyLVWi5Vj5Ibz8dCcutWlbIsfiLKJ stephen.ligue@smile.ci

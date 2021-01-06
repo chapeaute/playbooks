@@ -1,0 +1,6 @@
+---
+- hosts: 1db
+  vars:
+    mysql_data_dir:      "/var/lib/mysql"
+  roles:
+    - role: mariadb-server

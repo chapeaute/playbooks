@@ -1,0 +1,5 @@
+# {{ ansible_managed }}
+
+JVB_OPTS="--apis=rest,xmpp"
+VIDEOBRIDGE_MAX_MEMORY="{{ jvb_memory_size }}"
+JAVA_SYS_PROPS="-Xms{{ jvb_memory_size }} -Dnet.java.sip.communicator.SC_HOME_DIR_LOCATION={{ jvb_etc_dir | dirname }} -Dnet.java.sip.communicator.SC_HOME_DIR_NAME=jitsi-videobridge -javaagent:{{ jvb_install_dir }}/lib/jolokia-jvm-{{ jolokia_version }}-agent.jar=config={{ jvb_etc_dir }}/jolokia.properties -Djava.util.logging.config.file={{ jvb_etc_dir }}/logging.properties -Djava.util.prefs.systemRoot={{ jvb_install_dir }}/.java -Djava.util.prefs.userRoot={{ jvb_install_dir }}/.java/.userPrefs"

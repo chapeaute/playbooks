@@ -1,0 +1,5 @@
+---
+# vars file for wso2
+
+wso2sp_install_dir: /var/lib/wso2sp
+

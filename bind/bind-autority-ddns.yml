@@ -1,0 +1,12 @@
+---
+- hosts: all
+  roles:
+  - role: bind
+    bind_recursion: false
+    bind_ddns_enable: true
+    bind_ddns_key_name: dev.smile.lan
+    bind_zone_conf_manage: true
+    bind_zone:
+      dev.smile.lan:
+        subnet: 10.1.1.0/24
+        servers: [ '10.1.1.2', '10.1.1.3' ]

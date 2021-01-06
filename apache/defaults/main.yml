@@ -1,0 +1,42 @@
+---
+
+apache2_modules:
+  - headers
+  - deflate
+  - rewrite
+  - expires
+  - ssl
+
+apache2_ports_template: ports.conf.j2
+apache2_server_name: "{{ ansible_fqdn }}"
+apache2_data_dir: "{{ apache2_default_data_dir }}"
+apache2_host: "*"
+apache2_port: "{% if varnish_port is defined %}81{% else %}80{% endif %}"
+apache2_ssl_port: "443"
+apache2_ssl_protocols: "-All +TLSv1.2"
+apache2_ssl_ciphers: "HIGH:!aNULL:!eNULL:!kECDH:!aDH:!RC4:!3DES:!CAMELLIA:!MD5:!PSK:!SRP:!KRB5:@STRENGTH"
+
+apache2_vhosts: {}
+
+apache2_enable_reverse_proxy: false
+apache2_enable_gzip: true
+apache2_enable_caching: false
+apache2_proxy_timeout: 360
+apache2_gzip_compression_level: 6
+apache2_dontlog_proxy_healthcheck: true
+apache2_log_x_forwarded_for: true
+apache2_vhost_create_index_file: true
+
+apache2_default_load_balencing_method: byrequests
+apache2_default_stickysession: JSESSIONID|jsessionid
+
+# Deploy
+apache2_deploy_user: "{{ apache2_user }}"
+apache2_deploy_group: "{{ apache2_group }}"
+
+# Firewall settings
+firewall_setup: true
+firewall_type: "firewalld"
+
+# mod status
+apache2_enable_server_status: true

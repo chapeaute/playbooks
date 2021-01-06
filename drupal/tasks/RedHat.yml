@@ -1,0 +1,28 @@
+---
+
+- name: main | Create selinux confitext for drupal files
+  tags:
+    - config_selinux
+  sefcontext:
+    target: "{{ drupal_site_root }}/{{ item }}(/.*)?"
+    setype: httpd_sys_rw_content_t
+    state: present
+    reload: yes
+  with_items:
+    - "{{ drupal_files_dir }}"
+    - "{{ drupal_tmp_dir }}"
+  when: ansible_selinux.status == "enabled"
+
+- name: main | Fix selinux permissions for drupal
+  tags:
+    - config_selinux
+  file:
+    path: "{{ drupal_site_root }}/{{ item }}"
+    setype: httpd_sys_rw_content_t
+    state: directory
+    owner: "{{ apache2_user }}"
+    group: "{{ apache2_group }}"
+  with_items:
+    - "{{ drupal_files_dir }}"
+    - "{{ drupal_tmp_dir }}"
+  when: ansible_selinux.status == "enabled"

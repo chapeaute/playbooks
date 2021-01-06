@@ -1,0 +1,10 @@
+---
+- name: firewall | Setting firewall rules
+  firewalld:
+    port:      "{{item}}/tcp"
+    permanent: true
+    state:     enabled
+    immediate: yes
+  with_items:
+    - 5601
+  when: firewall_type == 'firewalld'

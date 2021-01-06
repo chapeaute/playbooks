@@ -1,0 +1,40 @@
+# SQL {{ sql.name|default(default) }} instance
+sql {{ sql.name|default() }} {
+  # Database driver
+  database = "{{ sql.driver|default(freerad_db_driver) }}"
+  driver = "rlm_sql_${database}"
+  dialect = "${database}"
+
+  # Database connection parameter
+  server = "{{ sql.host|default(freerad_db_host) }}"
+  port = {{ sql.port|default(freerad_db_port) }}
+  login = "{{ sql.user|default(freerad_db_user) }}"
+  password = "{{ sql.pass|default(freerad_db_pass) }}"
+  radius_db = "{{ sql.database|default(freerad_db_name) }}"
+
+  # Table name
+  acct_table1 = "radacct"
+  acct_table2 = "radacct"
+  postauth_table = "radpostauth"
+  authcheck_table = "radcheck"
+  groupcheck_table = "radgroupcheck"
+  authreply_table = "radreply"
+  groupreply_table = "radgroupreply"
+  usergroup_table = "radusergroup"
+  client_table = "nas"
+  group_attribute = "${.:instance}-SQL-Group"
+
+  # Pool configuration
+  pool {
+    start = 5
+    min = 4
+    max = ${thread[pool].max_servers}
+    spare = 3
+    uses = 0
+    lifetime = 0
+    idle_timeout = 60
+  }
+  delete_stale_sessions = yes
+
+  $INCLUDE ${modconfdir}/${.:name}/main/${dialect}/queries.conf
+}

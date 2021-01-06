@@ -1,0 +1,117 @@
+galaxy_info:
+  author: your name
+  description: your description
+  company: your company (optional)
+
+  # If the issue tracker for your role is not on github, uncomment the
+  # next line and provide a value
+  # issue_tracker_url: http://example.com/issue/tracker
+
+  # Choose a valid license ID from https://spdx.org - some suggested licenses:
+  # - BSD-3-Clause (default)
+  # - MIT
+  # - GPL-2.0-or-later
+  # - GPL-3.0-only
+  # - Apache-2.0
+  # - CC-BY-4.0
+  license: license (GPL-2.0-or-later, MIT, etc)
+
+  min_ansible_version: 2.4
+
+  # If this a Container Enabled role, provide the minimum Ansible Container version.
+  # min_ansible_container_version:
+
+  #
+  # Provide a list of supported platforms, and for each platform a list of versions.
+  # If you don't wish to enumerate all versions for a particular platform, use 'all'.
+  # To view available platforms and versions (or releases), visit:
+  # https://galaxy.ansible.com/api/v1/platforms/
+  #
+  # platforms:
+  # - name: Fedora
+  #   versions:
+  #   - all
+  #   - 25
+  # - name: SomePlatform
+  #   versions:
+  #   - all
+  #   - 1.0
+  #   - 7
+  #   - 99.99
+
+  galaxy_tags: []
+    # List tags for your role here, one per line. A tag is a keyword that describes
+    # and categorizes the role. Users find roles by searching for tags. Be sure to
+    # remove the '[]' above, if you add tags to this list.
+    #
+    # NOTE: A tag is limited to a single word comprised of alphanumeric characters.
+    #       Maximum 20 tags per role.
+
+dependencies:
+  - role: wso2-generic
+    wso2_generic_service_name: wso2iot
+    wso2_generic_version: "{{ wso2iot_version }}"
+    wso2_generic_ports: "{{ wso2iot_ports }}"
+    wso2_generic_start_command: "bin/iot-server.sh"
+    wso2_generic_stop_command: "bin/iot-server.sh --stop"
+    wso2_generic_java_version: "{{ wso2iot_java_version }}"
+    wso2_generic_memory_size: "{{wso2iot_memory_size}}"
+    wso2_generic_root_dir: "{{ wso2iot_root_dir }}"
+    wso2_generic_log_glob: repository/logs/*log
+    wso2_generic_dropins_dir: dropins
+    wso2_generic_libs_dir: lib
+  - role: csync2-lsyncd
+    when: wso2iot_nodes|length > 1
+    tags:
+      - config_csync2
+    lsyncd_enabled: "{% if inventory_hostname in wso2iot_worker_nodes %}false{% else %}true{% endif %}"
+    csync2_config_per_group: true
+    csync2_hosts: "{{ wso2iot_nodes }}"
+    csync2_groups:
+      - name: wso2iot
+        auto: first
+        includes:
+          - "{{ wso2iot_install_dir }}/repository/deployment/server"
+          - "{{ wso2iot_install_dir }}/repository/tenants"
+  - role: mysql-provider
+    tags:
+      - config_mysql
+    run_once: true
+    delegate_to: "{{ wso2iot_db_host }}"
+    when: wso2iot_db_host is defined
+    mysql_host: "{{ wso2iot_db_host }}"
+    mysql_databases:
+      wso2reg:
+        db_name: WSO2_REG
+        encoding: latin1
+        collation: latin1_swedish_ci
+        sync_source:
+          src: dbscripts/mysql/wso2um.sql
+          file: wso2um.sql
+      wso2um:
+        db_name: WSO2_UM
+        encoding: latin1
+        collation: latin1_swedish_ci
+        sync_source:
+          src: dbscripts/mysql/wso2um.sql
+          file: wso2um.sql
+      wso2am:
+        db_name: WSO2_AM
+        encoding: latin1
+        collation: latin1_swedish_ci
+        sync_source:
+          src: dbscripts/mysql/wso2am.sql
+          file: wso2iot.sql
+      wso2app:
+        db_name: WSO2_APP
+        encoding: latin1
+        collation: latin1_swedish_ci
+        sync_source:
+          src: dbscripts/mysql/wso2appmgt.sql
+          file: wso2iot.sql
+    mysql_users:
+      - user: "{{ wso2iot_db_user }}"
+        password: "{{ wso2iot_db_pass }}"
+        priv: "WSO2_REG.*:ALL/WSO2_UM.*:ALL/WSO2_AM.*:ALL/WSO2_MB.*:ALL/WSO2_STATS.*:ALL"
+        host: "%"
+        state: present

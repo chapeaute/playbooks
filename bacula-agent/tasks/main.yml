@@ -1,0 +1,91 @@
+---
+# Include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+
+- include: '{{ ansible_os_family }}.yml'
+
+- name: main | Install bacula file daemon
+  package:
+    name:  "{{ bacula_fd_package }}"
+    state: present
+
+- name: main | Create bacula tmp backup directory
+  file:
+    name: "{{ bacula_tmp_backup_dir }}"
+    state: directory
+    owner: "{{ bacula_fd_user }}"
+    group: "{{ bacula_fd_group }}"
+    setype: bacula_spool_t
+    follow: yes
+    recurse: yes
+
+- name: main | Create restore directory
+  file:
+    path:  "{{ bacula_fd_restore_dir }}"
+    setype: bacula_spool_t
+    state: directory
+    mode:  0755
+    recurse: yes
+
+- name: main | Create bacula agent config on file daemon
+  template:
+    src:   etc/bacula/bacula-fd.conf.j2
+    dest:  "{{ bacula_conf_dir }}/bacula-fd.conf"
+    owner: root
+    group: root
+    mode:  0640
+  notify: Restart bacula-fd
+
+
+- name: main | Enable bacula-fd service on boot
+  service:
+    name:    "{{ bacula_fd_service }}"
+    state:   started
+    enabled: yes
+
+- name: main | Choose random bacula sd (ansible version < 2.5)
+  tags: deploy_config
+  set_fact:
+    bacula_sd_host: "{{ bacula_sd_hosts[bacula_sd_hosts|length|random(seed=ansible_fqdn)] }}"
+  when: ansible_version.full is version_compare('2.5', '<') or ansible_version.full is version_compare('2.8', '>=')
+
+- name: main | Choose random bacula sd (ansible version >= 2.5)
+  tags: deploy_config
+  set_fact:
+    bacula_sd_host: "{{ bacula_sd_hosts[(bacula_sd_hosts|length - 1)|random(seed=ansible_fqdn)] }}"
+  when: ansible_version.full is version_compare('2.5', '>=') and ansible_version.full is version_compare('2.8', '<')
+
+- name: main | Create bacula agent config on director
+  tags: deploy_config
+  template:
+    force: "{{ bacula_fd_regenerate_config }}"
+    src:   etc/bacula/clients.d/client.conf.j2
+    dest:  "{{ bacula_conf_dir }}/clients.d/{{ bacula_fd_name }}.conf"
+    owner: bacula
+    group: bacula
+    mode:  0640
+  notify: Restart bacula-dir
+  delegate_to: "{{ bacula_dir_host }}"
+  when: ansible_fqdn != bacula_dir_host
+
+- name: main | Create bacula agent config on director
+  tags: deploy_config
+  template:
+    force: "{{ bacula_fd_regenerate_config }}"
+    src:   etc/bacula/clients.d/client.conf.j2
+    dest:  "{{ bacula_conf_dir }}/clients.d/{{ bacula_fd_name }}.conf"
+    owner: bacula
+    group: bacula
+    mode:  0640
+  delegate_to: "{{ bacula_dir_host }}"
+  when: ansible_fqdn == bacula_dir_host

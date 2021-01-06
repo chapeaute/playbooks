@@ -1,0 +1,43 @@
+---
+# defaults file for zimbra
+
+# Global vars
+
+#
+# Zimbra configuration
+# http://download.zextras.com/zcs-9.0.0_OSE_RHEL7_latest-zextras.tgz
+zimbra_version: 8.8.12
+# zimbra_license_file:
+zimbra_type: "{% if zimbra_license_file is defined %}NETWORK{%endif%}"
+zimbra_domain: "{{ ansible_domain }}"
+zimbra_hostname: "{{ ansible_hostname }}"
+zimbra_password: "{{ lookup('password', 'credential/zimbra_password length=12 chars=ascii_letters,digits,punctuation') }}"
+zimbra_timezone: UTC
+# zimbra_http_mode: redirect
+zimbra_http_mode: https
+zimbra_server_hostname: "{{ ansible_hostname }}"
+zimbra_server: "{{ ansible_fqdn }}"
+zimbra_ldap_server: []
+zimbra_ldap_password: "{{ zimbra_password }}"
+zimbra_admin_password: changeme
+zimbra_ldap_port: 389
+zimbra_tmp_dir: /var/tmp/zcs
+zimbra_ldap_type:
+
+# Products to be installed
+zimbra_services:
+  - ldap
+  - logger
+  - chat
+  - mta
+  - store
+  - apache
+  - memcached
+  - proxy
+  - dnscache
+  - chat
+  - drive
+  - imapd
+  - spell
+
+zmconfigd_file: /opt/zimbra/log/zmconfigd.pid

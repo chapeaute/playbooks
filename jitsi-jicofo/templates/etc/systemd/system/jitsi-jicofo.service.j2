@@ -1,0 +1,29 @@
+[Unit]
+Description=Jitsi Conference Focus
+After=network.target
+
+[Service]
+Type=simple
+SuccessExitStatus=143
+EnvironmentFile={{ jicofo_etc_dir }}/jicofo.conf
+User={{ jicofo_user }}
+Group={{ jicofo_user }}
+PrivateTmp=true
+PrivateDevices=true
+ProtectHome=true
+ProtectSystem=full
+ReadOnlyDirectories={{ jicofo_etc_dir }} {{ jicofo_install_dir }}
+Restart=on-failure
+StartLimitInterval=10
+RestartSec=30
+ExecStart={{ jicofo_install_dir }}/jicofo.sh \
+            --host=${JICOFO_HOST} \
+            --domain=${JICOFO_DOMAIN} \
+            --secret=${JICOFO_SECRET} \
+            --user_domain=${JICOFO_USERDOMAIN} \
+            --user_name=${JICOFO_USER} \
+            --user_password=${JICOFO_USER_PASS} \
+            ${JICOFO_OPTS}
+
+[Install]
+WantedBy=multi-user.target

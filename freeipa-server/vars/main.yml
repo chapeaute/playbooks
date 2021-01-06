@@ -1,0 +1,5 @@
+---
+# vars file for freeipa-server
+ipa_srv_install: ipa-server-install
+ipa_cli_install: ipa-client-install
+ipa_rpl_install: ipa-replica-install

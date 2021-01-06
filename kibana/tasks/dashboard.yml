@@ -1,0 +1,42 @@
+---
+- name: dashboard | Waiting for .kibana index creation
+  uri:
+    url: "http://{{ kibana_elasticsearch_host }}:{{ kibana_elasticsearch_port }}/.kibana"
+    status_code: 200
+  register: result
+  until: result.status == 200
+  retries: 60
+  delay: 1
+
+- name: dashboard | Define default index-pattern
+  uri:
+    url:    "http://{{ kibana_elasticsearch_host }}:{{ kibana_elasticsearch_port }}/.kibana/index-pattern/logstash-*"
+    method: PUT
+    body:   {'title' : 'logstash-*',  'timeFieldName': '@timestamp'}
+    body_format: json
+    status_code: 200,201
+  register: create_default_index
+  when: kibana_major_version|int < 6
+  changed_when: create_default_index.status == 201
+  delegate_to: "{{ inventory_hostname }}"
+
+- name: dashboard | Import dashboards
+  include: "dashboard-import-{{ kibana_major_version }}.yml dashbrd={{ db }}"
+  with_items:
+    - freeradius
+    - http
+    - main
+    - postfix
+  loop_control:
+    loop_var: db
+
+- name: dashboard | Copy dashboard tools scripts
+  copy:
+    src:   "usr/local/sbin-{{ kibana_major_version }}/{{ item }}"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - kibana-dashboard-list
+    - kibana-dashboard-extract

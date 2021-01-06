@@ -1,0 +1,11 @@
+# Input from Kafka
+input {
+  kafka {
+    type => "event"
+    topics => ["{{ ls_kafka_topic }}"]
+    codec => {{ ls_input_kafka_codec }}
+    bootstrap_servers => "{% for h in ls_kafka_hosts -%}{{ h }}:{{ ls_kafka_port }}{%- if not loop.last -%},{% endif %}{% endfor %}"
+    tags => ["kafka"]
+    max_poll_records => "{{ ls_kafka_max_poll_records }}"
+  }
+}

@@ -1,0 +1,11 @@
+---
+# defaults file for neo4j
+
+
+neo4j_version: 3.5.13
+neo4j_listen_adress: 0.0.0.0
+
+# Tuning configuration
+neo4j_heap_size_prct: 0.75
+neo4j_min_heap_size: "{{( ansible_memtotal_mb*neo4j_heap_size_prct)|int }}M"
+neo4j_max_heap_size: "{{ neo4j_min_heap_size }}"

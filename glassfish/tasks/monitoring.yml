@@ -1,0 +1,10 @@
+---
+
+- name: monitoring | Configure jmx
+  shell: "{{ glf_install_dir }}/bin/asadmin create-jvm-options {{ item }}"
+  with_items:
+    - "-Dcom.sun.management.jmxremote.ssl=false"
+    - "-Dcom.sun.management.jmxremote.port={{glf_jmx_server_port}}"
+    - "-Dcom.sun.management.jmxremote.rmi.port={{glf_jmx_server_port}}"
+    - "-Dcom.sun.management.jmxremote.authenticate=false"
+    - "-Dcom.sun.management.jmxremote.local.only=true"

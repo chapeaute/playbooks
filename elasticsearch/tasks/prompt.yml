@@ -1,0 +1,33 @@
+---
+
+- name: prompt | Install JQ
+  package:
+    name: jq
+  tags:
+    - prompt
+    - script
+
+- name: prompt | Copy prompt script
+  copy:
+    src: usr/local/sbin/es-cluster-state
+    dest: /usr/local/sbin/es-cluster-state
+    mode: 0755
+
+- name: prompt | Ensure /etc/bash.bashrc.d exist
+  file:
+    path: /etc/bash.bashrc.d
+    state: directory
+    owner: root
+    group: root
+    mode: 0755
+
+- name: prompt | Include /etc/bash.bashrc.d in /etc/bashrc
+  lineinfile:
+    dest:   "/etc/bashrc"
+    regexp: '-x /etc/bash.bashrc.d'
+    line:   '[[ -x /etc/bash.bashrc.d ]] && for file in `ls /etc/bash.bashrc.d/* 2>/dev/null`; do source $file; done'
+
+- name: prompt | Setup PS1
+  copy:
+    src:  etc/bashrc.d/es-status
+    dest: /etc/bash.bashrc.d/es-status

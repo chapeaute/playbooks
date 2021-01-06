@@ -1,0 +1,42 @@
+---
+- name: etcd_backup | Install git package
+  package:
+    name: git
+
+- name: etcd_backup | Create user private and public key
+  user:
+    name: root
+    generate_ssh_key: yes
+    ssh_key_comment: "root@{{ ansible_fqdn }}"
+  register: user_ssh_key
+
+- name: etcd_backup | Deploy gitlab public key
+  known_hosts:
+    name: "{{ etcd_backup_git_srv }}"
+    key:  "{{ etcd_backup_git_pubkey }}"
+ 
+- name: etcd_backup | Public ssh key to deploy in 'Deploy Keys' available in https://{{ etcd_backup_git_srv }}/{{ etcd_backup_git_prj }}/-/settings/repository
+  debug:
+    msg:
+      - "Title: root@{{ ansible_fqdn }}"
+      - "Key: {{ user_ssh_key.ssh_public_key }}"
+      - "Enable 'Write access allowed' option"
+
+- name: etcd_backup | Deploy etcd backup scripts
+  template:
+    src:   "usr/local/sbin/{{ item }}.j2"
+    dest:  "/usr/local/sbin/{{ item }}"
+    owner: root
+    group: root
+    mode:  0750
+  with_items:
+    - etcd-backup-dump
+    - etcd-backup-restore
+    - etcd-migrate-traefikv2
+
+- name: etcd_backup | Deploy crontab to automate backup script
+  cron:
+    name:   "Backup etcd and commit on remote git repository"
+    hour:   "5"
+    minute: "{{ 59 | random(seed=ansible_fqdn) }}"
+    job:    "chronic /usr/local/sbin/etcd-backup-dump"

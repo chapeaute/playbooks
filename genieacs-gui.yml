@@ -1,0 +1,8 @@
+---
+
+- hosts: all
+  roles:
+    - role: mongodb
+    - role: redis
+    - role: genieacs
+    - role: genieacs-gui

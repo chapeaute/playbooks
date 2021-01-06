@@ -1,0 +1,46 @@
+- name: mariadb | Waiting for database to become available {{ bacula_db_host }}:{{ bacula_db_port }}
+  wait_for:
+    port: "{{ bacula_db_port }}"
+    host: "{{ bacula_db_host }}"
+
+- name: mariadb | Create bacula database
+  mysql_db:
+    name: "{{ bacula_db_name }}"
+    state: present
+  run_once: true
+  delegate_to: "{{ bacula_db_remote_host }}"
+  register: bacula_db_created
+
+- name: mariadb | Copy bacula database schema on {{ bacula_db_remote_host }}
+  copy:
+    src:  bacula_schema.sql
+    dest: /var/tmp
+  run_once: true
+  delegate_to: "{{ bacula_db_remote_host }}"
+  when: bacula_db_created.changed
+
+- name: mariadb | Import bacula database schema
+  mysql_db:
+    name:  "{{ bacula_db_name }}"
+    state:  import
+    target: /var/tmp/bacula_schema.sql
+  run_once: true
+  delegate_to: "{{ bacula_db_remote_host }}"
+  when: bacula_db_created.changed
+
+- name: mariadb | Create bacula user
+  tags: create_bacula_db_user
+  mysql_user:
+    name: "{{ bacula_db_user }}"
+    password: "{{ bacula_db_pass }}"
+    host: "{{ bacula_db_host }}"
+    priv: "{{ bacula_db_name }}.*:ALL"
+    state: present
+  run_once: true
+  delegate_to: "{{ bacula_db_remote_host }}"
+
+
+- name: mariadb | Using mysql library
+  alternatives:
+    name: libbaccats.so
+    path: /usr/lib64/libbaccats-mysql.so

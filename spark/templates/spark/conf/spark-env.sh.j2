@@ -1,0 +1,27 @@
+export JAVA_HOME={{ java_home }}
+export SPARK_WORKER_DIR={{ spark_tmp_dir }}
+export SPARK_HOME={{ spark_install_dir }}
+export SPARK_LOCAL_DIRS={{ spark_tmp_dir }}
+export SPARK_LOCAL_HOSTNAME={{ spark_hostname }}
+{% if ansible_fqdn in spark_masters  %}
+export SPARK_MASTER_CORES={{ ansible_processor_vcpus }}
+export SPARK_MASTER_WEBUI_PORT={{ spark_master_port }}
+{% if spark_enable_monitoring %}
+# export SPARK_MASTER_OPTS="-javaagent:/usr/share/java/jolokia-jvm-{{ spark_jolokia_version }}-agent.jar=config={{ spark_install_dir }}/conf/jolokia.properties"
+{% endif %}
+{% if spark_masters | length > 2  and spark_zk_hosts is defined %}
+export SPARK_MASTER_OPTS="-Dspark.deploy.recoveryMode=ZOOKEEPER -Dspark.deploy.zookeeper.url={% for item in spark_zk_hosts -%}{{ item }}:{{ spark_zk_port }}{%- if not loop.last -%},{% endif -%}{%- endfor %} -Dspark.deploy.zookeeper.dir={{ spark_zk_dir }}"
+{% endif %}
+{% else %}
+{% if spark_enable_monitoring %}
+export SPARK_WORKER_OPTS="-javaagent:/usr/share/java/jolokia-jvm-{{ spark_jolokia_version }}-agent.jar=config={{ spark_install_dir }}/conf/jolokia.properties"
+{% endif %}
+{% endif %}
+export SPARK_WORKER_WEBUI_PORT={{ spark_worker_port }}
+export SPARK_WORKER_CORES={{ ansible_processor_vcpus }}
+export SPARK_WORKER_PORT=7078
+{% if spark_use_hadoop %}
+export HADOOP_CONF_DIR={{ hadoop_root_dir }}/hadoop/etc/hadoop
+export LD_LIBRARY_PATH={{ hadoop_root_dir }}/hadoop/lib/native:$LD_LIBRARY_PATH
+{% endif %}
+export SPARK_MASTER_URL="spark://{% for item in spark_masters -%}{{ item }}:7077{%- if not loop.last -%},{% endif -%}{%- endfor %}"

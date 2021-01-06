@@ -1,0 +1,36 @@
+---
+
+# Global vars
+use_satellite_repo: false
+
+rocketchat_nodejs_version: 12.18.4
+
+rocketchat_service_name: rocketchat
+rocketchat:
+  #source_url: "https://github.com/RocketChat/Rocket.Chat/archive/{{ rocketchat_version }}.zip"
+  source_url: "https://cdn-download.rocket.chat/build/rocket.chat-{{ rocketchat_version }}.tgz"
+  subpath: bundle
+rocketchat_version: 3.9.0
+
+rocketchat_root_dir: "{{ rocketchat_default_root_dir }}"
+rocketchat_install_dir: "{{ rocketchat_root_dir }}/rocketchat"
+rocketchat_full_dir: "{{ rocketchat_root_dir }}/rocketchat-{{ rocketchat_version }}"
+rocketchat_port: 3000
+rocketchat_site_url: "http://{{ ansible_fqdn }}"
+
+rocketchat_db_host: localhost
+rocketchat_db_port: 27017
+rocketchat_db_name: rocketchat
+rocketchat_db_user: rocketchat
+rocketchat_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-rocketchat_db_pass chars=ascii_letters,digits') }}"
+rocketchat_db_options: ""
+rocketchat_mongo_url: "mongodb://{{ rocketchat_db_user }}:{{ rocketchat_db_pass }}@{{ rocketchat_db_host }}:{{ rocketchat_db_port }}/{{ rocketchat_db_name }}?{{ rocketchat_db_options }}"
+# rocketchat_mongo_oplog_url:
+
+rocketchat_npm_root_dir: "{{ rocketchat_install_dir }}/programs/server"
+
+# SSL configuration
+rocketchat_enable_ssl: false
+# rocketchat_key_path:
+# rocketchat_cert_path:
+# rocketchat_ca_path: []

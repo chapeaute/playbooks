@@ -1,0 +1,236 @@
+---
+- name: bind-zone | Deploy zone {{ key }}
+  set_fact:
+    subnet: "{{ zone.subnet.split('/')[0] }}"
+    prefix: "{{ zone.subnet.split('/')[1]|default(24) }}"
+  when: zone.subnet is defined
+  tags:
+    - config_zone
+
+# Set servers list
+- set_fact:
+    servers: "{{ bind_zone_dft_servers }}"
+  when: bind_zone_dft_servers is defined
+  tags:
+    - config_zone
+
+- set_fact:
+    servers: "{{ zone.servers }}"
+  when: zone.servers is defined
+  tags:
+    - config_zone
+
+# Set SOA mail address
+- set_fact:
+    soa_mail: "admin.{{ key }}."
+  tags:
+    - config_zone
+
+- set_fact:
+    soa_mail: "{{ zone.soa_mail|default(bind_zone_dft_soa_mail) }}"
+  when: (zone.soa_mail is defined) or (bind_zone_dft_soa_mail is defined)
+  tags:
+    - config_zone
+
+# Set SOA server name
+- set_fact:
+    soa_server: "{{ servers[0].split(':')[1]|regex_replace('^-','') }}."
+  when: servers[0].split(':')[1]|default("-") != "-"
+  tags:
+    - config_zone
+
+- set_fact:
+    soa_server: "ns1.{{ key }}."
+  when: servers[0].split(':')[1]|default("-") == "-"
+  tags:
+    - config_zone
+
+- set_fact:
+    soa_server: "{{ zone.soa_server|default(bind_zone_dft_soa_server) }}"
+  when: (zone.soa_server is defined) or (bind_zone_dft_soa_server is defined)
+  tags:
+    - config_zone
+
+- set_fact:
+    soa_server: "{{ soa_server }}{{ key }}."
+  when: soa_server.split('.')[1] == ""
+  tags:
+    - config_zone
+
+# Set reverse address
+- set_fact:
+    revsubnet: "{{ key.split('.in-addr.arpa')[0] }}"
+  when: "'in-addr.arpa' in key"
+  tags:
+    - config_zone
+
+- set_fact:
+    revsubnet: "{{ subnet.split('.')[0] }}"
+  when:
+    - zone.subnet is defined
+    - prefix|int >= 8 and prefix|int < 16
+  tags:
+    - config_zone
+
+- set_fact:
+    revsubnet: "{{ subnet.split('.')[1]+'.'+subnet.split('.')[0] }}"
+  when:
+    - zone.subnet is defined
+    - prefix|int >= 16 and prefix|int < 24
+  tags:
+    - config_zone
+
+- set_fact:
+    revsubnet: "{{ subnet.split('.')[2]+'.'+subnet.split('.')[1]+'.'+subnet.split('.')[0] }}"
+  when:
+    - zone.subnet is defined
+    - prefix|int >= 24
+  tags:
+    - config_zone
+
+# Set server to forwarder by default
+- set_fact:
+    zone_type: forward
+  tags:
+    - config_zone
+
+# If second address in zone servers lists is mine, I'm a slave !
+- set_fact:
+    zone_type: slave
+  when: servers|map('regex_replace','^(.*):.*','\\1')|list|intersect(ansible_all_ipv4_addresses)
+  tags:
+    - config_zone
+
+# If first address in zone servers lists is mine, I'm a master !
+- set_fact:
+    zone_type: master
+  when: servers[0].split(':')[0] in ansible_all_ipv4_addresses
+  tags:
+    - config_zone
+
+# Zone configuration file
+- name: bind-zone | Deploy zone configuration {{ key }} ({{ zone_type }})
+  template:
+    src:   etc/named/named.conf.zone.j2
+    dest:  "{{ bind_conf_dir }}/zone/{{ key }}.conf"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode:  0644
+    force: "{{ bind_zone_conf_manage }}"
+  when: zone.state|default() != "absent"
+  notify: "Restart Bind"
+  tags:
+    - config_zone
+
+- name: bind-zone | Remove zone configuration file {{ key }} ({{ zone_type }}) if state=absent
+  file:
+    path: "{{ bind_conf_dir }}/zone/{{ key }}.conf"
+    state: "{{ zone.state|default('file') }}"
+  when:
+    - zone.state|default() == "absent"
+  tags:
+    - config_zone
+
+# Domain zone file
+- name: bind-zone | Deploy zone file {{ key }} ({{ zone_type }})
+  template:
+    src:   var/named/db.domain.lan.j2
+    dest:  "{{ bind_cache_dir }}/db.{{ key }}"
+    force: no
+  when:
+    - zone_type == "master"
+    - zone.state|default() != "absent"
+  notify: "Restart Bind"
+  tags:
+    - config_zone
+
+- name: bind-zone | Remove zone file {{ key }} ({{ zone_type }}) if state=absent
+  file:
+    path:  "{{ bind_cache_dir }}/db.{{ key }}"
+    state: "{{ zone.state|default('file') }}"
+  when:
+    - zone.state|default() == "absent"
+  tags:
+    - config_zone
+
+# Reverse zone file
+- name: bind-zone | Deploy reverse zone file {{ key }} ({{ zone_type }})
+  template:
+    src:   var/named/db.reverse.j2
+    dest:  "{{ bind_cache_dir }}/db.{{ revsubnet }}"
+    force: no
+  when:
+    - zone.subnet is defined
+    - zone_type == "master"
+    - zone.state|default() != "absent"
+  notify: "Restart Bind"
+  tags:
+    - config_zone
+
+- name: bind-zone | Remove reverse zone file {{ key }} ({{ zone_type }}) if state=absent
+  file:
+    path:  "{{ bind_cache_dir }}/db.{{ revsubnet }}"
+    state: "{{ zone.state|default('file') }}"
+  when:
+    - zone.subnet is defined
+    - zone.state|default() == "absent"
+  tags:
+    - config_zone
+
+# Set permissions on files
+- name: bind-zone | Set permissions on zone file {{ key }} ({{ zone_type }})
+  file:
+    path:  "{{ bind_cache_dir }}/db.{{ key }}"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode:  0644
+    state: "{{ zone.state|default('touch') }}"
+  when: zone_type == "master"
+  changed_when: false
+  notify: "Restart Bind"
+  tags:
+    - config_zone
+
+- name: bind-zone | Set permissions on reverse zone file {{ key }} ({{ zone_type }})
+  file:
+    path:  "{{ bind_cache_dir }}/db.{{ revsubnet }}"
+    owner: "{{ bind_user }}"
+    group: "{{ bind_group }}"
+    mode:  0644
+    state: "{{ zone.state|default('touch') }}"
+  when:
+    - zone.subnet is defined
+    - zone_type == "master"
+  changed_when: false
+  notify: "Restart Bind"
+  tags:
+    - config_zone
+
+- name: bind-zone | Create zone configuration file named.conf.zone
+  copy:
+    dest:    "{{ bind_conf_dir }}/named.conf.zone"
+    content: ""
+    owner:   root
+    group:   "{{ bind_group }}"
+    mode:    0640
+    force:   no
+  tags:
+    - config_zone
+
+- name: bind-zone | Declare zone configuration file in bind named.conf
+  lineinfile:
+    path: "{{ bind_conf_dir }}/named.conf.zone"
+    line: 'include "{{ bind_conf_dir }}/zone/{{ key }}.conf";'
+    state: "{{ zone.state|default('present') }}"
+  tags:
+    - config_zone
+
+- set_fact:
+    soa_mail:
+  tags:
+    - config_zone
+
+- set_fact:
+    soa_server:
+  tags:
+    - config_zone

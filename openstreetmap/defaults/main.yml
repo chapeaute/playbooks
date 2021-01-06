@@ -1,0 +1,20 @@
+---
+# defaults file for openstreetmap
+osm_root_dir: /var/lib/
+osm_install_dir: "{{ osm_root_dir }}/nominatim"
+osm_python_modules:
+  - pip
+  - setuptools
+  - lettuce==0.2.18
+  - six==1.9
+  - haversine
+  - Shapely
+  - pytidylib
+  - numpy
+
+osm_db_name: "nomatim"
+osm_db_host: "127.0.0.1"
+osm_db_user: "{{ apache2_user|default('apache') }}"
+osm_db_pass: "{{ lookup('password', 'credential/{{ inventory_hostname }}-osm_db_pass chars=ascii_letters,digits') }}"
+osm_php_modules:
+  - PHP_CodeSniffer

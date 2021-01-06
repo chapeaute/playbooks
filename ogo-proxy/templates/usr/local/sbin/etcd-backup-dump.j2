@@ -1,0 +1,59 @@
+#!/bin/bash
+
+export PATH=$PATH:/usr/local/bin:/usr/local/sbin
+HOST_FQDN=$(hostname -f)
+
+# Backup variables
+BACKUP_DIR=/var/backup/etcd
+BACKUP_DATE=`date +%Y-%m-%d`
+BACKUP_FILE=etcd-backup.json
+
+# Etcd variables
+ETCDCTL=`dirname $0`/etcd-ctl
+ETCD_PREFIX="{{ etcd_backup_prefix }}"
+ETCD_CLUSTERNAME_KEY="{{ etcd_backup_clustername }}"
+
+# Git repository variables
+GIT_PROJECT_URL='{{ etcd_backup_git_url }}'
+rc=0
+
+# Only docker swarm leader can do backup to avoid concurrent backup on multi node
+echo -n "Check if docker swarm node is a manager leader: "
+SWARM_LEADER=$(docker node inspect self | jq .[].ManagerStatus.Leader)
+
+if [ "$SWARM_LEADER" == "true" ]; then
+	echo "Yes - Begining backup of etcd."
+else
+	echo "No - Exiting backup..."
+	exit 0
+fi
+
+CLUSTER_NAME=$($ETCDCTL get --print-value-only "$ETCD_CLUSTERNAME_KEY" | sed 's/.$//')
+
+if [ ! -e $BACKUP_DIR ]; then
+	git clone $GIT_PROJECT_URL $BACKUP_DIR || exit 1
+else
+	cd $BACKUP_DIR && git pull 
+fi
+
+[[ ! -e $BACKUP_DIR/$CLUSTER_NAME ]] && mkdir -p $BACKUP_DIR/$CLUSTER_NAME
+
+TMP_FILE=$(mktemp)
+chmod 600 $TMP_FILE
+
+$ETCDCTL --write-out=json get --prefix $ETCD_PREFIX > $TMP_FILE
+
+echo -n "{\"keys\": [" > $BACKUP_DIR/$CLUSTER_NAME/$BACKUP_FILE
+for key64 in $(cat $TMP_FILE | jq ".kvs[].key")
+do
+	key=$(echo $key64 | base64 -di)
+	val=$(cat $TMP_FILE | jq ".kvs[] | select (.key == $key64)" | jq .value | base64 -di)
+	echo -n "{\"key\":\"$key\",\"value\":\"$val\"},"
+done | sed 's/,$//' >> $BACKUP_DIR/$CLUSTER_NAME/$BACKUP_FILE
+echo -n "]}" >> $BACKUP_DIR/$CLUSTER_NAME/$BACKUP_FILE
+
+rm -f $TMP_FILE
+
+# Upload backup to git project
+cd $BACKUP_DIR && git add --all && git diff --quiet && git diff --quiet --staged && echo "No change detected since last backup. Nothing to commit." || (git commit --quiet -m "Backup from $HOST_FQDN at $BACKUP_DATE" && git push)
+

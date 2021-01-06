@@ -1,0 +1,156 @@
+---
+# tasks file for libvirt-kvm
+# include per-environment variables
+- include_vars: '{{ item }}'
+  with_first_found:
+    - files:
+        - '{{ ansible_distribution }}-{{ ansible_distribution_version }}.yml'           # CentOS-6.5
+        - '{{ ansible_os_family }}-{{ ansible_distribution_version }}.yml'              # RedHat-6.5
+        - '{{ ansible_distribution }}-{{ ansible_distribution_major_version }}.yml'     # CentOS-6
+        - '{{ ansible_os_family }}-{{ ansible_distribution_major_version }}.yml'        # RedHat-6
+        - '{{ ansible_distribution }}.yml'                                              # CentOS
+        - '{{ ansible_os_family }}.yml'                                                 # RedHat
+        - 'main.yml'
+      paths: '../vars'
+  tags:
+    - update_role
+
+- include: '{{ ansible_os_family }}.yml'
+
+- name: main | Check if {{ vagrant_home }} data directory exists
+  stat:
+    path: "{{ vagrant_home }}"
+  register: home_dir
+
+- name: main | Create {{ vagrant_home }} data directory
+  file:
+    state:   directory
+    path:    "{{ vagrant_home }}"
+    recurse: yes
+  when: not home_dir.stat.exists
+
+- name: main | Create symlink from {{ vagrant_default_home }} to {{ vagrant_home }} data directory
+  file:
+    state: link
+    src:   "{{ vagrant_home }}"
+    dest:  "{{ vagrant_default_home }}"
+    force: true
+  when:  vagrant_home != vagrant_default_home
+
+- name: main | Install vagrant extra packages
+  package:
+    name:  "{{ vagrant_packages_extra | join(',') }}"
+    state: present
+
+- name: main | Install vagrant
+  yum:
+    name:  "{{ vagrant_packages | join(',') }}"
+    state: present
+    disable_gpg_check: yes
+
+- name: main | Create vagrant home directory
+  file:
+    path:  "{{ vagrant_home }}"
+    state: directory
+    owner: root
+    group: "{{ vagrant_group_owner | default('root') }}"
+    mode:  0750
+
+- name: main | Declare default provider in .bashrc.d
+  template:
+    src:  etc/environment
+    dest: /etc/environment
+    mode: 0640
+
+- name: main | Install plugins
+  environment:
+    VAGRANT_HOME: "{{ vagrant_home }}"
+  shell: "vagrant plugin list | egrep -q '^{{ item }} ' || {{ vagrant_build_vars | default() }} vagrant plugin install {{ item }}"
+  register: vagrant_plugin_result
+  with_items: "{{ vagrant_plugins }}"
+  changed_when: "'Installing the ' in vagrant_plugin_result.stdout"
+
+# Bug fix: https://github.com/vagrant-libvirt/vagrant-libvirt/issues/1127
+- name: main | Deploy compile libk5crypto lib
+  copy:
+    src:  opt/vagrant/embedded/lib64/libk5crypto.so.3.1
+    dest: /opt/vagrant/embedded/lib64/libk5crypto.so.3.1
+    owner: root
+    group: root
+    mode:  0755
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version >= '8'
+
+- name: main | Create symlink to libk5crypto lib
+  file:
+    src:   /opt/vagrant/embedded/lib64/libk5crypto.so.3.1
+    dest:  /opt/vagrant/embedded/lib64/libk5crypto.so.3
+    state: link
+    owner: root
+    group: root
+    mode:  0755
+  when:
+    - ansible_os_family == 'RedHat'
+    - ansible_distribution_major_version >= '8'
+
+- name: main | Deploy ddns admin script
+  copy:
+    src:   usr/local/sbin/vagrant-ddns
+    dest:  /usr/local/sbin/vagrant-ddns
+    owner: root
+    group: root
+    mode:  0755
+  when: vagrant_manage_dns
+
+- name: main | Deploy vagrant template (files)
+  copy:
+    src:   var/lib/vagrant/project
+    dest:  "{{ vagrant_home }}"
+    owner: root
+    group: "{{ vagrant_group_owner }}"
+  when: vagrant_deploy_template
+
+- name: main | Set permission en template directory
+  file:
+    path: "{{ vagrant_home }}/project/template"
+    mode: 0775
+  when: vagrant_deploy_template
+
+- name: main | Install git util
+  package:
+    name:  git
+    state: installed
+
+- name: main | Deploy vagrant playbooks templates from git
+  git:
+    repo: ssh://git@git.smile.ci/adminsys/playbooks.git
+    dest: "{{ vagrant_home }}/project/template/playbooks"
+    accept_hostkey: yes
+  become: false
+  when: vagrant_deploy_template
+  register: git_playbook
+
+- name: main | Set owner on vagrant template playbook
+  file:
+    path:   "{{ vagrant_home }}/project/template/playbooks"
+    owner:  root
+    group:  "{{ vagrant_group_owner }}"
+    mode:   "g+w"
+    recurse: yes
+  when: vagrant_deploy_template
+  changed_when: false
+
+- name: main | Deploy vagrant settings.json file
+  template:
+    src:   var/lib/vagrant/project/template/settings.json.j2
+    dest:  "{{ vagrant_home }}/project/template/settings.json"
+    owner: root
+    group: "{{ vagrant_group_owner }}"
+    mode:  0640
+  when: vagrant_deploy_template
+
+- include: ansible.yml
+  when: vagrant_ansible_deploy
+  tags:
+    - update_role

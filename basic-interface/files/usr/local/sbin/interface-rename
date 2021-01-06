@@ -1,0 +1,38 @@
+#!/bin/bash
+
+
+usage()
+{
+    exec >&2
+    echo "usage: $0 oldname newname"
+    exit 1
+}
+
+[ $# -eq 2 ] || usage
+
+OLD_DEV=$1
+NEW_DEV=$2
+
+# Rename and update interface configuration file
+if [ -f "/etc/sysconfig/network-scripts/ifcfg-$OLD_DEV" ]; then
+  mv /etc/sysconfig/network-scripts/ifcfg-{$OLD_DEV,$NEW_DEV}
+  sed -i "s/${OLD_DEV}$/${NEW_DEV}/g" /etc/sysconfig/network-scripts/ifcfg-$NEW_DEV
+fi
+
+# Rename and update route configuration file
+if [ -f "/etc/sysconfig/network-scripts/route-$OLD_DEV" ]; then
+  mv /etc/sysconfig/network-scripts/route-{$OLD_DEV,$NEW_DEV}
+  sed -i "s/${OLD_DEV}$/${NEW_DEV}/g" /etc/sysconfig/network-scripts/route-$NEW_DEV
+fi
+
+ip link set down $OLD_DEV >/dev/null 2>&1 && \
+ip link set $OLD_DEV name $NEW_DEV && \
+ip link set up $NEW_DEV
+
+mac_addr=$(ip a l dev $NEW_DEV | grep 'link/ether' | awk '{print $2}')
+
+sed -i "/${mac_addr}/d" /etc/udev/rules.d/70-persistent-net.rules 2>/dev/null
+echo "SUBSYSTEM==\"net\", ACTION==\"add\", DRIVERS==\"?*\", ATTR{address}==\"$mac_addr\", ATTR{type}==\"1\", KERNEL==\"eth*\", NAME=\"$NEW_DEV\"" >> /etc/udev/rules.d/70-persistent-net.rules
+
+ifdown $NEW_DEV
+ifup $NEW_DEV

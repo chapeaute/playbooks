@@ -1,0 +1,3 @@
+---
+# vars file for libvirt-kvm
+vagrant_default_home: /var/lib/vagrant

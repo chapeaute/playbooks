@@ -1,0 +1,6 @@
+- hosts: varnish
+  roles:
+    - role: varnish
+      varnish_listen_port: 8080
+      varnish_default_backend_host: 127.0.0.1
+      varnish_default_backend_port: 80

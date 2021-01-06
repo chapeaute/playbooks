@@ -1,0 +1,40 @@
+---
+- name: RedHat | Install Percona Repository
+  yum:
+    name:  "{{ pmmclient_repo }}"
+    state: present
+  when: use_satellite_repo == false
+
+- name: RedHat | Set firewall rules
+  firewalld:
+    port: "{{item}}/tcp"
+    permanent: true
+    state: enabled
+    immediate: yes
+  with_items:
+    - "{{ pmmclient_port_default }}"
+
+- name: RedHat | Set firewall rules for MySQL
+  firewalld:
+    port: "{{ pmmclient_port_mysql }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: yes
+  when: pmmclient_mysql_enable
+
+- name: RedHat | Set firewall rules for MongoDB
+  firewalld:
+    port: "{{ pmmclient_port_mongo }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: yes
+  when: pmmclient_mongo_enable
+
+- name: RedHat | Set firewall rules for ProxySQL
+  firewalld:
+    port: "{{ pmmclient_port_proxy }}/tcp"
+    permanent: true
+    state: enabled
+    immediate: yes
+  when: pmmclient_proxy_enable
+

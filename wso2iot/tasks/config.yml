@@ -1,0 +1,74 @@
+---
+
+- name: Config | General configurations
+  tags:
+    - config_analytics
+  template:
+    src: "repository/conf/{{ item }}.j2"
+    dest: "{{ wso2iot_install_dir }}/repository/conf/{{ item }}"
+    owner: wso2iot
+    group: wso2iot
+  with_items:
+    - carbon.xml
+    - api-manager.xml
+    - broker.xml
+    #- tomcat/catalina-server.xml.j2
+  notify: "Restart wso2iot"
+
+- name: Config | log4j configurations
+  tags:
+    - config
+  copy:
+    src: "repository/conf/{{ item }}"
+    dest: "{{ wso2iot_install_dir }}/repository/conf/{{ item }}"
+    backup: yes
+  with_items:
+    - log4j.properties
+  notify: "Restart wso2iot"
+
+- name: Config | Configure to use remote DB
+  template:
+    src: "repository/conf/{{ item }}.j2"
+    dest: "{{ wso2iot_install_dir }}/conf/{{ item }}"
+    owner: wso2iot
+    group: wso2iot
+  with_items:
+    - registry.xml
+    - user-mgt.xml
+    - datasources/master-datasources.xml
+    - datasources/cdm-datasources.xml
+    - datasources/windows-datasources.xml
+    - datasources/android-datasources.xml
+    - datasources/metrics-datasources.xml
+  when: wso2iot_db_host is defined
+  notify: "Restart wso2iot"
+
+- name: Config | Configure Cluster
+  tags: clustering
+  template:
+    src: "repository/conf/{{ item }}.j2"
+    dest: "{{ wso2iot_install_dir }}/repository/conf/{{ item }}"
+    owner: wso2iot
+    group: wso2iot
+  with_items:
+    - axis2/axis2.xml
+    - hazelcast.properties
+  when: wso2iot_nodes|length > 1
+  notify: "Restart wso2iot"
+
+- name: Config | Configure for SSO
+  tags: config_sso
+  template:
+    src: "repository/{{ item }}.j2"
+    dest: "{{ wso2iot_install_dir }}/repository/{{ item }}"
+    owner: wso2iot
+    group: wso2iot
+  with_items:
+    - deployment/server/jaggeryapps/publisher/site/conf/site.json
+    - deployment/server/jaggeryapps/admin/site/conf/site.json
+    - deployment/server/jaggeryapps/store/site/conf/site.json
+    - conf/security/authenticators.xml
+  when:
+    - wso2iot_sso_server is defined
+    - inventory_hostname in wso2iot_manager_nodes
+  notify: "Restart wso2iot"
