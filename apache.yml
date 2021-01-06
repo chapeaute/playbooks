@@ -3,7 +3,7 @@
 - hosts: all
   vars:
     site_name: 
-    site_aliases: ['rodje.lan']
+    site_aliases: ['']
     site_dir:  /srv/www
     docs_dir:  "{{ site_dir }}/{{ site_name }}/htdocs"
   roles:
