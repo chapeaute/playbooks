@@ -2,8 +2,8 @@
 ---
 - hosts: all
   vars:
-    site_name: 
-    site_aliases: ['']
+    site_name: "app-name"
+    site_aliases: ['app-url']
     site_dir:  /srv/www
     docs_dir:  "{{ site_dir }}/{{ site_name }}/htdocs"
   roles:
