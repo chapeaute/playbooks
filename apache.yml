@@ -2,7 +2,7 @@
 ---
 - hosts: all
   vars:
-    site_name: rodje
+    site_name: 
     site_aliases: ['rodje.lan']
     site_dir:  /srv/www
     docs_dir:  "{{ site_dir }}/{{ site_name }}/htdocs"
